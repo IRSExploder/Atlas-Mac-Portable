@@ -114,3 +114,13 @@ call through the per-call sandbox and the model attestation reads `MATCH`.
 - `packs.lock.json` (older) is only read by `atlas map check`, `map pin` and the release audit.
 - Everything else missing is tests or developer scratchpad. `src/` only touches `scratchpad/`
   from the release audit and the lab tooling, never from gameplay.
+
+**Full suite after the fixes:** 1,813 passed, 5 failed, 54 skipped, 0 errors (12 min, all packs
+baked; run before the resolver fix, which touches no tested path except `test_providers`, 125/125
+green after it). The 5 failures are all missing test or developer files, not game behaviour:
+- `test_release_audit` x2: `scratchpad/tape_replay.py` is missing, so the active tape cannot be
+  replayed.
+- `test_the_older_tables_rewind...` x2: imports `tests/test_the_new_tables_rewind_whatever_you_do_to_them.py`,
+  which is missing.
+- `test_the_window_reviews_the_orders_a_jump_would_carry`: this test file is the older version and
+  does not match the current `main_window.py`.
