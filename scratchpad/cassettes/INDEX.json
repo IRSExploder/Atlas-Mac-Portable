@@ -1,0 +1,289 @@
+{
+  "$comment": "Which recorded runs gate a release and which are only history. An ACTIVE tape was recorded against a tree whose prompts HEAD still produces; `atlas release-audit` REPLAYS every active tape through `scratchpad/tape_replay.py` and reddens on a miss or a mismatch, so a drifted active tape stops a release. A HISTORICAL tape predates changes that legitimately altered those questions; it misses on purpose, is never replayed, and must never redden anything. An index with no active tape is itself a finding: nothing would be checking that HEAD still asks what anybody recorded. The replay reproduces each tape against the harness that recorded it -- that pairing is part of the tape.",
+  "tapes": [
+    {
+      "tag": "pt79-cold-war",
+      "status": "active",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "**Recorded against the batch that closes the 45-item review and both reopened decisions.** 12 turns, **98 calls, 0 of them failures**, 1132s. Replaces `pt78-cold-war`, which this batch retired for the reason its entry now gives.\n\n**The fixture is the same fixture, checked before the quota was spent.** `pt46_intel.py --dry` ranked focus as usa 142 / dvn 74 / sov 72 / rvn 68 / wger 60 -- exactly the set, order and scores pt78 and pt77 record. The ranking reads wars, unresolved agreements and recent events, none of which the trade matcher touches, so it is unmoved even though the board beneath it is rebuilt. That pairing is the point: the models are asked the same questions about a different economy.\n\n**What moved the tape**, all of it landed together because it all moves the same recording: the matcher default to `large` (cold-war 368 -> 461 routes); a cargo inside the repricing deadband billed at the fresh quote rather than the stale stored one, which removed an execution-order dependence without moving any acceptance verdict; C9, the composite minor that disowned its own sovereign republics; C10, amphibious lift counting transports already at sea; colonial depots reading `owner_nation_id` with the development bar at 0.3; the shortage throttle biting on the rate at 0.35; war exhaustion by the calendar; refusals quoted back to the government that earned them, with model text sanitised before it re-enters a prompt; an embargo prospect priced at the marginal cost rather than the contract; a trade intention holding its place only while its arrangement runs; and a starved yard saying so in the friction lines.\n\nRewind to turn 10 matches (699390cdf3d6 both ways). Arsenals end where they started, no new wars, no ground changed hands, and the laboratory reports nothing suspicious across twelve turns. On the providers the game ships with: 60 tracked_agent calls, 24 gambits, 12 world_sim, 2 organisation sessions."
+    },
+    {
+      "tag": "pt76-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "**Retired by the settlement-conservation fix, and it misses on purpose -- by exactly one line.** Recorded against a tree where `assess_trade` rounded each nation's netted position to 2dp on its own and dropped anything under a cent, which created money: 214 of 216 settlements leaked across six long games, +37.40 out of nothing against 2144.88 traded. A payment is now one integer in `trade.SETTLEMENT_UNITS` handed to both sides, so settled treasuries differ.\n\n**The whole of the drift, characterised before a call was spent.** The gate was green on master's `trade.py` and red on the fix, so nothing but the settlement moved it; `scratchpad/characterize_miss.py` put the entire prompt difference at one line -- `treasury 95.0` becoming `treasury 95.1` -- at similarity 1.0000. The briefing renders treasury to one decimal and that nation sat on a rounding boundary, so the underlying change is far smaller than the printed 0.1.\n\nSuperseded by `pt77-cold-war`."
+    },
+    {
+      "tag": "pt75-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "**Retired by the trade-pricing merge, and it misses on purpose.** Recorded against a barter world: `ATLAS_TRADE_PRICING` defaulted *off*, so no briefing on this tape carries the `## Your trade, and what it is costing you` block that every priced briefing now opens with -- 0 of its 98 calls have it against 57 of pt76's 97. HEAD asks a question this recording has no answer for, which is what a historical tape is. Superseded by pt76-cold-war, recorded against the merge candidate itself.\n\nWhat it still records, and why it was kept: Recorded after the five systems that said one thing and did another. 12 turns, **98 calls, 0 of them failures** -- the extra call over pt74's 97 is a second `organisation` session, the Council sitting twice, which is where pt64 and pt66 record the same one-call wobble. Rewind to turn 10 matches (4df0f3214da2 both ways), the laboratory reports nothing suspicious across twelve turns, no new wars, no ground changed hands, and every arsenal ends where it started. Replays 12 matched, 0 mismatched, 0 missed. Ten turns sealed and two partial. **Both partials are model-side and neither is this batch's:** turn 7 is CORE-001 refusing a batch that cited event 470, which does not exist, and turn 11 is CORE-004 refusing one that expected `relation.score` of -6 when it was -6.535 at write time -- a hallucinated id and a stale read, the two ordinary ways a live batch is refused, and both are recorded here rather than averaged away. On the providers the game ships with: gpt-5.6-terra for 60 tracked-agent calls, claude-sonnet-5 for the 24 gambits and 2 organisation sessions, gemini-3.6-flash-medium for 12 world_sim. **The one prompt change behind the re-record is W2**, the war-cost disclosure in `_warpath_lines`: every eligible target is now quoted its price on the same line as its grievance, which the tape carries 90 times as `(costs 8 legitimacy)`. The free-reclamation branch -- `no legitimacy cost -- the grievance is recognised` -- is live code and never fired in this run, because nobody was standing on an eligible target's own ground; it is unrecorded here and the next re-record should be read with that in mind."
+    },
+    {
+      "tag": "pt74-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Recorded after the safe-first recovery policy: under domestic strain a government takes a certain restorative (housing +4, health +3), or a gamble whose expectation is actually positive, or nothing at all -- rather than leading with `land_reform`, which is +9/-8 and whose failure also costs the 3 legitimacy the next attempt's odds are read off. 12 turns, **97 calls, 0 of them failures**, which is worth stating beside pt73's 106 calls and 9 `codex exited with code 1` faults: that was a transient CLI fault and this run did not see it. Nothing suspicious across twelve turns, rewind to turn 10 matches (e8d474e16845 both ways), no new wars and no ground changed hands. Replays 12 matched, 0 mismatched, 0 missed. Eleven turns sealed and one partial. **Retired at the p1 bug-fix batch.** `_warpath_lines` now prints what a declaration would cost beside each target it offers, so every briefing that lists eligible targets changed. Replayed against that tree it reads `turn 1: MISS` on a tracked_agent call, and the miss is exactly that and nothing else: the nearest recorded prompt is 0.9987 similar and the whole unified diff is five lines, each gaining `(costs 8 legitimacy)`. A prompt change is a MISS by construction, which is the gate working. Superseded by pt75-cold-war, recorded against the same harness on the same era."
+    },
+    {
+      "tag": "pt73-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Recorded after the briefing batch: research reachable out of surplus with saving off, the three discoverability fixes, and the zero-stability fix beneath both. 12 turns, **106 calls, 9 of them failures** -- and that number wants stating plainly rather than averaging away. All nine are `codex exited with code 1` on `tracked_agent`, each about six seconds, which is a transient CLI fault and not a tree fault. **Eight were retried successfully.** One key failed all three attempts, so one tracked power was silent for one turn; the engine's own degraded path handled it, the laboratory reports nothing suspicious across all twelve turns, and the rewind to turn 10 matches (0e7a37be423e both ways). Replays 12 matched, 0 mismatched, 0 missed. Ten turns sealed and three partial. On the providers the game ships with: gpt-5.6-terra for 68 tracked-agent calls, gemini-3.6-flash-medium for 12 world_sim, claude-sonnet-5 for the rest. **24 of 24 gambit calls were made** and the run opened no new wars; ground changed hands once, dvn 11->12 and rvn 12->11. The comparable initiative number and the one silent power are both recorded here so the next re-record has something to be measured against rather than a clean-looking blank. **Retired at the safe-first recovery policy.** `_RESTORATIVE` led with `land_reform`, the catalogue's only gamble, so a strained government reached for a negative-expectation bet ahead of two certain answers; the fix changes what unattended governments build, which changes the world at turn 1 and the briefings at turn 2. Replayed against that tree it reads `turn 1 sealed MISMATCH` and then a tracked_agent MISS -- the tape asking a question the engine no longer poses, which is exactly what an active tape is for."
+    },
+    {
+      "tag": "pt72-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Recorded after the victory frame stopped promising what it cannot deliver. 12 turns, 99 calls, **1 of them a failure** (a world_sim retry), nothing suspicious, replays 12 matched, 0 mismatched, 0 missed. Two briefing changes behind it: an occupier is shown the ground it could keep, the package the enemy would sign for it, and why not when the answer is no -- annexation has always worked and only the LOSER was ever told, above 90 exhaustion. And the victory block now separates what a power can play for from how the game can end regardless, because hegemony was listed as a third route and is not one. **Retired at the briefing batch: research, discoverability and the zero-stability fix.** Four changes moved the questions rather than the answers -- every research programme's line now ends in what it buys and programmes behind an unmet prerequisite are named with what opens them; the task block examples a programme; the capability menu says what an act costs including when the answer is 'no direct cost'; and a patron is told it may ship deniably. A prompt change is a MISS by construction and this one missed on turn 1, which is the gate working. Superseded by pt73-cold-war, recorded against the same harness on the same era."
+    },
+    {
+      "tag": "pt71-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Recorded after the conquest trend stopped measuring its own denominator. 12 turns, 98 calls, zero failures, nothing suspicious, replays 12 matched, 0 mismatched, 0 missed. The trend had read `ground_share`, a share of a world total that shrinks as occupation spreads, so a nation standing still read its own drift as conquest going well and the field went 3% committed to conquest at turn one to 49% by turn forty-eight. Reading `budget.ground_value` instead was worse at 66%, because that sums development and development inflates. This is the third measure and the first that holds still: a count of provinces, owned at 1.0 and occupied at 0.4. **Retired at the victory-frame work.** Two briefing changes: an occupier is now shown the ground it could keep and the terms that would keep it, and the victory block partitions routes from endings."
+    },
+    {
+      "tag": "pt70-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Recorded after a government could hold a strategy across turns. 12 turns, 98 calls, zero failures, nothing suspicious, replays 12 matched, 0 mismatched, 0 missed. Schema 45 adds `nation_strategy` and `strategy_revision`, so this is also the record that the two of them carry their data and their indexes intact. A tracked power is now told what it is playing for before it is told what would count as winning -- which is the order the two are actually decided in. **Retired at the conquest-trend correction.** It MISMATCHED rather than missed, which is the distinction worth recording: the prompts were identical, so the briefing had not changed. What changed was the world -- the corrected fitness picks different plans, and `nation_strategy` is fingerprinted, so the same answers now produce a different and correct world."
+    },
+    {
+      "tag": "pt68-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Recorded after UNIT-001 was scoped to the nations a batch is actually about. 12 turns, 97 calls, zero failures, and **the laboratory reports nothing suspicious** -- which is the number this recording was for, its predecessor having reported three then six engine batches refused across turns 6 and 7 because one country on the other side of the map was overdrawn. Replays 12 matched, 0 mismatched, 0 missed. **Retired at the strategy layer.** Two fingerprinted tables joined the digest, which moves every built-world fingerprint by the width of a table name -- the schema-16, -21 and -23 situation, harmless for the reason recorded there -- and a tracked power's briefing gained a block saying what it is playing for. It MISMATCHED on the digest before it could miss on the prompt."
+    },
+    {
+      "tag": "pt67-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Recorded after the international order began paying a peacemaker for the act rather than for its rank. 12 turns, 99 calls, **1 of them a failure** (a world_sim retry), and it replays 12 matched, 0 mismatched, 0 missed. **A mediation actually fired in this run** -- one brokered peace, recorded with its mediator -- which is the first live-model evidence the channel works end to end rather than only under a scripted oracle. **The laboratory reports a live rule violation, and it is not this batch's:** turns 6 and 7, three then six engine batches refused by UNIT-001 for South Vietnam being overdrawn. The rule's own docstring says the *owning* nation must not be driven negative; the implementation scans every nation in the world, so one insolvent country refuses every unit-touching batch anywhere. Pre-existing, unrelated to mediation, and reported rather than fixed here. **Retired at the UNIT-001 fix, and it is the tape that found it.** Narrowing the rule to the batch's own nations means those refused batches now apply, so the same answers produce a different and correct world: it MISMATCHED at turn 6, which is exactly the turn it had reported. A world change, not a prompt change."
+    },
+    {
+      "tag": "pt66-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Recorded after a power gained the ability to broker somebody else's war. 12 turns, **98** calls -- the same as pt64 and pt65, the extra Council session sitting for a third recording running -- zero failures, nothing suspicious, and it replays 12 matched, 0 mismatched, 0 missed. Recorded across the second save-invalidating migration in the project, schema 44, so this tape is also the record that the rebuilt `event_participant` carries its data, its primary key and its index intact. The tape under which the diplomatic route stopped being only about being liked: ending a war you are not in is the one part of the leadership index a power earns by acting. **Retired at the peacemaker award.** The mediation block's closing line claimed brokering was the single largest thing a power could do for its standing in one turn, which the chain trace showed was false by three orders of magnitude. The corrected line changed the prompt, so it missed."
+    },
+    {
+      "tag": "pt65-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Recorded after the concert victory gained an absolute floor on world regard, alongside its comparative ratio and its six-month run. 12 turns, **98** calls -- matching pt64, the extra Council session sitting again -- zero failures, nothing suspicious, and it replays 12 matched, 0 mismatched, 0 missed. The tape under which the concert route stopped being winnable by outlasting the field: the measured collapse victory, taken on turn 47 by a power the world regarded at 0.3, is refused, while the legitimate turn-97 win at 34.4 clears the floor of 15 by nineteen points. **Retired at mediation.** A tracked power's briefing gained a list of the wars it could offer to bring to an end and what its good offices are worth at each. Prompts changed, so it missed."
+    },
+    {
+      "tag": "pt64-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Recorded after the concert route made the diplomatic victory winnable. 12 turns, **98** calls rather than the usual 97 -- an extra Council session sat, which is the organisation layer reacting to a world where standing now moves -- zero failures, nothing suspicious, and it replays 12 matched, 0 mismatched, 0 missed. The tape under which a `concert` victory became reachable for the first time: measured across five seeds and an aggression stress case, it fires in two of six worlds, once on turn 97 for a power holding six provinces and the regard of the world. **Retired at the concert regard floor.** The victory screen's concert entry gained a second requirement -- the world's regard for you, against an absolute floor -- so a power can now see that leading the field is not sufficient. Prompts changed, so it missed."
+    },
+    {
+      "tag": "pt63-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Recorded after a power gained the ability to start its own war, after peace terms could unseat a government or cap an arsenal, and after a country's aims became measurable. 12 turns, 97 calls, zero failures, the laboratory reports nothing suspicious, and it replays 12 matched, 0 mismatched, 0 missed. Clean on the first recording, as pt62 was. **Recorded across the first save-invalidating migration in the project** -- schema 43 -- so this tape is also the record that the rebuilt `peace_term` carries its data, its UNIQUE and its index intact. **Retired at the concert route.** A tracked power's briefing gained a section on where it stands in the international order and what would raise it. Prompts changed, so it missed."
+    },
+    {
+      "tag": "pt62-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Recorded after war-weariness merged, the standing block landed and the arsenal gained a tactical/strategic split. 12 turns, 97 calls, zero failures, the laboratory reports nothing suspicious, and it replays 12 matched, 0 mismatched, 0 missed. **Clean on the first recording**, which is worth noting after two consecutive batches where the laboratory caught a live rule violation on a tape that replayed green. On the providers the game ships with: claude-sonnet-5 for 25 calls, gpt-5.6-terra for 60, gemini-3.6-flash-medium for 12. **9 of 24 gambit calls produced an undertaking**, between PT57's 8 and the 11 of PT55, PT56, PT59 and PT61 -- inside the normal band. **Retired at the war-declaration batch.** A tracked power's briefing gained a list of powers it could legitimately declare war on and a block of its own measurable aims; schema 43 widened `peace_term.kind`. Prompts changed, so it missed."
+    },
+    {
+      "tag": "pt61-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Recorded after the mobilisation ladder, warhead acquisition and the duplicate-exposure fix. 12 turns, 97 calls, zero failures, and **the laboratory reports nothing suspicious** -- which is the number this recording was for, its predecessor having reported the exposure collision. Replays 12 matched, 0 mismatched, 0 missed. On the providers the game ships with: claude-sonnet-5 for 25 calls, gpt-5.6-terra for 60, gemini-3.6-flash-medium for 12. **11 of 24 gambit calls produced an undertaking**, matching PT55, PT56 and PT59 exactly. **Retired at the standing and tactical-arsenal batch.** A tracked power's briefing gained a 'where you stand' block naming its rank, its five score components and the lever for each; schema 42 split the arsenal. Prompts changed, so it missed."
+    },
+    {
+      "tag": "pt60-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "**Never activated, and kept for the same reason pt58 was: it replayed clean and found a real defect.** Turn 9, `[CORE-000] IntegrityError: UNIQUE constraint failed: exposure.world_id, exposure.event_id` -- `assess_exposure` read its already-published set once before its loop while `_publish` inserted during it, so an operation yielded twice in one pass lost the whole batch, and left a public scandal in the event log with nothing behind it. Latent since the table existed and reachable only once covert backing became common, which making the patronage channel visible had just done. Superseded by pt61, recorded after the fix. **Two of the last three recordings have caught a live rule violation on a tape whose replay was perfectly green.**"
+    },
+    {
+      "tag": "pt59-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Recorded after the discoverability audit and the reinforcement overdraw fix. 12 turns, 97 calls, zero failures, and **the laboratory reports nothing suspicious** -- which is the number that matters here, because its immediate predecessor reported the UNIT-001 overdraw this was recorded to confirm gone. Replays 12 matched, 0 mismatched, 0 missed. Recorded on the providers the game ships with: claude-sonnet-5 for 25 calls, gpt-5.6-terra for 60, gemini-3.6-flash-medium for 12. **11 of 24 gambit calls produced an undertaking**, matching PT55 and PT56 exactly and above PT57's 8 -- squarely normal initiative. **Retired at the mobilisation and warhead batch.** A tracked power's briefing gained a war-footing block and, for a nuclear power, an arsenal block; schema 41 added `nation.mobilisation`. Prompts changed, so it missed."
+    },
+    {
+      "tag": "pt58-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "**Never activated, and kept because of what it caught.** Recorded against the discoverability audit and replayed 12 matched, 0 mismatched, 0 missed -- but the laboratory reported one thing worth a look, and it was a real defect: turn 7, `[UNIT-001] North Vietnam is overdrawn after this batch (treasury 4.5, manpower -0.0)`, its entire reinforcement thrown out for a rounding error latent on master since the reinforce channel landed. Fixing that changed the arithmetic and so the world, which turned this tape into a MISMATCH on turn 1 the moment it was no longer wanted. Superseded by pt59-cold-war, recorded after the fix. **This is the argument for the laboratory pass**: the tape itself replayed perfectly clean, and the bug would have shipped on a green replay."
+    },
+    {
+      "tag": "pt57-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Re-recorded after the war-layer overhaul, which changed what a tracked power is asked in four separate places: the forces menu and `reinforce`/`raise_formations` channels, the patronage block naming friends who are at war, the garrison posture behind the march, and every budget figure in a briefing once upkeep was rebalanced and a war footing added. 12 turns, 97 calls, zero failures, ten turns sealed and two partial, rewind to turn 10 matched, and the laboratory reports nothing suspicious. Replays 12 matched, 0 mismatched, 0 missed. Recorded on the providers the game ships with -- claude-sonnet-5 for 25 calls, gpt-5.6-terra for 60 and gemini-3.6-flash-medium for 12 -- rather than the single-provider fallback PT54 was forced into. **The comparable number: 8 of 24 gambit calls produced an undertaking**, against 11 in PT55 and PT56, 10 in PT53 and the anomalous 2 in PT54. Normal initiative, at the low end of the band. **Retired at the discoverability audit.** Four more channels became visible in a tracked power's briefing -- the doctrine menu, war aims, releasing a quiet dependency, and what would count as winning -- so the questions changed and it missed on turn 1. Superseded by pt59-cold-war."
+    },
+    {
+      "tag": "pt55-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Recorded on claude-sonnet-5 once the CLI was re-authenticated and the temporary Gemini routing was reverted, so the fixture is back to the providers the game actually ships with. 12 turns, 97 calls, zero failures, replays 12 matched with nothing missed or mismatched, and the laboratory reports nothing suspicious. **The number this re-record was for: 11 of 24 gambit calls produced an undertaking** -- espionage 5, envoy 3, air_strike 2, counterintelligence 1 -- against PT53's 10 of 24 on the same provider and PT54's 2 of 24 on Gemini. Normal initiative, and the same mix of kinds. **Retired at the focus-rotation change.** The roster stopped being the top five of a ranked list and started rotating, so a different set of nations acts each turn and the whole run diverges -- a MISMATCH rather than a MISS, because the questions still match and the answers no longer produce the same world. Superseded by pt56-cold-war, recorded against the same harness on the same era."
+    },
+    {
+      "tag": "pt54-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Superseded by PT55 the moment the `claude` CLI was re-authenticated. Recorded on gemini-3.6-flash-medium because claude's OAuth session had expired and the five roles it answers had no provider at all, which is the only reason it exists. **Kept as the measurement of what that substitution cost**: 2 of 24 gambit calls produced an undertaking, against 10 in PT53 and 11 in PT55. The refusals were well-argued prose rather than malformed output, so nothing was broken -- the model was simply far more passive, and a fixture recording a world where the great powers stop running covert operations is a poor sample of the game even when it is a sound regression fixture for the engine."
+    },
+    {
+      "tag": "pt53-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Superseded by PT54 after schema 38 renamed the fingerprinted `doctrine` table to `doctrine_stance`. Replayed 12 mismatched with 0 missed -- a world change, not a prompt change. **Kept as the last tape recorded with `claude` answering the five roles it used to answer, and the benchmark PT54's passivity is measured against**: 10 of its 24 gambit calls produced an undertaking, against 2 of 24 in PT54."
+    },
+    {
+      "tag": "pt52-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Superseded by PT53 after the two budget follow-ups. The arsenal charge was retuned (small-force scaling, a cheaper sea tier and a much smaller per-warhead cost) and a per-month pact upkeep was added, so every treasury in the world runs differently from the first turn. Kept as the first run that reported nothing suspicious after the Quang Tri fix."
+    },
+    {
+      "tag": "pt51-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Superseded by PT52 after the second and third doctrine axes. Replayed 0 matched, 0 mismatched, 1 MISSED on turn 1 -- a prompt change: the nuclear posture and alignment stances now carry effects, and every armed or aligned nation's briefing says what they imply. Kept as the run that CAUGHT the Quang Tri self-siege for the fifth and last time."
+    },
+    {
+      "tag": "pt50-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Superseded by PT51 after doctrines. Replayed 0 matched, 0 mismatched, 1 MISSED on turn 1 -- the signature of a prompt change and not a world change: schema 37 put a `doctrine_shift` field in every tracked agent's schema and a 'what your country is built to do' block in every briefing of a nation that has one, which in 1972 is thirteen of them. HEAD asks a question this recording has no answer for, which is exactly what an active tape exists to catch."
+    },
+    {
+      "tag": "pt49-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Superseded by PT50 after the world-clock work. Schemas 35 and 36 added `expires_on`, `due_on` and `until_on` to `commitment`, `commitment_term` and `sanction` -- tables that have rows in the shipped eras, so every world digest moved. Replayed 12 mismatched with 0 missed, which is the signature of a world change and not a prompt change: HEAD asks exactly the questions this recorded, and the answers land in a world whose fingerprint has shifted."
+    },
+    {
+      "tag": "pt48-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Superseded by PT49 after the converging-drift fix moved 0.001-scale values at span 1. Mismatched with zero misses, which is the signature of a world change rather than a prompt change -- exactly what the strict gate is for."
+    },
+    {
+      "tag": "pt46-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "The intelligence capstone, recorded before the deception tell was fixed. That fix reworded every tracked-agent briefing, so it misses on its first call -- correctly. Kept as the run that showed models using the new espionage and counterintelligence doors, and as the evidence that deception could not accumulate at the old decay. Superseded by PT48."
+    },
+    {
+      "tag": "pt47-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "The staged half of the capstone: six turns with Moscow's counterintelligence pre-loaded past DECEPTION_AT, because the unstaged PT46 showed deception is reachable but does not accumulate fast enough to arrive in twelve turns. Historical rather than active: it is an observation of a fixture-set world, not a regression fixture, and `--stage` is not the default the replay would rebuild."
+    },
+    {
+      "tag": "pt45-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt38-support-cost",
+      "why": "Recorded the day before espionage and counterintelligence became undertakings. Two new gambit kinds change the gambit prompt, so it misses on its first call -- correctly, and the strict gate said so within minutes of the fix landing. Superseded by PT46."
+    },
+    {
+      "tag": "pt44-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt38-support-cost",
+      "why": "Was the active fixture and drifted: the intelligence channels changed the world-sim payload, so it misses on its first call. Nothing noticed, because the cassette gate counted tapes instead of replaying them -- the hole Codex found and `1a4e336` closed. Superseded by PT45, which is the same profile re-recorded against HEAD. Kept as the record of the tree before the intel batch landed."
+    },
+    {
+      "tag": "pt43-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt38-support-cost",
+      "why": "Recorded an hour before PT44 and superseded by it. Kept because it is the run that caught the self-besieging contest live -- South Vietnam holding Quang Tri and besieging it at 70% and 55% -- which is the finding that fixed `decay_idle_contests`. It predates that fix and misses on purpose."
+    },
+    {
+      "tag": "pt38-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt38-support-cost",
+      "why": "Predates the war-aims and peace channels on the world-sim answer schema, so the engine now asks for a different answer to the same question. Misses at the schema, correctly. Superseded by PT44, which is the same profile re-recorded."
+    },
+    {
+      "tag": "pt37-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt37-full-systems",
+      "why": "Same schema drift as PT38. Was kept active as the control for the support-cost pair -- the before against PT38's after -- and re-recording it against HEAD would have destroyed exactly what made it a control, since the support cost is live now and the two harnesses differ only in what they print. So it is retired as the record of the before rather than re-recorded into a duplicate of PT44. Flagged for Alex: the pair no longer has a live half."
+    },
+    {
+      "tag": "pt36-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "why": "Predates the air-across-oceans fix, both sovereignty maps and schemas 19-23. Misses against HEAD, correctly."
+    },
+    {
+      "tag": "pt35a-modern-day",
+      "status": "historical",
+      "preset": "modern-day",
+      "why": "Older still; kept as the record of what that run looked like."
+    },
+    {
+      "tag": "pt34g-gathering-storm",
+      "status": "historical",
+      "preset": "gathering-storm",
+      "why": "Older still."
+    },
+    {
+      "tag": "pt56-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "Re-recorded after the focus roster began rotating and the nuclear briefing gained the line saying a launch costs no treasury -- two changes that a tape cannot survive, one because it changes who is asked and one because it changes what they are asked. 12 turns, 97 calls, zero failures, every turn sealed but one partial, and the laboratory reports nothing suspicious. Replays 12 matched, 0 mismatched, 0 missed. Recorded on the providers the game ships with. **Retired at the war-layer overhaul.** Five changes moved the questions rather than the answers: a tracked power's briefing now carries a forces menu and a reinforcement channel, a patronage block naming the friends who are in a war, and budget figures computed from rebalanced upkeep and a war footing. A prompt change is a MISS by construction and this one missed on turn 1. Superseded by pt57-cold-war, recorded against the same harness on the same era."
+    },
+    {
+      "tag": "pt77-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "**Retired by the air rebrief, and it misses on purpose -- by exactly thirteen lines.** Recorded against a tree where `atlas.engine.rerecord`'s switch was still off, so its `tracked_agent` briefings carry neither of the two air bullets the engine had always been obeying and never said, and they name the naval programme `Solid-fuel missiles`.\n\n**The whole of the drift, characterised before a call was spent.** `characterize_miss.py` put the entire prompt difference at 13 lines against this tape's own seq=1 at similarity 0.9906: the two air bullets, the programme's name, and the one `mirv` prerequisite line that names the programme. Nothing else in any prompt moved -- the trade-alert click-through that merged alongside it is read by the overlay and the matters panel and by nothing that talks to a model.\n\nSuperseded by `pt78-cold-war`."
+    },
+    {
+      "tag": "pt78-cold-war",
+      "status": "historical",
+      "preset": "cold-war",
+      "profile": "pt46-intel",
+      "why": "**Retired by the trade matcher's default, and it misses on purpose from turn 1.** Recorded against the greedy board, where the largest seller took buyers until it ran dry. `scratchpad/DECISION_MEASUREMENTS.md` reopened that: gathering-storm and modern-day hand out a truthful endowment, and cold-war does not -- at a 5% tolerance top-1 share swung 53.6% to 35.8% across 83 distinct boards, because `usa` held 2.6% more steel surplus than `jpn`. Who carried cold-war's trade was a tie-break, not an endowment. The matcher now ships `large`, which splits the buyers that carry the concentration and leaves the long tail of captive buyers alone.\n\n**So the world underneath this tape no longer exists**: cold-war goes from 368 routes to 461 (+25.3%, inside the documented 18-32% band) and its built-world fingerprint from `8b628c26...` to `1b297b5d...`. Every prompt that quotes a trade figure follows. Naming `ATLAS_TRADE_SPREAD=off` still reproduces this tape's board exactly, which is what makes this recording readable rather than merely old.\n\nWhat it still records, and why it is kept: 12 turns, 97 calls, 0 failures, recorded against the air rebrief. Superseded by `pt79-cold-war`."
+    }
+  ]
+}

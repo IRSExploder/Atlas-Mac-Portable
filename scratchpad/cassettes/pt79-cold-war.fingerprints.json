@@ -1,0 +1,84 @@
+{
+  "preset": "cold-war",
+  "world_id": "cw72",
+  "turns": 12,
+  "days": 30,
+  "profile": "pt46-intel",
+  "created_at": "2026-09-09T15:31:51+00:00",
+  "attempts": [
+    {
+      "turn": 1,
+      "status": "partial",
+      "fingerprint": "f033183d4d483e61f91ab1975118ea0d"
+    },
+    {
+      "turn": 2,
+      "status": "sealed",
+      "fingerprint": "702e626685ca2da3be8d60a8df6d42a9"
+    },
+    {
+      "turn": 3,
+      "status": "partial",
+      "fingerprint": "ede48ef9bb7e1340d6580079e4d52d1a"
+    },
+    {
+      "turn": 4,
+      "status": "sealed",
+      "fingerprint": "dae82aefa87fbdb66302da887a98cd14"
+    },
+    {
+      "turn": 5,
+      "status": "partial",
+      "fingerprint": "e61e004ba62a4257eb90fa2021f6172f"
+    },
+    {
+      "turn": 6,
+      "status": "sealed",
+      "fingerprint": "e33c1acefc1bd209d25c44cb20966a3e"
+    },
+    {
+      "turn": 7,
+      "status": "partial",
+      "fingerprint": "bfb4549b21b5047492797e533ba294dd"
+    },
+    {
+      "turn": 8,
+      "status": "sealed",
+      "fingerprint": "46d47780fa7b5dd7d7058c79b2a0c368"
+    },
+    {
+      "turn": 9,
+      "status": "partial",
+      "fingerprint": "10da50fd406c774f4cfe3822eeed28e5"
+    },
+    {
+      "turn": 10,
+      "status": "sealed",
+      "fingerprint": "699390cdf3d67b9a2312c477826b668f"
+    },
+    {
+      "turn": 11,
+      "status": "sealed",
+      "fingerprint": "9137a11c4a5695f0fe4648c30efe3ae5"
+    },
+    {
+      "turn": 12,
+      "status": "sealed",
+      "fingerprint": "cc2a8f159bbf9e8fdf51479c5c373833"
+    }
+  ],
+  "per_turn": {
+    "1": "f033183d4d483e61f91ab1975118ea0d",
+    "2": "702e626685ca2da3be8d60a8df6d42a9",
+    "3": "ede48ef9bb7e1340d6580079e4d52d1a",
+    "4": "dae82aefa87fbdb66302da887a98cd14",
+    "5": "e61e004ba62a4257eb90fa2021f6172f",
+    "6": "e33c1acefc1bd209d25c44cb20966a3e",
+    "7": "bfb4549b21b5047492797e533ba294dd",
+    "8": "46d47780fa7b5dd7d7058c79b2a0c368",
+    "9": "10da50fd406c774f4cfe3822eeed28e5",
+    "10": "699390cdf3d67b9a2312c477826b668f",
+    "11": "9137a11c4a5695f0fe4648c30efe3ae5",
+    "12": "cc2a8f159bbf9e8fdf51479c5c373833"
+  }
+}

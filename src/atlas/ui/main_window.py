@@ -68,6 +68,7 @@ from .overlays import (
 from .preferences import (
     colour_safe,
     load_preferences,
+    save_app_preferences,
     save_preferences,
     set_current,
 )
@@ -289,6 +290,10 @@ class AtlasWindow(QMainWindow):
         # module-level multiplier inside `styled_font`, so it has to be in force before the
         # first widget is constructed -- everything after this line comes out at the size
         # the person asked for, with no widget knowing there was a question.
+        #: Endings already shown this session, so a world with no workspace file
+        #: (``:memory:``) does not ask again every turn. The workspace remembers the rest.
+        self._endings_seen: set[str] = set()
+        self._end_screen = None
         self._preferences = load_preferences(conn)
         set_current(self._preferences)
         set_text_scale(self._preferences.text_scale)
@@ -299,6 +304,10 @@ class AtlasWindow(QMainWindow):
         # overlay is hidden when the shortcut has to work.
         self._find = QShortcut(QKeySequence(self._preferences.key_for("find")), self)
         self._find.activated.connect(self._open_search)
+        # Settings, from inside a game: the same sheet the main menu opens, applied live
+        # through `set_preferences`.
+        self._settings = QShortcut(QKeySequence(self._preferences.key_for("settings")), self)
+        self._settings.activated.connect(self.open_settings)
         # The reporter is a plain callback on the engine's side and a queued signal on
         # ours: the engine runs on the asyncio thread and must never touch a widget.
         self._progress = ProgressReporter()
@@ -581,11 +590,23 @@ class AtlasWindow(QMainWindow):
         """
         self._preferences = preferences
         save_preferences(self._conn, preferences)
+        # And as the player's own default: a choice made in one game is what the next new
+        # game should start with.
+        save_app_preferences(preferences)
         set_current(preferences)
         set_text_scale(preferences.text_scale)
         base = DARK if self._theme.is_dark else LIGHT
         self._find.setKey(QKeySequence(preferences.key_for("find")))
+        self._settings.setKey(QKeySequence(preferences.key_for("settings")))
         self.apply_theme(colour_safe(base) if preferences.colour_safe else base)
+
+    def open_settings(self) -> None:
+        """The settings sheet over the game; Save applies at once and is remembered."""
+        from .settings import SettingsScreen
+
+        sheet = SettingsScreen(self._preferences, theme=self._theme, parent=self)
+        sheet.saved.connect(self.set_preferences)
+        sheet.open()
 
     def apply_theme(self, theme: Theme) -> None:
         self._theme = theme
@@ -1299,6 +1320,39 @@ class AtlasWindow(QMainWindow):
             conn=self._conn, world_id=self._world_id, viewer=self._player,
             watching=self._watched_regions())
         self._summary.open()
+        if report.status is not TurnStatus.ABORTED:
+            self._check_ending(report)
+
+    def _check_ending(self, report) -> None:
+        """Victory, defeat, another power's win, or the campaign's last turn: say so.
+
+        Over the summary rather than instead of it -- the turn that ended the campaign is
+        still a turn worth reading. See :mod:`atlas.engine.campaign` for the endings.
+        """
+        from ..engine.campaign import ending_after, reckoning
+        from .endscreen import EndScreen
+
+        ending = ending_after(self._conn, self._world_id, turn=report.turn,
+                              victories=list(report.victories), player=self._player)
+        if ending is None or ending.key in self._endings_seen:
+            return
+        self._endings_seen.add(ending.key)
+        date = self._conn.execute(
+            "SELECT world_date FROM world WHERE id = ?", (self._world_id,)).fetchone()
+        sheet = EndScreen(ending, reckoning(self._conn, self._world_id, self._player),
+                          theme=self._theme, date=str(date[0]) if date else "", parent=self)
+        sheet.chosen.connect(lambda choice: self._ending_chosen(ending, choice))
+        self._end_screen = sheet
+        sheet.open()
+
+    def _ending_chosen(self, ending, choice: str) -> None:
+        from ..engine.campaign import play_on
+
+        if choice == "play_on":
+            play_on(self._conn, ending)
+            return
+        # Ending here closes the game: under `atlas start` that is the main menu.
+        self.close()
 
     def _orders_landed(self, *, attempted: bool) -> None:
         """Take the orders the turn spent out of the draft, and only those.
@@ -1890,7 +1944,13 @@ class AtlasWindow(QMainWindow):
 
         if self._turn_in_flight("rewind"):
             return
-        report = rewind_to(self._conn, self._world_id, target)
+        try:
+            report = rewind_to(self._conn, self._world_id, target)
+        except sqlite3.Error as exc:
+            from ..state.problems import describe
+
+            self._status.set_state(describe(exc, what="The rewind"), problem=True)
+            return
         if not report.ok:
             self._status.set_state("; ".join(report.problems), problem=True)
             return
@@ -1927,8 +1987,13 @@ class AtlasWindow(QMainWindow):
             self._export.show_result(
                 "A turn is still running. Export once it has landed.", ok=False)
             return
+        from ..state.problems import WORLD_ERRORS, describe
+
         try:
             written = export_world(self._conn, destination)
+        except WORLD_ERRORS as exc:
+            self._export.show_result(describe(exc, what="The copy"), ok=False)
+            return
         except OSError as exc:
             self._export.show_result(str(exc), ok=False)
             return

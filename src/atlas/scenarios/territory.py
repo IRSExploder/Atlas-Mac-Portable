@@ -95,16 +95,15 @@ def pack_paths(scenario_id: str, map_source: str) -> list[Path]:
     its country pack alone and plays exactly as it did before -- which is also what makes
     the province pack an optional download rather than a hard requirement.
     """
-    from ..config.paths import packs_root
+    from ..config.paths import pack_file
 
-    root = packs_root()
-    paths = [root / f"{map_source}.pack"]
+    paths = [pack_file(map_source)]
     territory = load_territory(scenario_id)
     if territory is not None and territory.source != map_source:
-        finer = root / f"{territory.source}.pack"
+        finer = pack_file(territory.source)
         if finer.exists():
             paths.insert(0, finer)
-    water = root / f"{SEA_SOURCE}.pack"
+    water = pack_file(SEA_SOURCE)
     if water.exists():
         # Last: sea keys never collide with land keys, so where it sits in the order
         # changes nothing, and appending keeps the land resolution order obvious.

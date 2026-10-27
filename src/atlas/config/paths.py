@@ -34,15 +34,22 @@ Do not collapse them into one function -- they guard different mechanisms.
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 __all__ = [
     "FORBIDDEN_ROOTS",
+    "LAYOUT",
     "IsolationError",
     "app_data_root",
     "assert_grantable",
     "assert_isolated",
+    "bundled_packs_root",
+    "is_frozen",
+    "logs_root",
     "is_forbidden",
+    "missing_pack_advice",
+    "pack_file",
     "packs_root",
     "project_root",
     "runs_root",
@@ -66,8 +73,35 @@ def _local_app_data() -> Path:
 
 
 def app_data_root() -> Path:
-    """Root for everything mutable. Deliberately outside the synced project tree."""
+    """Root for everything mutable. Deliberately outside the synced project tree.
+
+    ``%LOCALAPPDATA%/Atlas`` -- per user, per machine, never roamed by Windows. Steam Cloud
+    syncs the parts of it :data:`LAYOUT` marks as cloud, and nothing else.
+    ``ATLAS_DATA_DIR`` moves the whole root: a portable install, a test, or a second
+    profile on one machine.
+    """
+    override = os.environ.get("ATLAS_DATA_DIR")
+    if override:
+        return Path(override)
     return _local_app_data() / "Atlas"
+
+
+#: Every folder and file under :func:`app_data_root`, and whether it belongs to the player
+#: (``cloud``: saves and the player's own settings and scenarios -- what Steam Cloud should
+#: carry between machines) or to this machine (``local``: logs, call sandboxes, download
+#: caches and developer-baked packs, which are either disposable or machine-specific).
+#: One table, so the Steam Cloud configuration (A16) is generated from it rather than
+#: remembered.
+LAYOUT: dict[str, str] = {
+    "worlds/": "cloud",
+    "presets/": "cloud",
+    "workshop/": "cloud",
+    "preferences.json": "cloud",
+    "logs/": "local",
+    "runs/": "local",
+    "cache/": "local",
+    "packs/": "local",
+}
 
 
 def worlds_root() -> Path:
@@ -75,7 +109,60 @@ def worlds_root() -> Path:
 
 
 def packs_root() -> Path:
+    """Where `atlas map bake` writes. A developer's packs; a player's install has none here."""
     return app_data_root() / "packs"
+
+
+def is_frozen() -> bool:
+    """Whether this is the installed, frozen build rather than a source checkout."""
+    return bool(getattr(sys, "frozen", False))
+
+
+def bundled_packs_root() -> Path | None:
+    """The packs shipped with the install, or ``None`` in a source checkout.
+
+    **A player never bakes.** Baking downloads Natural Earth from GitHub and needs the
+    `[bake]` geometry stack (shapely, topojson); none of that belongs on a player's
+    machine. The release build copies the packs `packs.lock.json` pins into a ``packs``
+    folder beside the executable, read-only like the rest of the install -- a pack is a
+    read-only memory map, so a Program Files folder is fine. ``ATLAS_BUNDLED_PACKS``
+    points a source checkout at such a folder, which is how the shipped layout is tested
+    without freezing anything.
+    """
+    raw = os.environ.get("ATLAS_BUNDLED_PACKS")
+    if raw:
+        return Path(raw)
+    if is_frozen():
+        return Path(sys.executable).resolve().parent / "packs"
+    return None
+
+
+def pack_file(source: str) -> Path:
+    """The pack for one geometry source: the shipped one if there is one, else the baked one.
+
+    Shipped wins because it is the copy the release was verified against; a stale bake
+    left in app data by an older developer install must not shadow it. When neither
+    exists this returns the baked path, which is what the error messages name.
+    """
+    bundled = bundled_packs_root()
+    if bundled is not None:
+        shipped = bundled / f"{source}.pack"
+        if shipped.exists():
+            return shipped
+    return packs_root() / f"{source}.pack"
+
+
+def missing_pack_advice(path: Path) -> str:
+    """What to tell someone whose pack is missing -- which differs for a player."""
+    if bundled_packs_root() is not None:
+        return (f"the map data file {path.name} is missing from this installation; "
+                "verify or reinstall the game")
+    return f"no map pack at {path.name}; run `atlas map bake --source {path.stem}`"
+
+
+def logs_root() -> Path:
+    """The rotating log, faulthandler output and crash reports. See `runtime.crash`."""
+    return app_data_root() / "logs"
 
 
 def runs_root() -> Path:
@@ -88,33 +175,51 @@ def project_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
 
+#: The developer's own forbidden folders, kept out of the code (A7). Read only from a source
+#: checkout; see the file itself.
+DEV_FORBIDDEN_FILE = "config/dev_forbidden_roots.txt"
+
+
+def _dev_roots() -> tuple[Path, ...]:
+    """The checkout's dev list plus ``ATLAS_FORBIDDEN_ROOTS``; nothing in a frozen build.
+
+    **Moved out of the code, not dropped.** The Quartz and Council trees are forbidden
+    because the user's standing instruction is that no agent ever runs inside them, and on
+    the machine this is developed on that is exactly as true as it was. What changed is
+    where it is written: a shipped build has no business carrying one developer's folder
+    names, and a player's machine has none of those folders.
+    """
+    roots: list[Path] = []
+    listed = project_root() / DEV_FORBIDDEN_FILE
+    if not is_frozen() and listed.is_file():
+        for line in listed.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#"):
+                roots.append(Path(line).expanduser())
+    for raw in os.environ.get("ATLAS_FORBIDDEN_ROOTS", "").split(os.pathsep):
+        if raw.strip():
+            roots.append(Path(raw.strip()).expanduser())
+    return tuple(roots)
+
+
 def _default_forbidden() -> tuple[Path, ...]:
     """Paths a model call must never be pointed at.
 
-    The Quartz and Council trees are named explicitly because the user's standing
-    instruction is that no agent ever runs inside them. Home is included so a
-    misconfiguration cannot hand an agent the whole user profile.
+    Always the home folder -- so a misconfiguration cannot hand an agent the whole user
+    profile -- and ATLAS's own tree; plus the developer's list (:func:`_dev_roots`). Home
+    goes last: it is matched exactly rather than recursively (see :func:`is_forbidden`).
     """
     home = Path.home()
-    desktop = home / "OneDrive" / "Desktop"
-    named = (
-        desktop / "Chess Engine competition" / "quartz-engine",
-        desktop / "Chess Engine competition" / "arena" / "quartz_reference",
-        desktop / "Multi-AI app" / "council",
-        desktop / "Atlas Game",
-        home,
-    )
-    # **ATLAS's own tree, found rather than spelled.** The entry above names it by the
-    # absolute path it happens to sit at today, so moving the checkout -- or cloning it to
-    # review a branch -- silently stopped the source tree being a forbidden root, while
-    # `project_root()`, which computes it correctly, sat exported and unused. That is the
-    # same "by spelling alone" mistake this module refuses for the MSIX redirect, pointing
-    # the other way. Deduplicated, because on the machine this was written for the two are
-    # the same directory and a list that names it twice reads like two rules.
+    named = _dev_roots()
+    # **ATLAS's own tree, found rather than spelled.** Naming it by the absolute path it
+    # happens to sit at today meant moving the checkout -- or cloning it to review a
+    # branch -- silently stopped the source tree being a forbidden root. Deduplicated,
+    # because on the development machine the dev list names the same directory and a list
+    # that names it twice reads like two rules.
     here = project_root()
-    if any(_resolve(root) == _resolve(here) for root in named):
-        return named
-    return (*named[:-1], here, named[-1])
+    if not any(_resolve(root) == _resolve(here) for root in named):
+        named = (*named, here)
+    return (*named, home)
 
 
 FORBIDDEN_ROOTS: tuple[Path, ...] = _default_forbidden()

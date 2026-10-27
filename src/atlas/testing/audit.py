@@ -524,14 +524,13 @@ def _packs(conn: sqlite3.Connection, world_id: str, manifest: Manifest) -> list[
     and the world plays. Two Germanys become one, four flashpoints become four countries,
     and no test fails -- the era's own suite skips itself, which reads green.
     """
-    from ..config.paths import packs_root
+    from ..config.paths import pack_file
 
-    root = packs_root()
     return [
-        f"{source}: not baked ({root / (source + '.pack')}) -- this era is drawn with it, "
+        f"{source}: not baked ({pack_file(source)}) -- this era is drawn with it, "
         "and without it the world silently degrades to country granularity"
         for source in manifest.packs
-        if not (root / f"{source}.pack").exists()
+        if not pack_file(source).exists()
     ]
 
 

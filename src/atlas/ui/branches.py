@@ -33,6 +33,7 @@ from PySide6.QtWidgets import (
 
 from ..state.branch import Branch, branches, fork_world
 from ..state.chronicle import tree
+from ..state.problems import WORLD_ERRORS, describe
 from .overlays import Overlay
 from .theme import PANEL, SPACE, Theme
 from .widgets import Chip, Divider, SectionLabel, TextLabel, clear_layout, restyle
@@ -455,6 +456,8 @@ def fork_here(conn: sqlite3.Connection, world_id: str, turn: int, name: str) -> 
         branch = fork_world(conn, world_id, at_turn=turn, name=name)
     except FileExistsError:
         return f"There is already a line called {name!r}."
+    except WORLD_ERRORS as exc:
+        return describe(exc, what="The new line")
     except (ValueError, OSError) as exc:
         return f"That fork could not be made: {exc}"
     return (f"Forked at turn {branch.forked_at} — {branch.name} is now its own line, "

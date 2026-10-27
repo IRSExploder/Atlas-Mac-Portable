@@ -205,6 +205,10 @@ PLAYER_CLOCK: dict[str, str] = {
                      "make 'new' mean something different depending on the pace control",
     "NEWS_RECENT_TURNS": "how far back that substrate's news sweep reaches. The same "
                          "argument: 'recently' means since the player last looked",
+    "CAMPAIGN_TURNS": "the campaign's length as a number of decisions the player is asked "
+                      "for (engine/campaign.py). Deliberately turns: it sizes a play session, "
+                      "so at a slower pace the same campaign spans more history rather than "
+                      "asking for more turns. A world can carry its own limit",
 }
 
 

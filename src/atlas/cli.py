@@ -186,6 +186,69 @@ def _cmd_rules(_args: argparse.Namespace) -> int:
     return 0
 
 
+def _add_offline_flags(parser: argparse.ArgumentParser) -> None:
+    """The flags that let the game window run with no model behind it at all.
+
+    `--mock` alone gives empty narrative; `--replay` adds real recorded text; `--bots`
+    makes the untracked-by-the-player world move. Together they are the dev profile in
+    `docs/DEV_OFFLINE.md`.
+    """
+    parser.add_argument("--mock", action="store_true", help="use the mock provider, no real calls")
+    parser.add_argument(
+        "--replay", metavar="TAPE",
+        help="answer from a recorded cassette (.jsonl) instead of a model; implies no real calls",
+    )
+    parser.add_argument(
+        "--replay-mode", choices=("text", "loose", "exact"), default="text",
+        help="text: recorded prose only, works on any world (default); loose/exact: whole "
+             "recorded answers, for the world the tape was made in",
+    )
+    parser.add_argument(
+        "--bots", metavar="SCOPES",
+        help="comma-separated bot scopes (tracked,gambit,organisation) or 'all'; "
+             "deterministic controllers answer instead of a model",
+    )
+
+
+def _offline_providers(args: argparse.Namespace) -> dict | None:
+    """The providers the offline flags ask for, or ``None`` to use the real CLIs.
+
+    Also moves the bot switches, because they have to be set before the first turn and
+    this is the one place both window commands pass through.
+    """
+    from .engine import bots
+    from .providers.mock import MockProvider
+
+    scopes = getattr(args, "bots", None)
+    if scopes:
+        wanted = bots.SCOPES if scopes.strip() == "all" else {
+            scope.strip() for scope in scopes.split(",") if scope.strip()}
+        bots.set_bots(roles=frozenset(wanted))
+        print(f"bots answer for: {', '.join(sorted(wanted))}")
+
+    tape = getattr(args, "replay", None)
+    if tape:
+        from .providers.devreplay import DevReplayProvider
+
+        shared = DevReplayProvider.from_file(tape, mode=args.replay_mode)
+        roles = ", ".join(f"{role} x{count}" for role, count in shared.roles().items())
+        print(f"replaying {Path(tape).name} ({args.replay_mode}): {roles}; "
+              "no real model calls will be made")
+    elif args.mock:
+        shared = MockProvider()
+        print("running with the mock provider; no real model calls will be made")
+    else:
+        return None
+    return {key: shared for key in ("claude", "codex", "antigravity")}
+
+
+def _guard_window() -> None:
+    """Crash logging and the crash dialog, for every command that opens a window (A5)."""
+    from .runtime.crash import install
+
+    install()
+
+
 def _cmd_new(args: argparse.Namespace) -> int:
     """Open the new-world screen, then the world it creates.
 
@@ -193,10 +256,11 @@ def _cmd_new(args: argparse.Namespace) -> int:
     polygon geometry, which is a few hundred thousand coordinate comparisons. The screen
     says so rather than pretending to be instant.
     """
+    _guard_window()
+    from .config.paths import missing_pack_advice
     from .engine.routing import Router
     from .map.pack import PackSet
     from .providers.cli_provider import default_role_models, make_provider
-    from .providers.mock import MockProvider
     from .providers.sandbox import sweep_orphans
     from .runtime.loop_thread import AsyncRuntime
     from .scenarios.registry import preset_politics, preset_seed
@@ -208,6 +272,7 @@ def _cmd_new(args: argparse.Namespace) -> int:
     from .ui.setup import SetupScreen
     from .ui.theme import DARK, load_fonts
 
+    offline = _offline_providers(args)
     sweep_orphans()
     app = ensure_app()
     load_fonts()
@@ -226,10 +291,7 @@ def _cmd_new(args: argparse.Namespace) -> int:
         paths = pack_paths(request.preset.id, request.preset.map_source)
         missing = [path for path in paths if not path.exists()]
         if missing:
-            screen.show_problem(
-                f"no map pack at {missing[0].name}; "
-                f"run `atlas map bake --source {missing[0].stem}`"
-            )
+            screen.show_problem(missing_pack_advice(missing[0]))
             return
 
         db_path = world_db_path(request.world_id)
@@ -240,22 +302,25 @@ def _cmd_new(args: argparse.Namespace) -> int:
             return
 
         screen.set_busy(True)
-        with PackSet.open(paths) as pack:
-            seed = preset_seed(
-                request.preset, pack, world_id=request.world_id, player=request.player,
-                difficulty=request.difficulty, seed=request.seed,
-            )
-            conn = create_world(db_path, seed)
-            preset_politics(conn, request.world_id, request.preset)
-        conn.close()
+        try:
+            with PackSet.open(paths) as pack:
+                seed = preset_seed(
+                    request.preset, pack, world_id=request.world_id, player=request.player,
+                    difficulty=request.difficulty, seed=request.seed,
+                )
+                conn = create_world(db_path, seed)
+                preset_politics(conn, request.world_id, request.preset)
+            conn.close()
+        except Exception as exc:  # noqa: BLE001 -- shown on the screen, not as a traceback
+            from .state.problems import describe
 
-        if args.mock:
-            shared = MockProvider()
-            providers = {key: shared for key in ("claude", "codex", "antigravity")}
-        else:
-            providers = {
-                key: make_provider(key) for key in ("claude", "codex", "antigravity")
-            }
+            screen.set_busy(False)
+            screen.show_problem(describe(exc, what="The new world"))
+            return
+
+        providers = offline or {
+            key: make_provider(key) for key in ("claude", "codex", "antigravity")
+        }
 
         window = AtlasWindow(
             connect(db_path),
@@ -280,12 +345,62 @@ def _cmd_new(args: argparse.Namespace) -> int:
         runtime.stop()
 
 
+def _cmd_start(args: argparse.Namespace) -> int:
+    """The game as a player meets it: the main menu, then setup or a save, then play."""
+    _guard_window()
+    from .providers.cli_provider import make_provider
+    from .providers.sandbox import sweep_orphans
+    from .runtime.loop_thread import AsyncRuntime
+    from .ui.app import ensure_app
+    from .ui.launcher import Launcher
+    from .ui.preferences import load_app_preferences
+    from .ui.theme import DARK, load_fonts
+    from .ui.widgets import set_text_scale
+
+    offline = _offline_providers(args)
+    if offline is not None:
+        status = "Offline: no AI model is being called (mock or recorded answers)."
+    else:
+        status = "AI providers: the installed command-line models (see `atlas doctor`)."
+    sweep_orphans()
+    app = ensure_app()
+    app.setQuitOnLastWindowClosed(False)
+    load_fonts()
+    set_text_scale(load_app_preferences().text_scale)
+    runtime = AsyncRuntime()
+    runtime.start()
+    launcher = Launcher(
+        app, DARK, runtime=runtime, provider_status=status,
+        providers=lambda: offline or {
+            key: make_provider(key) for key in ("claude", "codex", "antigravity")},
+    )
+    launcher.show_menu()
+    try:
+        return int(app.exec())
+    finally:
+        runtime.stop()
+
+
+def _cmd_selftest(args: argparse.Namespace) -> int:
+    from .selftest import run_selftest
+
+    if args.crash:
+        # Proves the crash handler works in *this* build: the build script runs it against
+        # the frozen exe and checks a report appears in the logs folder.
+        _guard_window()
+        raise RuntimeError("selftest --crash: a deliberate crash, to check reporting")
+
+    return run_selftest(preset_id=args.preset, player=args.nation, turns=args.turns,
+                        report_path=Path(args.report) if args.report else None,
+                        open_window=not args.no_window)
+
+
 def _cmd_play(args: argparse.Namespace) -> int:
     """Open the full application: map, events, orders, diplomacy, time."""
+    _guard_window()
     from .engine.routing import Router
     from .map.pack import PackSet
     from .providers.cli_provider import default_role_models, make_provider
-    from .providers.mock import MockProvider
     from .providers.sandbox import sweep_orphans
     from .runtime.loop_thread import AsyncRuntime
     from .state.db import connect, world_db_path
@@ -307,20 +422,16 @@ def _cmd_play(args: argparse.Namespace) -> int:
     paths = _packs_for_world(db_path, args.world_id, args.source)
     for pack_path in paths:
         if not pack_path.exists():
-            print(
-                f"missing {pack_path}; run `atlas map bake --source {pack_path.stem}`",
-                file=sys.stderr,
-            )
+            from .config.paths import missing_pack_advice
+
+            print(f"missing {pack_path}: {missing_pack_advice(pack_path)}", file=sys.stderr)
             return 1
 
     sweep_orphans()
 
-    if args.mock:
-        shared = MockProvider()
-        providers = {key: shared for key in ("claude", "codex", "antigravity")}
-        print("running with the mock provider; no real model calls will be made")
-    else:
-        providers = {key: make_provider(key) for key in ("claude", "codex", "antigravity")}
+    providers = _offline_providers(args) or {
+        key: make_provider(key) for key in ("claude", "codex", "antigravity")
+    }
 
     app = ensure_app()
     runtime = AsyncRuntime()
@@ -1353,17 +1464,30 @@ def build_parser() -> argparse.ArgumentParser:
     rules.set_defaults(func=_cmd_rules)
 
     new_world = sub.add_parser("new", help="pick a scenario and a power, then play")
-    new_world.add_argument(
-        "--mock", action="store_true", help="use the mock provider, no real calls"
-    )
+    _add_offline_flags(new_world)
     new_world.set_defaults(func=_cmd_new)
+
+    start = sub.add_parser("start", help="open the game (what double-clicking ATLAS does)")
+    _add_offline_flags(start)
+    start.set_defaults(func=_cmd_start)
+
+    selftest = sub.add_parser(
+        "selftest", help="check this installation works, with no model calls")
+    selftest.add_argument("--preset", default="modern-day")
+    selftest.add_argument("--nation", default="rus")
+    selftest.add_argument("--turns", type=int, default=3)
+    selftest.add_argument("--report", help="write the JSON report here")
+    selftest.add_argument("--no-window", action="store_true", help="skip opening the window")
+    selftest.add_argument("--crash", action="store_true",
+                          help="crash on purpose, to check a crash report is written")
+    selftest.set_defaults(func=_cmd_selftest)
 
     play = sub.add_parser("play", help="open the full game window")
     play.add_argument("--source", default="admin0-50m")
     play.add_argument("--world-id", default="earth")
     play.add_argument("--nation", help="nation id to play (defaults to the world's player)")
     play.add_argument("--path", help="explicit database path")
-    play.add_argument("--mock", action="store_true", help="use the mock provider, no real calls")
+    _add_offline_flags(play)
     play.set_defaults(func=_cmd_play)
 
     eve = sub.add_parser(
@@ -1563,10 +1687,24 @@ def _use_utf8_output() -> None:
             stream.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
 
 
+#: Exit status when the world file itself is the problem: newer, synced, unmigratable, damaged.
+WORLD_FILE_PROBLEM = 4
+
+
 def main(argv: list[str] | None = None) -> int:
     _use_utf8_output()
     args = build_parser().parse_args(argv)
-    return int(args.func(args))
+    from .state.problems import WORLD_ERRORS, describe
+
+    try:
+        return int(args.func(args))
+    except WORLD_ERRORS as exc:
+        # A save that is newer, synced, unmigratable or damaged is the file's problem, not
+        # a bug: one sentence and exit status 4, never a traceback (A6). 4 because 1-3
+        # already mean things (no such world; `check` findings; an EVE round failed).
+        # Anything else still propagates -- to the crash handler, in a window command.
+        print(f"atlas: {describe(exc, what='That world')}", file=sys.stderr)
+        return WORLD_FILE_PROBLEM
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -13,7 +13,7 @@ than by what an accessibility checklist lists:
   can tell from red and the third can tell by lightness.
 * **Reduced motion.** Recorded, and honest about how little there is to reduce: see
   :data:`MOTION_SURFACES`.
-* **Shortcuts.** Three of them, and they are remappable because a fixed `Ctrl+Return` is a
+* **Shortcuts.** Four of them, and they are remappable because a fixed `Ctrl+Return` is a
   problem for anybody whose hands or keyboard layout disagree with it.
 
 **Kept in the workspace, not in a config file**, because the workspace is already where the
@@ -35,7 +35,10 @@ __all__ = [
     "SHORTCUTS",
     "Preferences",
     "colour_safe",
+    "app_preferences_path",
+    "load_app_preferences",
     "load_preferences",
+    "save_app_preferences",
     "save_preferences",
     "scaled_size",
 ]
@@ -58,6 +61,7 @@ SHORTCUTS: dict[str, tuple[str, str]] = {
     "find": ("Ctrl+F", "Find a province, a power, a headline or an agreement"),
     "dismiss": ("Escape", "Close whatever is open"),
     "send": ("Ctrl+Return", "Send the message you have written"),
+    "settings": ("Ctrl+,", "Open settings"),
 }
 
 #: **What "reduced motion" actually turns off, which is very little.** Written down because
@@ -139,17 +143,10 @@ def colour_safe(theme: Theme) -> Theme:
     return dataclasses.replace(theme, **_SAFE[theme.name])
 
 
-def load_preferences(conn: sqlite3.Connection) -> Preferences:
-    """What this workspace remembers, or the defaults.
-
-    Anything unreadable is the defaults rather than an error: a preference file is not
-    worth refusing to start over, and the next save writes a good one.
-    """
-    from ..state.workspace import recall
-
-    stored = recall(conn, _KEY, None)
+def _from_dict(stored: object) -> Preferences | None:
+    """A stored record as preferences, or ``None`` when there is nothing usable there."""
     if not isinstance(stored, dict):
-        return Preferences()
+        return None
     offered = {scale for scale, _label in SCALES}
     scale = stored.get("text_scale", 1.0)
     shortcuts = stored.get("shortcuts") or {}
@@ -164,10 +161,60 @@ def load_preferences(conn: sqlite3.Connection) -> Preferences:
     )
 
 
+def load_preferences(conn: sqlite3.Connection) -> Preferences:
+    """What this workspace remembers, else the player's own defaults, else the defaults.
+
+    Anything unreadable is the defaults rather than an error: a preference file is not
+    worth refusing to start over, and the next save writes a good one.
+
+    **The player's defaults sit under the workspace, not over it.** They are what the main
+    menu's Settings writes, before any world is open; a world that already remembers its
+    own setup keeps it. A world that has never been told anything -- every new game --
+    starts the way the player set the game up.
+    """
+    from ..state.workspace import recall
+
+    return _from_dict(recall(conn, _KEY, None)) or load_app_preferences()
+
+
 def save_preferences(conn: sqlite3.Connection, preferences: Preferences) -> bool:
     from ..state.workspace import remember
 
     return remember(conn, _KEY, preferences.as_dict())
+
+
+def app_preferences_path():
+    """The player's own defaults: one small JSON file in app data, beside the worlds."""
+    from ..config.paths import app_data_root
+
+    return app_data_root() / "preferences.json"
+
+
+def load_app_preferences() -> Preferences:
+    import json
+
+    try:
+        stored = json.loads(app_preferences_path().read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return Preferences()
+    return _from_dict(stored) or Preferences()
+
+
+def save_app_preferences(preferences: Preferences) -> bool:
+    """Write the player's defaults atomically. ``False`` (never an exception) on failure."""
+    import json
+    import os
+
+    path = app_preferences_path()
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        staging = path.with_suffix(".json.tmp")
+        staging.write_text(json.dumps(preferences.as_dict(), indent=2) + "\n",
+                           encoding="utf-8")
+        os.replace(staging, path)
+    except OSError:
+        return False
+    return True
 
 
 #: **The preferences in force, for the widgets that are not handed them.** Three shortcuts
