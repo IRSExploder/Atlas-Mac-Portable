@@ -248,6 +248,12 @@ class AtlasWindow(QMainWindow):
         #: a private word with your own ministers no longer ends because talks began.
         self._council: AdvisorSession | None = None
         self._pending_orders: list[dict] = _restore_orders(conn)
+        #: The words in the orders box that the draft was confirmed from. Advance compares
+        #: the box against it: anything typed since has not been read yet, and is read --
+        #: and confirmed -- before the turn runs, so a typed order never misses its turn.
+        self._queued_text = ""
+        #: What to do once the reading in flight is confirmed: the jump that asked for it.
+        self._after_reading: Callable[[], None] | None = None
         #: The orders handed to the turn that is running, exactly as handed over. The
         #: draft stays editable while a turn runs -- a read-back confirmed mid-turn, an
         #: *order this* from search -- so what the turn spent is these and only these, and
@@ -1043,18 +1049,27 @@ class AtlasWindow(QMainWindow):
         shape: there is no reading to confirm, so there is nothing to show.
         """
         self._status.set_state("Ready")
-        if not parsed.ok:
+        advancing = self._after_reading is not None
+        if not parsed.ok or (not parsed.actions and not parsed.rejected):
             self._reading = None
-            self._right.show_orders_result([], [parsed.error or "orders could not be checked"])
-            return
-        if not parsed.actions and not parsed.rejected:
-            # Nothing was said. Not a misreading, and not worth a screen.
-            self._reading = None
-            self._right.show_orders_result([], [])
+            self._after_reading = None
+            if not parsed.ok:
+                self._right.show_orders_result(
+                    [], [parsed.error or "orders could not be checked"])
+            else:
+                # Nothing was said. Not a misreading, and not worth a screen.
+                self._right.show_orders_result([], [])
+            if advancing:
+                self._status.set_state(
+                    "The turn did not start: fix your orders, or clear the box to advance "
+                    "without them.", problem=True)
             return
         self._reading = parsed
         self._understood.show_reading(
-            self._conn, self._world_id, wrote=self._wrote, parsed=parsed)
+            self._conn, self._world_id, wrote=self._wrote, parsed=parsed,
+            advancing=advancing,
+            warnings=needed_for(self._conn, self._world_id, list(parsed.actions))
+            if advancing else ())
         self._understood.open()
 
     def _queue_understood_orders(self) -> None:
@@ -1068,10 +1083,14 @@ class AtlasWindow(QMainWindow):
             return
         self._reading = None
         self._pending_orders = list(parsed.actions)
+        self._queued_text = self._wrote.strip()
         self._keep_orders()
         self._right.show_orders_result(parsed.summaries, parsed.rejection_lines)
         self._status.set_state(
-            f"{len(parsed.actions)} order(s) queued. They are attempted at the next jump.")
+            f"{len(parsed.actions)} order(s) ready. They are carried out when you advance.")
+        then, self._after_reading = self._after_reading, None
+        if then is not None:
+            then()
 
     def _reword_orders(self) -> None:
         """Cancelled. The world, the draft and the words in the box are all where they were.
@@ -1081,6 +1100,7 @@ class AtlasWindow(QMainWindow):
         answer the expensive one.
         """
         self._reading = None
+        self._after_reading = None
         self._right.show_orders_note(
             "Nothing queued. Your words are still in the box — edit them and check again.")
         self._status.set_state("Ready")
@@ -1202,6 +1222,9 @@ class AtlasWindow(QMainWindow):
         """
         if self._jump_started is not None:
             return
+        # Confirmed on the read-back, which shows what cannot be undone: one decision.
+        if not confirmed and self._read_first(partial(self._on_jump, days, confirmed=True)):
+            return
         if not confirmed and self._asked_first(partial(self._on_jump, days, confirmed=True)):
             return
         self._awaiting_confirmation = None
@@ -1233,6 +1256,23 @@ class AtlasWindow(QMainWindow):
         )
         handle.finished.connect(self._on_jump_finished)
         handle.failed.connect(self._on_turn_failed)
+
+    def _read_first(self, then: Callable[[], None]) -> bool:
+        """Read orders typed since the last check before the turn runs, and say whether.
+
+        **Advance used to take only what had already been checked.** Words typed and not yet
+        checked were left behind, or raced the turn when the box lost focus to the Advance
+        button -- so the same orders sometimes made the turn and sometimes did not. Now the
+        box is read, the player confirms the reading, and ``then`` runs the turn.
+        """
+        text = self._right.orders_text()
+        if not self._player or not text or text == self._queued_text:
+            return False
+        if self._after_reading is not None:
+            return True  # already being read; a second press must not read it twice
+        self._after_reading = then
+        self._on_check_orders(text)
+        return True
 
     def _asked_first(self, then: Callable[[], None]) -> bool:
         """Put the question if the draft holds anything grave, and say whether it did.
@@ -1379,6 +1419,7 @@ class AtlasWindow(QMainWindow):
         left = [order for order in self._pending_orders if id(order) not in spent]
         if not left:
             self._right.clear_orders()
+            self._queued_text = ""
         self._pending_orders = left
         self._keep_orders()
 
@@ -1647,6 +1688,10 @@ class AtlasWindow(QMainWindow):
         this one. `confirmed` is only ever passed by `_jump_confirmed`.
         """
         if self._jump_started is not None:
+            return
+        if not confirmed and self._read_first(
+                partial(self._run_advance, cap, watch, confirmed=True)):
+            self._advance.close_overlay()
             return
         if not confirmed and self._asked_first(
                 partial(self._run_advance, cap, watch, confirmed=True)):

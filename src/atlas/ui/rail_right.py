@@ -549,7 +549,7 @@ class _ChatPage(QWidget):
         layout.addWidget(self._area, 1)
 
         self._input = _InputBox(
-            f"Say something. {key_for('send')} sends.", height=74, theme=theme
+            "Say something. Enter sends.", height=74, theme=theme
         )
         self._input.submitted.connect(self.send.emit)
         layout.addWidget(self._input)
@@ -643,8 +643,8 @@ class _OrdersBlock(QWidget):
         head.addStretch(1)
         # The binding as it stands, not as it shipped: a player who has re-bound *send*
         # was being told the wrong key by the one label whose whole job is to say it.
-        self._hint = TextLabel(f"{key_for('send')} to check", style="mono_small",
-                               colour="ink_ghost", theme=theme)
+        self._hint = TextLabel("Enter to check",
+                               style="mono_small", colour="ink_ghost", theme=theme)
         head.addWidget(self._hint)
         layout.addLayout(head)
 
@@ -778,10 +778,15 @@ class _ParseFeedback(QWidget):
 
 
 class _InputBox(QWidget):
-    """A text area that submits on Ctrl+Enter, and on focus-out if it has content.
+    """A text area that submits on Enter (or the *send* binding); Shift+Enter is a newline.
 
-    Never on a timer. A debounce here would spawn a parser subprocess on every pause in
-    typing -- a real call, for a result the player has not asked for.
+    **Only when asked, and every time asked.** It used to submit on focus-out as well --
+    so clicking anywhere on the screen could open the read-back by surprise -- and it
+    swallowed a second submit of unchanged text, so pressing the key again sometimes
+    answered and sometimes did nothing. Players could not tell which would happen. Now
+    the key always checks and nothing else does; Advance reads an unchecked box itself.
+
+    Never on a timer. A debounce here would spawn a parser call on every pause in typing.
     """
 
     submitted = Signal(str)
@@ -813,24 +818,26 @@ class _InputBox(QWidget):
         shortcut = QShortcut(QKeySequence(key_for("send")), self._edit)
         shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         shortcut.activated.connect(self._submit)
-        self._edit.focusOutEvent = self._on_focus_out  # type: ignore[method-assign]
+        self._edit.keyPressEvent = self._on_key  # type: ignore[method-assign]
         self.apply_theme(theme)
 
     def set_placeholder(self, text: str) -> None:
         self._edit.setPlaceholderText(text)
 
-    def _on_focus_out(self, event) -> None:
-        QPlainTextEdit.focusOutEvent(self._edit, event)
-        self._submit()
+    def _on_key(self, event) -> None:
+        enter = event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter)
+        plain = not (event.modifiers() & (Qt.KeyboardModifier.ShiftModifier
+                                          | Qt.KeyboardModifier.ControlModifier
+                                          | Qt.KeyboardModifier.MetaModifier
+                                          | Qt.KeyboardModifier.AltModifier))
+        if enter and plain:
+            event.accept()
+            self._submit()
+            return
+        QPlainTextEdit.keyPressEvent(self._edit, event)
 
     def _submit(self) -> None:
-        # Submitting the same unchanged text twice is two real provider subprocesses for
-        # one typed line. Focus-out fires whenever the player clicks anything -- including
-        # Advance -- so without this, typing an order and pressing Ctrl+Enter and then
-        # clicking Advance parsed it twice and raced the two results.
         text = self._edit.toPlainText().strip()
-        if text and text == self._last_submitted:
-            return
         self._last_submitted = text
         if text:
             self.submitted.emit(text)

@@ -88,6 +88,14 @@ game onto a more expensive model.
 A country that still holds ground is taken from at the peace table instead ("sue for peace
 with Iran, ceding ...").
 
+## Giving orders
+
+Type what you want in **Your orders** in plain words ("Declare war on Iran and invade it").
+**Enter** reads them back so you can check them (**Shift+Enter** starts a new line). Or just
+press **Advance**: anything not yet checked is read back first, with anything that cannot be
+undone marked in red, and **Issue orders and advance** runs the turn. Nothing is checked
+behind your back, and typed orders never miss the turn they were written for.
+
 ## Reading the screen
 
 By default the interface hides the engine's working: odds and before -> after numbers in

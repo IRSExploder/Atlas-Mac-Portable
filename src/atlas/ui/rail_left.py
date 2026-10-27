@@ -113,7 +113,8 @@ class LeftRail(Rail):
 
         layout = self.body
 
-        self._tabs = _TabStrip(("Events", "Focus", "Region", "Stats"), theme=theme)
+        # "Focus" is the powers the engine follows closely; to a player it is who matters.
+        self._tabs = _TabStrip(("Events", "Powers", "Region", "Stats"), theme=theme)
         self._tabs.changed.connect(self._on_tab)
         layout.addWidget(self._tabs)
         layout.addWidget(Divider(theme=theme))

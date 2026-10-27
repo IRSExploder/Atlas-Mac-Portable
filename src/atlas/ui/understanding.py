@@ -190,14 +190,21 @@ class _ActionBlock(QFrame):
         # The parser's own clause, which is the sentence the player is actually checking.
         self._add(outer, TextLabel(read["summary"], style="row", colour="ink_bright",
                                    theme=theme, wrap=True))
-        if read["explain"]:
+        from .plain import technical
+
+        detail = technical()
+        # The catalogue's gloss on the act and the parser's tone are its working: shown
+        # with technical details. Who, from where and to where are what a player checks.
+        if read["explain"] and detail:
             self._add(outer, TextLabel(read["explain"], style="body_small",
                                        colour="ink_faint", theme=theme, wrap=True))
 
-        if read["details"]:
+        details = [(label, value) for label, value in read["details"]
+                   if detail or label != "Tone"]
+        if details:
             grid = QVBoxLayout()
             grid.setSpacing(3)
-            for label, value in read["details"]:
+            for label, value in details:
                 row = QHBoxLayout()
                 row.setSpacing(10)
                 caption = TextLabel(label, style="label", colour="ink_ghost", theme=theme)
@@ -310,8 +317,16 @@ class UnderstoodOverlay(Overlay):
     # -- data ----------------------------------------------------------------
 
     def show_reading(self, conn: sqlite3.Connection, world_id: str, *,
-                     wrote: str, parsed) -> None:
-        """Lay out one parse: what was written, what was understood, what was refused."""
+                     wrote: str, parsed, advancing: bool = False,
+                     warnings: list | tuple = ()) -> None:
+        """Lay out one parse: what was written, what was understood, what was refused.
+
+        ``advancing`` is a reading Advance asked for: the affirmative then also runs the
+        turn, and says so, and it is offered even over nothing -- the player can see what
+        was refused and choose to go on without it. ``warnings`` are the orders the turn
+        cannot give back (`engine.confirmations.needed_for`), said here so that one screen
+        is one decision rather than two confirmations in a row.
+        """
         theme = self._theme
         actions = list(parsed.actions)
         rejected = list(parsed.rejected)
@@ -321,6 +336,18 @@ class UnderstoodOverlay(Overlay):
             + (f"  ·  {len(rejected)} REFUSED" if rejected else ""))
 
         clear_layout(self._stack)
+        if warnings:
+            self._stack.addWidget(SectionLabel("Cannot be undone", theme=theme))
+            self._stack.addSpacing(2)
+            for warning in warnings:
+                what = str(warning.what).replace(" — ", ": ")
+                self._stack.addWidget(TextLabel(
+                    what[:1].upper() + what[1:], style="row", colour="ink_bright",
+                    theme=theme, wrap=True))
+                self._stack.addWidget(TextLabel(
+                    str(warning.because), style="body", colour="danger", theme=theme,
+                    wrap=True))
+            self._stack.addSpacing(14)
         if actions:
             self._stack.addWidget(SectionLabel("You will attempt", theme=theme))
             self._stack.addSpacing(4)
@@ -355,7 +382,10 @@ class UnderstoodOverlay(Overlay):
         self._stack.addStretch(1)
         # Nothing to attempt means nothing to agree to, so the affirmative is not offered.
         # An *Issue orders* over an empty list is a button that does nothing.
-        self._go.setVisible(bool(actions))
+        self._go.setVisible(bool(actions) or advancing)
+        self._go.set_text(
+            (f"{ISSUE} and advance" if actions else "Advance without them") if advancing
+            else ISSUE)
         self._back.set_text(REVISE)
 
     # -- internals -----------------------------------------------------------

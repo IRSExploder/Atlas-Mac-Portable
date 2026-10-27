@@ -488,7 +488,7 @@ def test_map_chrome_legend_names_the_player(qapp):
     assert any(line == "Germany — you" for line in _legend_lines(chrome))
 
 
-def test_the_legend_says_what_the_layer_showing_actually_means(qapp):
+def test_the_legend_says_what_the_layer_showing_actually_means(qapp, technical_details):
     """A static key on a map that changes is a caption that lies.
 
     Four sentences about ownership were shown while the fill underneath became

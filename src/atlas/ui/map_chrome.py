@@ -535,7 +535,12 @@ class _Legend(_Frosted):
             hot.setAlignment(Qt.AlignmentFlag.AlignRight)
             ends.addWidget(hot)
             self._layout.addLayout(ends)
+        from .plain import technical
+
+        detail = technical()
         for entry in legend.entries:
+            if entry.swatch is SwatchKind.FOCUS and not detail:
+                continue  # which powers the engine tracks: its working, not the map's
             text = entry.text.replace("{nation}", self._player_name)
             row = _LegendRow(text, entry.swatch, theme=theme)
             if entry.swatch is SwatchKind.PLAYER:
@@ -544,11 +549,13 @@ class _Legend(_Frosted):
         if legend.blank:
             self._layout.addWidget(_LegendRow(legend.blank, SwatchKind.BLANK, theme=theme))
 
-        # The second question, once the colour has been read: what moves this.
-        self._layout.addWidget(Divider(soft=True, theme=theme))
-        self._layout.addWidget(
-            TextLabel(legend.driven_by, style="mono_small", colour="ink_faint",
-                      theme=theme, wrap=True))
+        # The second question, once the colour has been read: what moves this. A design
+        # note more than a key, so it is a technical detail.
+        if detail:
+            self._layout.addWidget(Divider(soft=True, theme=theme))
+            self._layout.addWidget(
+                TextLabel(legend.driven_by, style="mono_small", colour="ink_faint",
+                          theme=theme, wrap=True))
         # **Shown, then measured.** A widget built after its parent is already on screen
         # is hidden until it is told otherwise, and a hidden widget answers a layout with
         # a size of nothing -- so the first legend, built before the map was shown, laid
