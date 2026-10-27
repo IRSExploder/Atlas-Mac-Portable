@@ -11,8 +11,11 @@
 
 from pathlib import Path
 
+import os
+
 ROOT = Path(SPECPATH).resolve().parent
-ICON = ROOT / "packaging" / "atlas.ico"
+# Drawn by `scripts/build_windows.py` (the same mark as the Mac icon) and handed over here.
+ICON = Path(os.environ.get("ATLAS_ICO") or ROOT / "packaging" / "atlas.ico")
 
 # The same globs as `[tool.setuptools.package-data]` in pyproject.toml, read straight from
 # the source tree. Not `collect_data_files("atlas")`: that imports the package in a clean
@@ -44,10 +47,13 @@ hiddenimports = sorted(
     ".".join(("atlas", *found.relative_to(SRC).with_suffix("").parts)).removesuffix(".__init__")
     for found in SRC.rglob("*.py")
 )
+# The API provider is imported lazily (only `--api` reaches it) and keyring finds its
+# backends through package metadata at run time; both are invisible to the import graph.
+hiddenimports += ["anthropic", "keyring", "keyring.backends.Windows", "keyring.backends.fail"]
 
 EXCLUDES = [
     "shapely", "topojson", "requests", "numpy", "pytest", "_pytest", "ruff",
-    "tkinter", "unittest", "pydoc_data",
+    "tkinter", "pydoc_data",
     # Qt modules ATLAS never imports; the PySide6 hook only collects what is imported,
     # these just make that explicit.
     "PySide6.QtWebEngineCore", "PySide6.QtWebEngineWidgets", "PySide6.Qt3DCore",

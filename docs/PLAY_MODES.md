@@ -20,7 +20,20 @@ Every push that touches the game rebuilds it: `.github/workflows/mac-app.yml` ru
 `scripts/build_mac.py` on an Apple-silicon runner, smoke-tests the app and replaces the
 release asset. Apple silicon only; an Intel Mac uses the source route below.
 
-**From a checkout.** Double-click **`Atlas.command`**. The first run installs the game into `~/.atlas-venv` and
+## On Windows
+
+Download `Atlas-Windows-x64.zip` from the rolling `atlas-windows` release, unzip it anywhere
+and run **`ATLAS.exe`**. Python, Qt and the maps are inside. It is not code-signed, so the
+first run may show SmartScreen: choose **More info > Run anyway**. Like the Mac app it starts
+in API mode when a key is saved (Settings > AI providers, stored in Windows Credential
+Manager) and with bots otherwise. Saves go to `%LOCALAPPDATA%\Atlas`. Every push that
+touches the game rebuilds it: `.github/workflows/windows-app.yml` runs
+`scripts/build_windows.py --zip` on a Windows runner, smoke-tests the frozen build and
+replaces the release asset.
+
+## On a Mac, from a checkout
+
+Double-click **`Atlas.command`**. The first run installs the game into `~/.atlas-venv` and
 bakes the maps (a few minutes, needs internet); later runs open straight away, and a newer
 build in the folder is installed automatically. It starts in API mode. **`Atlas (no
 AI).command`** starts with bots only. If macOS says the file is from an unidentified

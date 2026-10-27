@@ -51,12 +51,35 @@ def _baked_packs_root() -> Path:
     return Path(base) / "Atlas" / "packs"
 
 
+def draw_ico(build: Path) -> Path | None:
+    """The Mac icon's mark, as a Windows .ico. None (and no icon) if Qt cannot write one."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from build_mac import draw_icon
+    from PySide6.QtCore import Qt
+    from PySide6.QtGui import QImage
+
+    draw_icon(build)
+    image = QImage(str(build / "Atlas-1024.png")).scaled(
+        256, 256, Qt.AspectRatioMode.KeepAspectRatio,
+        Qt.TransformationMode.SmoothTransformation)
+    ico = build / "Atlas.ico"
+    if not image.save(str(ico), "ICO"):
+        print("[icon] Qt could not write an .ico; building without an icon", flush=True)
+        return None
+    print(f"[icon] {ico}", flush=True)
+    return ico
+
+
 def freeze(dist: Path, work: Path) -> None:
     print(f"[freeze] {SPEC.name} -> {dist}", flush=True)
+    env = dict(os.environ)
+    ico = draw_ico(work.parent)
+    if ico is not None:
+        env["ATLAS_ICO"] = str(ico)
     subprocess.run(
         [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean",
          "--distpath", str(dist), "--workpath", str(work), str(SPEC)],
-        cwd=ROOT, check=True)
+        cwd=ROOT, check=True, env=env)
 
 
 def ship_packs(app: Path, *, allow_unpinned: bool, source: Path) -> list[dict]:

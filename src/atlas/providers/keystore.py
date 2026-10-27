@@ -38,13 +38,18 @@ def _keyring():
         return None
     try:
         if isinstance(keyring.get_keyring(), NoBackend):
-            if sys.platform != "darwin":
-                return None
             # A frozen app often cannot discover backends (they are found through package
-            # metadata), so on a Mac the Keychain backend is named outright.
-            from keyring.backends import macOS
+            # metadata), so the platform's own store is named outright.
+            if sys.platform == "darwin":
+                from keyring.backends import macOS
 
-            keyring.set_keyring(macOS.Keyring())
+                keyring.set_keyring(macOS.Keyring())
+            elif sys.platform == "win32":
+                from keyring.backends import Windows
+
+                keyring.set_keyring(Windows.WinVaultKeyring())
+            else:
+                return None
     except Exception:  # noqa: BLE001 - a broken backend is the same as none
         return None
     return keyring
@@ -75,7 +80,9 @@ def store_key(key: str) -> str:
             ring.set_password(SERVICE, ACCOUNT, key)
             _remove_fallback()
             name = type(ring.get_keyring()).__module__
-            return "your Mac's Keychain" if "macOS" in name else "the system keychain"
+            return ("your Mac's Keychain" if "macOS" in name
+                    else "Windows Credential Manager" if "Windows" in name
+                    else "the system keychain")
         except Exception:  # noqa: BLE001 - fall back to the file below
             pass
     path = _fallback_path()

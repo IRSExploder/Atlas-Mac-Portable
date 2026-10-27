@@ -1,0 +1,69 @@
+# Builds ATLAS for Windows, smoke-tests it, and publishes a zip to the rolling
+# `atlas-windows` release, whose download link stays the same from build to build:
+#   https://github.com/<owner>/<repo>/releases/download/atlas-windows/Atlas-Windows-x64.zip
+name: Windows app
+
+on:
+  push:
+    branches: [main, claude/magical-cannon-j3a3m1]
+    paths:
+      - "src/**"
+      - "packaging/**"
+      - "scripts/build_mac.py"
+      - "scripts/build_windows.py"
+      - "pyproject.toml"
+      - ".github/workflows/windows-app.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: windows-app-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ATLAS and PyInstaller
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[bake,api]" pyinstaller
+
+      - name: Bake the map packs
+        run: |
+          for source in admin0-50m marine-10m admin1-10m; do
+            atlas map bake --source "$source"
+          done
+
+      - name: Build, smoke-test and zip
+        run: |
+          python scripts/build_windows.py --allow-unpinned --zip
+          mv dist/ATLAS-*-win64.zip dist/Atlas-Windows-x64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Atlas-Windows-x64
+          path: dist/Atlas-Windows-x64.zip
+          retention-days: 14
+
+      - name: Publish to the atlas-windows release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete atlas-windows --yes --cleanup-tag || true
+          gh release create atlas-windows dist/Atlas-Windows-x64.zip \
+            --target "$GITHUB_SHA" --prerelease \
+            --title "Atlas for Windows (latest build)" \
+            --notes "Built from ${GITHUB_SHA::7} on ${GITHUB_REF_NAME}. Windows 10/11, 64-bit. Unzip anywhere and run ATLAS.exe. Not code-signed: if SmartScreen warns, choose More info > Run anyway."
