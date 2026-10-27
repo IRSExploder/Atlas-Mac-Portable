@@ -286,6 +286,21 @@ ATTESTING: frozenset[str] = frozenset({"claude", "codex"})
 WORLD_SIM_FALLBACK: tuple[str, str] = ("claude", "claude-sonnet-5")
 
 
+#: Set by ``--api``: every role pinned to the Anthropic API provider instead of the table
+#: below. See :func:`use_api_pins`.
+_API_PINS: dict[Role, tuple[str, str]] | None = None
+
+
+def use_api_pins(pins: dict[Role, tuple[str, str]] | None) -> None:
+    """Point every router built from :func:`default_role_models` at the API, or back.
+
+    A switch rather than a parameter because routers are built in several places -- the
+    launcher, the setup screen, the play command -- and all of them must agree.
+    """
+    global _API_PINS
+    _API_PINS = dict(pins) if pins is not None else None
+
+
 def default_role_models() -> dict[Role, tuple[str, str]]:
     """The pinned model per role, as ``(provider_key, model)``.
 
@@ -341,6 +356,8 @@ def default_role_models() -> dict[Role, tuple[str, str]]:
     premise is three genuinely different judgment sources; taking agy out of this table
     entirely would undermine that quietly rather than by decision.
     """
+    if _API_PINS is not None:
+        return dict(_API_PINS)
     return {
         # Primary. `Breaker` falls back to WORLD_SIM_FALLBACK after repeated failure.
         Role.WORLD_SIM: ("antigravity", "gemini-3.6-flash-medium"),

@@ -21,11 +21,11 @@ estimate (`bots._believed_strength`), never the true row.
 
 Scopes, alongside the scenery scopes in :mod:`atlas.engine.bots`:
 
-* ``parser`` -- free-text orders, and the history digest;
+* ``parser`` -- free-text orders;
 * ``diplomacy`` -- replies in talks, and what the talks agreed;
 * ``advisor`` -- the player's council;
-* ``world_sim`` -- the world-simulation narrative, and treaty proposals and notes sent as
-  orders, which have no engine handler of their own;
+* ``world_sim`` -- the world-simulation narrative and the history digest, and treaty
+  proposals and notes sent as orders, which have no engine handler of their own;
 * ``freeform`` -- orders no mechanic covers.
 """
 
@@ -209,7 +209,9 @@ def _mentions(conn: sqlite3.Connection, world_id: str, kind: str,
               clause: str) -> list[tuple[int, str]]:
     """Every entry of ``kind`` named in ``clause``, with where it was named."""
     hay = normalise(clause)
+    raw = clause.lower()
     found: dict[str, int] = {}
+    verbatim: dict[str, int] = {}
     for entry_id, name in reference.vocabulary(conn, world_id, kind):
         for needle in {normalise(entry_id.replace("_", " ")), normalise(name)}:
             if len(needle) < 3:
@@ -217,7 +219,19 @@ def _mentions(conn: sqlite3.Connection, world_id: str, kind: str,
             hit = _words(needle).search(hay)
             if hit:
                 found[entry_id] = min(found.get(entry_id, hit.start()), hit.start())
-    return sorted((pos, entry_id) for entry_id, pos in found.items())
+        if entry_id in found and _words(name.lower()).search(raw):
+            verbatim[entry_id] = len(name)
+    # Normalising drops "Republic of", so "China" also reads as "Republic of China".
+    # Where several entries match at one place, the longest name written out in full wins.
+    by_pos: dict[int, list[str]] = {}
+    for entry_id, pos in found.items():
+        by_pos.setdefault(pos, []).append(entry_id)
+    out: list[tuple[int, str]] = []
+    for pos, entries in by_pos.items():
+        longest = max((verbatim[e] for e in entries if e in verbatim), default=0)
+        exact = [e for e in entries if verbatim.get(e) == longest] if longest else []
+        out.extend((pos, e) for e in (exact or entries))
+    return sorted(out)
 
 
 def _nations_in(conn: sqlite3.Connection, world_id: str, clause: str, *,
@@ -711,7 +725,8 @@ def advise(conn: sqlite3.Connection, world_id: str, *, nation_id: str, question:
             ename = _name(conn, world_id, str(enemy["id"]))
             if believed > 0 and strength < 0.6 * believed:
                 advice.append(f"Seek a ceasefire with {ename}")
-            else:
+            elif _front_region(conn, world_id, nation_id, str(enemy["id"])) is not None:
+                # Only where the parser can carry it out: troops next to their ground.
                 advice.append(f"Attack {ename}")
         advice.append("Reinforce our divisions")
     else:

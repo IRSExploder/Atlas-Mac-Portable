@@ -220,7 +220,9 @@ async def _summarise(
 
     from . import bots
 
-    if bots.controls_role("parser"):
+    # Part of the narrative the world simulator writes, so it follows that seat: a model
+    # when the world simulator is one, the mechanical summary when a bot plays it.
+    if bots.controls_role("world_sim"):
         return mechanical_summary(events)
 
     decision = router.route(Role.PARSER, 0.0)

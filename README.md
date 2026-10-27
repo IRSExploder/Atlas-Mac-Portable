@@ -85,6 +85,9 @@ plus same inputs always gives the same battle, which is what makes rewind trustw
 
 ## Setup
 
+**On macOS, or without the CLIs:** run `./setup_mac.sh`, then `atlas start --api` (Claude API
+plus rule-based bots) or `atlas start --no-ai` (bots only). See `docs/PLAY_MODES.md`.
+
 ```bash
 py -m venv %LOCALAPPDATA%\atlas-venv
 %LOCALAPPDATA%\atlas-venv\Scripts\python.exe -m pip install -e ".[dev,bake]"

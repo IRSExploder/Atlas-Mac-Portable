@@ -209,6 +209,12 @@ def _add_offline_flags(parser: argparse.ArgumentParser) -> None:
              "deterministic controllers answer instead of a model",
     )
     parser.add_argument(
+        "--api", action="store_true",
+        help="Claude over the Anthropic API (key in ATLAS_ANTHROPIC_API_KEY) writes the world, "
+             "talks, the council and odd orders; rule-based bots parse orders and play the "
+             "minor powers, covert channel and Security Council",
+    )
+    parser.add_argument(
         "--no-ai", action="store_true",
         help="rule-based bots play every AI seat -- other powers, your orders, talks, "
              "the council, the world narrative -- and no model is ever called",
@@ -223,6 +229,24 @@ def _offline_providers(args: argparse.Namespace) -> dict | None:
     """
     from .engine import bots
     from .providers.mock import MockProvider
+
+    if getattr(args, "api", False):
+        from .providers.api_provider import API_KEY_ENV, ApiProvider, api_role_models
+        from .providers.cli_provider import use_api_pins
+
+        api = ApiProvider()
+        if not api.available():
+            raise SystemExit(
+                f"--api needs an Anthropic API key in {API_KEY_ENV}. Set it in your "
+                "environment (not ANTHROPIC_API_KEY, which ATLAS keeps away from the CLIs).")
+        # The hybrid: a model where prose and judgement show, a rule where they do not.
+        bots.set_bots(roles=bots.SCOPES | {"parser"})
+        pins = api_role_models()
+        use_api_pins(pins)
+        print("api: " + ", ".join(f"{role.value} on {pins[role][1]}" for role in (
+            Role.WORLD_SIM, Role.DIPLOMACY, Role.ADVISOR, Role.FREEFORM))
+            + "; bots play the parser, minor powers, covert channel and council")
+        return {key: api for key in ("claude", "codex", "antigravity")}
 
     if getattr(args, "no_ai", False):
         # Every seat a model would fill, played by rule; the mock is only the backstop for
@@ -371,7 +395,9 @@ def _cmd_start(args: argparse.Namespace) -> int:
     from .ui.widgets import set_text_scale
 
     offline = _offline_providers(args)
-    if getattr(args, "no_ai", False):
+    if getattr(args, "api", False):
+        status = "Claude API (metered) writes the world and talks; bots play the rest."
+    elif getattr(args, "no_ai", False):
         status = "No AI: rule-based bots play every seat; no model is called."
     elif offline is not None:
         status = "Offline: no AI model is being called (mock or recorded answers)."
@@ -1223,6 +1249,9 @@ def _cmd_probe(args: argparse.Namespace) -> int:
     """Spend one small real call per provider to prove the path works end to end."""
     import asyncio
 
+    if args.provider == "api":
+        return asyncio.run(_probe_api(args.timeout))
+
     from .providers.diagnostics import probe_live
     from .providers.resolver import resolve_all
 
@@ -1261,6 +1290,51 @@ def _cmd_probe(args: argparse.Namespace) -> int:
         return 1 if failures else 0
 
     return asyncio.run(run())
+
+
+async def _probe_api(timeout_s: float) -> int:
+    """The ``--api`` seats, each asked one tiny question with the schema it really uses.
+
+    Schemas first-compile on the API side and some may be refused as too complex; this is
+    the cheap place to find that out, rather than mid-turn.
+    """
+    from .engine.diplomacy import COMMITMENT_SCHEMA
+    from .engine.freeform import FREEFORM_SCHEMA
+    from .providers.api_provider import API_KEY_ENV, ApiProvider, api_role_models
+    from .providers.base import ProviderRequest
+    from .state.diff import diff_batch_schema
+
+    provider = ApiProvider()
+    if not provider.available():
+        print(f"{API_KEY_ENV} is not set; nothing to probe")
+        return 1
+    pins = api_role_models()
+    checks = [
+        (Role.ADVISOR, "Reply with the single word: ready.", None),
+        (Role.WORLD_SIM, "Nothing happens this turn. Return no diffs, no events, no contests "
+         "and no declarations, and a one-sentence narrative.",
+         diff_batch_schema(role=Role.WORLD_SIM)),
+        (Role.FREEFORM, "The order was: hold a minute's silence. Narrate it in one sentence, "
+         "with no nudges.", FREEFORM_SCHEMA),
+        (Role.PARSER, "Two powers exchanged greetings and agreed nothing. Record the "
+         "commitments.", COMMITMENT_SCHEMA),
+    ]
+    failures = 0
+    for role, prompt, schema in checks:
+        result = await provider.invoke(ProviderRequest(
+            role=role, prompt=prompt, model=pins[role][1], schema=schema,
+            timeout_s=timeout_s))
+        shape = "structured" if schema else "text"
+        if result.ok:
+            served = result.audit.served if result.audit else "?"
+            print(f"  OK      {role.value:<10} {shape:<10} {served}  {result.duration_s:.1f}s")
+        else:
+            failures += 1
+            print(f"  FAILED  {role.value:<10} {shape:<10} {result.failure.kind.value}: "
+                  f"{result.failure.message}")
+            if result.failure.detail:
+                print(f"          {result.failure.detail[:300]}")
+    return 1 if failures else 0
 
 
 def _cmd_map(args: argparse.Namespace) -> int:
@@ -1624,7 +1698,8 @@ def build_parser() -> argparse.ArgumentParser:
     doctor.set_defaults(func=_cmd_doctor)
 
     probe = sub.add_parser("probe", help="spend one small real call per provider")
-    probe.add_argument("--provider", default="all", choices=["all", "claude", "codex", "antigravity"])
+    probe.add_argument("--provider", default="all",
+                       choices=["all", "claude", "codex", "antigravity", "api"])
     probe.add_argument("--model", help="override the pinned model")
     probe.add_argument("--timeout", type=float, default=180.0)
     probe.add_argument("--verbose", action="store_true")

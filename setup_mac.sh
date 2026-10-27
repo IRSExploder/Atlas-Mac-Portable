@@ -29,7 +29,7 @@ VENV="${ATLAS_VENV:-$HOME/.atlas-venv}"
 echo "==> Python: $("$PY" --version)  venv: $VENV"
 "$PY" -m venv "$VENV"
 "$VENV/bin/python" -m pip install -q --upgrade pip
-"$VENV/bin/python" -m pip install -q -e ".[dev,bake]"
+"$VENV/bin/python" -m pip install -q -e ".[dev,bake,api]"
 
 if [[ "${1:-}" != "--no-bake" ]]; then
   # Downloads public-domain Natural Earth data once; admin1-10m is the big one (~25 MB pack).
@@ -44,10 +44,16 @@ echo "==> smoke test"
 
 cat <<EOF
 
-Done. Start a game with no real model calls:
-  $VENV/bin/atlas new --mock
+Done. Three ways to play:
 
-With real models (needs the claude / codex / agy CLIs on PATH):
-  $VENV/bin/atlas doctor
-  $VENV/bin/atlas new
+  Claude API writes the world and talks, bots play the rest (key in ATLAS_ANTHROPIC_API_KEY):
+    $VENV/bin/atlas probe --provider api     # one-off check, a fraction of a cent
+    $VENV/bin/atlas start --api
+
+  No AI at all, rule-based bots in every seat (free):
+    $VENV/bin/atlas start --no-ai
+
+  The original setup, with the claude / codex / agy CLIs on PATH:
+    $VENV/bin/atlas doctor
+    $VENV/bin/atlas start
 EOF
