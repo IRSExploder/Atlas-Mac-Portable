@@ -728,6 +728,8 @@ class JumpReport:
     #: refused -- the yards hold no more". `order_outcomes` keeps only the ones that went
     #: wrong, for the console; this is the whole list, for the summary a player reads.
     your_orders: list[str] = field(default_factory=list)
+    #: The same, as records (`causality.OrderOutcome`), for a view that lays them out.
+    order_records: list = field(default_factory=list)
     #: The world simulator's own account of the turn, in prose. It used to be parsed and
     #: dropped: the facts below it were kept and the paragraph that tied them together was
     #: not shown anywhere. Narration, not record -- see `narrative_unbacked` -- so it is
@@ -1680,6 +1682,7 @@ class TurnEngine:
             if outcome.status != 'attempted'
         )
         report.your_orders.extend(_order_lines(effects))
+        report.order_records.extend(effects.outcomes)
 
         # Orders no mechanic covers. They used to become `other` and evaporate: accepted
         # by the parser, recorded as issued, and then nothing -- which the player cannot
@@ -2430,7 +2433,7 @@ class TurnEngine:
         if outcome.happened:
             report.sessions.append(
                 # The narrative already opens with the body's name ("the Security Council on
-                # Turkey: condemn — passed"); prefixing it again read as a stutter.
+                # Turkey: a motion to condemn it passed"); prefixing it again read as a stutter.
                 f"{outcome.narrative} "
                 f"(odds {outcome.odds:.0%}, standing "
                 f"{outcome.authority_before:.0f} -> {outcome.authority_after:.0f})"

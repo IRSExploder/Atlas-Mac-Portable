@@ -69,6 +69,8 @@ _ROUTINE_FRAGMENTS = (
     "strength in replacements",
     "set its objectives",
     "lays down",
+    # Research starting somewhere else in the world, a dozen a month.
+    "begins work on",
 )
 
 

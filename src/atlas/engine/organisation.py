@@ -476,6 +476,14 @@ VETO_AFFECTION = 25.0
 _ODDS_FLOOR, _ODDS_CEILING = 0.05, 0.95
 
 
+#: A session's outcome in words: "a motion to condemn it was vetoed".
+_MOTIONS = {"condemn": "condemn it", "sanction": "sanction it",
+            "authorise_force": "authorise force against it",
+            "demand_ceasefire": "demand a ceasefire"}
+_VERDICTS = {"passed": "passed", "watered_down": "passed in a weakened form",
+             "failed": "failed", "vetoed": "was vetoed"}
+
+
 def action_by_id(action_id: str) -> Action | None:
     return next((a for a in ACTIONS if a.id == action_id), None)
 
@@ -748,9 +756,11 @@ def convene(
 
     justification = sanitize(str(data.get("justification") or ""))[:300]
     names = _names(conn, (org.nation_id, trigger.accused))
+    motion = _MOTIONS.get(action.id, action.id.replace("_", " "))
+    verdict = _VERDICTS.get(result, result.replace("_", " "))
     told = (
-        f"{names[org.nation_id]} on {names[trigger.accused]}: {action.id} — {result}"
-        + (f". {justification}" if justification else "")
+        f"{names[org.nation_id]} on {names[trigger.accused]}: a motion to {motion} "
+        f"{verdict}" + (f". {justification}" if justification else ".")
     )
     outcome.narrative = told
     session_event = record_event(

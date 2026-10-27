@@ -921,9 +921,13 @@ class _AdvanceBlock(QWidget):
             f"{'themselves' if tracked != 1 else 'itself'}"
             if tracked else "the world moves on its own"
         )
+        from .plain import technical
+
         self._estimate.setText(
             f"{days} days · {powers}. "
             "Longer jumps make more history and take longer to live through."
+            if technical() else
+            f"Advance {days} days. Your orders are carried out, then the world answers."
         )
 
     def set_busy(self, busy: bool, theme: Theme) -> None:

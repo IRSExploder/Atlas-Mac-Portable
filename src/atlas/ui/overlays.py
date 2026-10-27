@@ -33,6 +33,7 @@ from ..engine.turn_engine import JumpReport
 from ..humanize import count
 from ..state.models import TurnStatus
 from ..state.visibility import by_salience
+from .brief import BriefView, build_brief
 from .plain import plain_line, someone_elses_pocket, technical
 from .preferences import key_for
 from .theme import PANEL, PANEL_INSET, SPACE, Theme
@@ -665,6 +666,19 @@ class SummaryOverlay(Overlay):
         self._column_scroll.setWidget(self._column_holder)
         self.body.addWidget(self._column_scroll, 1)
 
+        # **The briefing**, which replaces the block above and the columns when technical
+        # details are off: one column, in the order a player asks -- see `ui.brief`.
+        self._brief = BriefView(theme)
+        self._brief.event_selected.connect(self.event_selected)
+        self._brief_scroll = QScrollArea()
+        self._brief_scroll.setWidgetResizable(True)
+        self._brief_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self._brief_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._brief_scroll.setMinimumHeight(420)
+        self._brief_scroll.setWidget(self._brief)
+        self._brief_scroll.setVisible(False)
+        self.body.addWidget(self._brief_scroll, 1)
+
         self.body.addSpacing(SPACE.xl)
         controls = QHBoxLayout()
         self._read = Chip("Read the dispatch", theme=theme, padding=(14, 7))
@@ -714,12 +728,28 @@ class SummaryOverlay(Overlay):
                 f"{opener} "
                 + (", ".join(report.tracked_acted) + " acted for themselves."
                    if report.tracked_acted else "No power acted on its own initiative.")
+                if technical() else opener
             )
         # "sealed" is a finished turn; anything else means something did not resolve, and
         # the chip drops out of its brass state so that reads at a glance.
         self._status.set_text("sealed" if report.status is TurnStatus.SEALED
                               else str(report.status.value))
         self._status.set_selected(report.status is TurnStatus.SEALED)
+
+        detail = technical()
+        self._affected.setVisible(False)
+        self._column_scroll.setVisible(detail)
+        self._brief_scroll.setVisible(not detail)
+        story = str(getattr(report, "narrative", "") or "").strip()
+        self._story.setText(story)
+        self._story.setVisible(bool(story) and not abandoned)
+        if not detail:
+            affected = self._affected_items(conn, world_id, viewer, report.turn)
+            self._brief.show_brief(
+                build_brief(report, headlines, conn=conn, world_id=world_id,
+                            viewer=viewer, affected=affected), theme)
+            self._brief_scroll.verticalScrollBar().setValue(0)
+            return
 
         self._show_affected(conn, world_id, viewer, report.turn, theme)
 
@@ -734,7 +764,6 @@ class SummaryOverlay(Overlay):
                 break
             if headline not in happened:
                 happened.append(headline)
-        detail = technical()
         if not detail:
             me = None
             if conn is not None and world_id and viewer:
@@ -743,9 +772,6 @@ class SummaryOverlay(Overlay):
                 me = str(row[0]) if row else None
             happened = list(dict.fromkeys(
                 plain_line(line) for line in happened if not someone_elses_pocket(line, me)))
-        story = str(getattr(report, "narrative", "") or "").strip()
-        self._story.setText(story)
-        self._story.setVisible(bool(story) and not abandoned)
         # **A headline that names one province becomes a way to look at it.** The reader
         # has the name in front of them and the map is behind the overlay; making them
         # retype it into the search box is the kind of small tax that adds up. Derived
@@ -842,22 +868,7 @@ class SummaryOverlay(Overlay):
         be about and gets no block at all, which is what an empty list already means.
         """
         clear_layout(self._affected_rows)
-        if conn is None or not world_id or not viewer:
-            self._affected.setVisible(False)
-            return
-
-        changed = [item for item in attention_for(
-            conn, world_id, viewer, turn=turn, watching=self._watching)
-            if item.novelty > 0]
-        if not technical():
-            # Another pair's war reaches this block because they border you; that is a
-            # reason to watch, not something that happened to you.
-            enemies = {str(row[0]) for row in conn.execute(
-                "SELECT nation_b FROM relation WHERE world_id = ? AND nation_a = ?"
-                " AND at_war = 1", (world_id, viewer))}
-            changed = [item for item in changed
-                       if item.source != "news" or not item.nation_id
-                       or item.nation_id == viewer or item.nation_id in enemies]
+        changed = self._affected_items(conn, world_id, viewer, turn)
         self._affected.setVisible(bool(changed))
         if not changed:
             return
@@ -876,6 +887,25 @@ class SummaryOverlay(Overlay):
             else "Each of these opens what caused it.")
         self._affected_more.apply_theme(theme)
 
+    def _affected_items(self, conn: sqlite3.Connection | None, world_id: str,
+                        viewer: str | None, turn: int) -> list[AttentionItem]:
+        """The attention items that are new this turn, for this viewer."""
+        if conn is None or not world_id or not viewer:
+            return []
+        changed = [item for item in attention_for(
+            conn, world_id, viewer, turn=turn, watching=self._watching)
+            if item.novelty > 0]
+        if not technical():
+            # Another pair's war reaches this block because they border you; that is a
+            # reason to watch, not something that happened to you.
+            enemies = {str(row[0]) for row in conn.execute(
+                "SELECT nation_b FROM relation WHERE world_id = ? AND nation_a = ?"
+                " AND at_war = 1", (world_id, viewer))}
+            changed = [item for item in changed
+                       if item.source != "news" or not item.nation_id
+                       or item.nation_id == viewer or item.nation_id in enemies]
+        return changed
+
     def apply_theme(self, theme: Theme) -> None:
         """The recursive pass reaches every label; a scroll area's viewport and a bare
         layout holder it does not -- both take Qt's own palette, which is invisible on the
@@ -883,7 +913,9 @@ class SummaryOverlay(Overlay):
         super().apply_theme(theme)
         self._theme = theme
         self._column_scroll.setStyleSheet(scroll_qss(theme))
-        for surface in (self._column_scroll.viewport(), self._column_holder):
+        self._brief_scroll.setStyleSheet(scroll_qss(theme))
+        for surface in (self._column_scroll.viewport(), self._column_holder,
+                        self._brief_scroll.viewport(), self._brief):
             surface.setStyleSheet("background: transparent;")
 
 

@@ -389,7 +389,8 @@ def test_orders_feedback_shows_refusals(qapp, conn, player):
     assert rail._orders._feedback.isHidden()
 
 
-def test_advance_estimate_follows_the_span_and_the_tracked_count(qapp, conn, player):
+def test_advance_estimate_follows_the_span_and_the_tracked_count(qapp, conn, player,
+                                                                 technical_details):
     """And says it in the world's words: this line sits beside the screen a jump is
     watched through, which is written entirely in them."""
     rail = RightRail(DARK)
@@ -400,6 +401,15 @@ def test_advance_estimate_follows_the_span_and_the_tracked_count(qapp, conn, pla
     assert "365 days" in text
     assert "4 powers will decide for themselves" in text
     assert "model" not in text.lower() and "call" not in text.lower()
+
+
+def test_the_plain_advance_estimate_says_what_pressing_it_does(qapp, conn, player):
+    rail = RightRail(DARK)
+    rail.bind(conn, "sandbox", player)
+    rail.set_tracked_count(4)
+    rail._advance._pick(365)
+    assert rail._advance._estimate.text() == (
+        "Advance 365 days. Your orders are carried out, then the world answers.")
 
 
 def test_advance_button_reports_being_busy(qapp, conn, player):
@@ -597,7 +607,15 @@ def test_the_turning_view_reuses_rows_rather_than_stacking_them(qapp):
     assert len(overlay._rows) == 1
 
 
-def test_summary_shows_refusals_rather_than_hiding_them(qapp):
+@pytest.fixture
+def technical_details(monkeypatch):
+    """The three-column summary is the technical view; plain mode shows the briefing."""
+    from atlas.ui import preferences
+
+    monkeypatch.setattr(preferences, "_CURRENT", preferences.Preferences(technical=True))
+
+
+def test_summary_shows_refusals_rather_than_hiding_them(qapp, technical_details):
     overlay = SummaryOverlay(DARK)
     report = JumpReport(
         turn=3, status=TurnStatus.PARTIAL, days_advanced=365, new_date="1937-01-01",
@@ -613,7 +631,7 @@ def test_summary_shows_refusals_rather_than_hiding_them(qapp):
     assert not overlay._status.selected  # a partial turn is not a sealed one
 
 
-def test_summary_says_when_nothing_was_refused(qapp):
+def test_summary_says_when_nothing_was_refused(qapp, technical_details):
     overlay = SummaryOverlay(DARK)
     overlay.show_report(
         JumpReport(turn=1, status=TurnStatus.SEALED, days_advanced=30, new_date="1936-02-01"),
@@ -621,6 +639,19 @@ def test_summary_says_when_nothing_was_refused(qapp):
     )
     assert overlay._status.selected
     assert "Nothing was refused." in overlay._columns[2]._entries.itemAt(0).widget().text()
+
+
+def test_a_plain_summary_is_a_briefing_not_three_columns(qapp):
+    overlay = SummaryOverlay(DARK)
+    overlay.show_report(
+        JumpReport(turn=1, status=TurnStatus.SEALED, days_advanced=30, new_date="1936-02-01",
+                   rejections=["INFO-002: cited an event Germany cannot see"],
+                   tracked_acted=["Italy"]),
+        [],
+    )
+    assert overlay._brief_scroll.isVisibleTo(overlay)
+    assert not overlay._column_scroll.isVisibleTo(overlay)
+    assert overlay._sub.text() == "30 days passed."  # no engine jargon about tracked powers
 
 
 def test_rewind_previews_the_cost_before_committing(qapp, conn):
