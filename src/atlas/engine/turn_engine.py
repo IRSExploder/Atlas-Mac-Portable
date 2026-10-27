@@ -260,6 +260,27 @@ class _BotAnswer:
     failure: None = None
 
 
+def _order_lines(effects) -> list[str]:
+    """One plain line per order: what was asked, and done or refused with the reason."""
+    lines: list[str] = []
+    for outcome in effects.outcomes:
+        said = (outcome.order_text or outcome.action_type.replace("_", " ")).strip()
+        said = said[:1].upper() + said[1:]
+        if outcome.status == "refused":
+            reason = outcome.reason.strip().rstrip(".")
+            # A suggestion naming a schema field ("names unit_kind") is advice to a model,
+            # not to a player.
+            hint = outcome.suggestion if outcome.suggestion and "_" not in outcome.suggestion \
+                and "by id" not in outcome.suggestion else ""
+            lines.append(f"✗ {said} — {reason}" + (f". Try: {hint}" if hint else ""))
+        elif outcome.status == "not_attempted":
+            lines.append(f"– {said} — nothing in the game carries this out")
+        else:
+            result = outcome.result.strip().rstrip(".")
+            lines.append(f"✓ {said}" + (f" — {result}" if result else ""))
+    return lines
+
+
 def _note_accepted(
     report: JumpReport, role: Role, *, answered: bool = False, failed: bool = False,
     batch=None, outcome=None,
@@ -479,6 +500,8 @@ class JumpReport:
     capitulated: list[str] = field(default_factory=list)
     #: Nations that neither hold nor own any territory and have been marked not alive.
     eliminated: list[str] = field(default_factory=list)
+    #: Land taken by annexation this turn, one line per conquest.
+    annexed: list[str] = field(default_factory=list)
     promoted: list[str] = field(default_factory=list)
     demoted: list[str] = field(default_factory=list)
     tracked_acted: list[str] = field(default_factory=list)
@@ -700,6 +723,16 @@ class JumpReport:
     #: *to*, which is the difference between knowing something failed and knowing what to
     #: write instead.
     order_outcomes: list[str] = field(default_factory=list)
+    #: Every one of the player's orders this turn and what became of it, in the player's own
+    #: words: "Capture Iran: done -- Turkey annexed Iran", "Raise two armoured divisions:
+    #: refused -- the yards hold no more". `order_outcomes` keeps only the ones that went
+    #: wrong, for the console; this is the whole list, for the summary a player reads.
+    your_orders: list[str] = field(default_factory=list)
+    #: The world simulator's own account of the turn, in prose. It used to be parsed and
+    #: dropped: the facts below it were kept and the paragraph that tied them together was
+    #: not shown anywhere. Narration, not record -- see `narrative_unbacked` -- so it is
+    #: shown beside the facts and never instead of them.
+    narrative: str = ""
     #: Why the player's own numbers moved, one line per field. Derived from the diffs'
     #: cited events, so it cannot disagree with the log it summarises.
     why_it_moved: list[str] = field(default_factory=list)
@@ -814,6 +847,8 @@ class JumpReport:
             ranked.append((94, line))
         for line in self.eliminated:
             ranked.append((96, f"{line} has ceased to exist"))
+        for line in self.annexed:
+            ranked.append((93, line))
         for entry in self.fell:
             ranked.append((85, entry))
         # Above an ordinary fall, because it is rarer and because a reader who sees
@@ -1610,6 +1645,9 @@ class TurnEngine:
             self.conn, batch, difficulty=self.difficulty, days=days
         )
         _note_accepted(report, Role.WORLD_SIM, batch=batch, outcome=outcome)
+        from .untrusted import sanitize
+
+        report.narrative = sanitize(str(getattr(batch, "narrative", "") or "")).strip()
         if outcome.applied:
             report.applied_batches += 1
             report.events_recorded += len(batch.events)
@@ -1641,6 +1679,7 @@ class TurnEngine:
             outcome.rendered() for outcome in effects.outcomes
             if outcome.status != 'attempted'
         )
+        report.your_orders.extend(_order_lines(effects))
 
         # Orders no mechanic covers. They used to become `other` and evaporate: accepted
         # by the parser, recorded as issued, and then nothing -- which the player cannot
@@ -1697,6 +1736,7 @@ class TurnEngine:
         # winning, losing, or wasting a division a month on it.
         report.front.extend(resolution.headlines)
         report.front.extend(effects.headlines)
+        report.annexed.extend(effects.annexed)
         report.air.extend(_air_lines(self.conn, self.world_id, resolution,
                                      viewer=self._player_nation()))
         report.retreated = resolution.retreated
@@ -2389,7 +2429,9 @@ class TurnEngine:
         report.rejections.extend(outcome.problems)
         if outcome.happened:
             report.sessions.append(
-                f"{body.name}: {outcome.narrative} "
+                # The narrative already opens with the body's name ("the Security Council on
+                # Turkey: condemn — passed"); prefixing it again read as a stutter.
+                f"{outcome.narrative} "
                 f"(odds {outcome.odds:.0%}, standing "
                 f"{outcome.authority_before:.0f} -> {outcome.authority_after:.0f})"
             )

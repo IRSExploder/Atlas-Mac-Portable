@@ -99,6 +99,7 @@ class SettingsScreen(QDialog):
         self._scale = preferences.text_scale
         self._colour_safe = preferences.colour_safe
         self._reduced_motion = preferences.reduced_motion
+        self._technical = preferences.technical
 
         root = QVBoxLayout(self)
         root.setContentsMargins(28, 24, 28, 24)
@@ -127,6 +128,13 @@ class SettingsScreen(QDialog):
         self._motion_chip.clicked.connect(self._toggle_motion)
         toggles.addWidget(self._colour_chip)
         toggles.addWidget(self._motion_chip)
+        self._technical_chip = Chip("Show technical details", theme=theme,
+                                    selected=self._technical)
+        self._technical_chip.setToolTip(
+            "The engine's workings: odds and figures in headlines, why each item was picked, "
+            "every power's refused decisions, all fourteen map modes, the seed")
+        self._technical_chip.clicked.connect(self._toggle_technical)
+        toggles.addWidget(self._technical_chip)
         toggles.addStretch(1)
         root.addLayout(toggles)
 
@@ -201,6 +209,10 @@ class SettingsScreen(QDialog):
         self._colour_safe = not self._colour_safe
         self._colour_chip.set_selected(self._colour_safe)
 
+    def _toggle_technical(self) -> None:
+        self._technical = not self._technical
+        self._technical_chip.set_selected(self._technical)
+
     def _toggle_motion(self) -> None:
         self._reduced_motion = not self._reduced_motion
         self._motion_chip.set_selected(self._reduced_motion)
@@ -217,7 +229,8 @@ class SettingsScreen(QDialog):
             if key and key != default:
                 shortcuts[action] = key
         return Preferences(text_scale=self._scale, colour_safe=self._colour_safe,
-                           reduced_motion=self._reduced_motion, shortcuts=shortcuts)
+                           reduced_motion=self._reduced_motion, shortcuts=shortcuts,
+                           technical=self._technical)
 
     # -- the API key: acts at once, independently of Save -----------------------------------
 

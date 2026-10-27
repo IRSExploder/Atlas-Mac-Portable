@@ -470,6 +470,12 @@ def build_scene(
     for region in view.regions:
         known = region.region_id in view.known_region_ids
         owner = view.nations.get(region.owner_nation_id or "")
+        # **Borders are public; armies are not.** Who owns a province is on every atlas, so
+        # unscouted land keeps its owner's colour (muted) and its name. What fog hides --
+        # forces, sieges, occupation -- stays hidden. The Fog layer still shows the strict
+        # view: nothing but coastline beyond what the player has seen.
+        charted = (not known and region.kind != "ocean" and owner is not None
+                   and layer is not MapLayer.FOG)
         controller = view.nations.get(region.controller_nation_id or "")
         occupied = (
             controller is not None
@@ -479,6 +485,9 @@ def build_scene(
         if region.kind == "ocean":
             fill = palette.ocean
             selectable = False
+        elif charted:
+            fill = _muted(owner.colour, palette.ocean, 0.35)
+            selectable = True
         elif not known:
             fill = palette.unknown
             selectable = True
@@ -528,7 +537,7 @@ def build_scene(
             # pressure the contest table is accumulating, so a player can see where the
             # line is about to break without opening anything.
             outline, width = palette.outline_contested, 1.5 + 2.0 * pressure
-        elif not known and region.kind != "ocean":
+        elif not known and not charted and region.kind != "ocean":
             # **A coastline, and nothing more.** Land the player has not scouted is drawn at
             # 1.18:1 against the sea and its ordinary outline at 1.02:1 -- so an unexplored
             # continent read as open water. One line at the land/sea boundary says *there is
@@ -566,9 +575,11 @@ def build_scene(
             pattern=pattern,
             pattern_colour=pattern_colour,
             z=0 if region.kind == "ocean" else 1,
-            label=region.name if known else "",
+            label=region.name if known or charted else "",
             tooltip=_tooltip(view, region, owner.name if owner else None)
             if known
+            else f"{region.name}\nOwner: {owner.name}\nNo reliable information about forces here."
+            if charted
             else f"{region.name}\nNo reliable information.",
             known=known,
             selectable=selectable,
@@ -584,25 +595,26 @@ def build_scene(
             or pattern is not FillPattern.SOLID
             or region.kind == "ocean"
         )
-        if dissolve and known and not interesting and region.owner_nation_id:
-            quiet.setdefault(region.owner_nation_id, []).append(visual)
+        if dissolve and (known or charted) and not interesting and region.owner_nation_id:
+            quiet.setdefault((region.owner_nation_id, known), []).append(visual)
         else:
             regions.append(visual)
 
-    for nation_id, held in sorted(quiet.items()):
+    for (nation_id, seen), held in sorted(quiet.items()):
         nation = view.nations[nation_id]
         regions.append(
             RegionVisual(
                 # Not a region id: this is a drawing of a nation, and nothing in the world
                 # answers to it. Prefixed so it can never collide with one either.
-                region_id=f"whole:{nation_id}",
+                region_id=f"whole:{nation_id}" if seen else f"whole:{nation_id}:charted",
                 geo_key=held[0].geo_key,
                 lod=lod,
                 fill=held[0].fill,
                 outline=palette.outline,
                 outline_width=0.5,
                 z=1,
-                label=nation.name,
+                # One name per country: on the part the player has seen, if any.
+                label=nation.name if seen or (nation_id, True) not in quiet else "",
                 tooltip=f"{nation.name}\n{len(held)} regions",
                 geo_keys=tuple(key for visual in held for key in visual.shapes),
                 selectable=False,

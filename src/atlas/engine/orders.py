@@ -114,6 +114,9 @@ class OrderEffects:
     units_raised: int = 0
     problems: list[str] = field(default_factory=list)
     headlines: list[str] = field(default_factory=list)
+    #: Conquests made by order this turn. Kept apart from `headlines` because a country
+    #: ceasing to exist is top-of-the-report news, not a line among the front reports.
+    annexed: list[str] = field(default_factory=list)
     #: One record per order, tied to the words that produced it. `problems` says what went
     #: wrong; this says *which order* it went wrong for, which is the difference between a
     #: player knowing something failed and knowing what to write instead.
@@ -171,11 +174,16 @@ def apply_order_effects(
 
         handler = _HANDLERS.get(kind)
         if handler is None:
+            capability = by_type(kind)
+            if capability is not None and capability.handled_by not in ("nothing", "orders"):
+                # Carried out elsewhere this turn -- an invasion by resolution, a note or a
+                # treaty by diplomacy -- so it *was* attempted, and saying otherwise told
+                # players that their invasion had been ignored while the battle raged.
+                continue
             # **Not attempted is not the same as refused**, and telling a player the first
             # was the second sends them to fix a sentence that was fine.
             outcome.status = "not_attempted"
             outcome.reason = f"no part of your government carries out a {kind!r} order"
-            capability = by_type(kind)
             if capability is not None and capability.handled_by == "nothing":
                 outcome.suggestion = capability.notes[0] if capability.notes else ""
             continue
@@ -195,6 +203,7 @@ def apply_order_effects(
         repeats[_signature(action, kind)] += 1
         action = {**action, _REPEAT: repeats[_signature(action, kind)] - 1}
         before = len(effects.problems)
+        said = len(effects.headlines), len(effects.annexed)
         try:
             handler(conn, world_id, turn, date, action, nation_id, effects)
         except (KeyError, ValueError, TypeError, sqlite3.Error) as exc:
@@ -207,6 +216,9 @@ def apply_order_effects(
             outcome.status = "refused"
             outcome.reason = raised[0]
             outcome.suggestion = _suggestion_for(kind, raised[0])
+        else:
+            news = effects.annexed[said[1]:] + effects.headlines[said[0]:]
+            outcome.result = news[0] if news else ""
 
     return effects
 
@@ -1391,7 +1403,25 @@ def _adopt_doctrine(conn, world_id, turn, date, action, nation_id, effects) -> N
     effects.headlines.append(outcome.described)
 
 
+def _annex(conn, world_id, turn, date, action, nation_id, effects) -> None:
+    """Conquest. The rules, and why there are rules, are in :mod:`atlas.engine.conquest`."""
+    from .conquest import annex
+
+    target = resolve_nation(conn, world_id, action.get("target_nation"))
+    if not target:
+        effects.problems.append(
+            f"there is no country called {action.get('target_nation')!r} to annex")
+        return
+    done = annex(conn, world_id, nation_id=nation_id, target=target, turn=turn, date=date)
+    if done.done:
+        effects.applied += 1
+        effects.annexed.append(done.headline)
+    else:
+        effects.problems.append(done.refused)
+
+
 _HANDLERS = {
+    "annex": _annex,
     "economic_investment": _invest,
     "build_project": _build_project,
     "espionage": _espionage,

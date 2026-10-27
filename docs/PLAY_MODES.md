@@ -77,6 +77,25 @@ simulator's circuit breaker ever asks for a different model, the call is still s
 configured one and the routing log records a `MISMATCH`, so a fallback cannot quietly move the
 game onto a more expensive model.
 
+## Conquering a country
+
+1. **Declare war and invade**: "Declare war on Iran and invade it". Your forces must border it.
+2. **Take every province it holds**: "Capture Iran" (or "invade", "seize", "take"). When it
+   holds no ground at all it capitulates and the war ends.
+3. **Annex it**: "Capture Iran" again, or "Annex Iran". The land you occupy becomes yours;
+   a country left with nothing ceases to exist. Expect the Security Council to object.
+
+A country that still holds ground is taken from at the peace table instead ("sue for peace
+with Iran, ceding ...").
+
+## Reading the screen
+
+By default the interface hides the engine's working: odds and before -> after numbers in
+headlines, other powers' routine administration in the feed, debug map layers and the save
+path. The turn summary leads with what happened to you, then your orders and whether each
+worked. Land you have not scouted is drawn in its owner's colour, muted; armies there stay
+hidden. **Settings > Show technical details** brings all of it back.
+
 ## No-AI mode: what the bots do
 
 All of them write the same forms a model writes and go through the same gates.

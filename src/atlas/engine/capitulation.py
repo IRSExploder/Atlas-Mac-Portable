@@ -63,6 +63,13 @@ class CapitulationReport:
         return bool(self.capitulated or self.eliminated)
 
 
+def _occupies(conn: sqlite3.Connection, world_id: str, occupier: str, owner: str) -> bool:
+    return conn.execute(
+        "SELECT 1 FROM region WHERE world_id = ? AND owner_nation_id = ?"
+        " AND controller_nation_id = ? AND kind <> 'ocean' LIMIT 1",
+        (world_id, owner, occupier)).fetchone() is not None
+
+
 def _ground(conn: sqlite3.Connection, world_id: str, nation_id: str) -> tuple[int, int]:
     """``(held, owned)`` land regions. Held is what it can fight from; owned is what is
     still legally its own."""
@@ -145,7 +152,10 @@ def assess_capitulation(
                 f"fighting between them stopped."
                 if both else
                 f"{names[loser]} holds no ground and could not go on. The war with "
-                f"{names[winner]} is over."
+                f"{names[winner]} is over"
+                # The next step, said where the winner reads it: conquest is an order.
+                + (f"; {names[winner]} may now annex the {names[loser]} land it occupies."
+                   if _occupies(conn, world_id, winner, loser) else ".")
             ),
             visibility=Visibility.PUBLIC,
         )

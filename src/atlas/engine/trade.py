@@ -56,6 +56,14 @@ from ..state.diff import Diff, DiffBatch
 from ..state.models import DiffOp, EventKind, EventOrigin, Role, Visibility
 from .pacing import REFERENCE_DAYS, compounded, days_between, over, span_of
 
+
+def _called(conn: sqlite3.Connection, world_id: str, nation_id: str) -> str:
+    """A nation's name for a line a player reads; its id only if it has none."""
+    row = conn.execute("SELECT name FROM nation WHERE world_id = ? AND id = ?",
+                       (world_id, nation_id)).fetchone()
+    return str(row[0]) if row else str(nation_id)
+
+
 if TYPE_CHECKING:  # `consent` and `pricing` both import this module at runtime.
     from .consent import Band
     from .pricing import Terms
@@ -1250,7 +1258,9 @@ def assess_trade(
         ok, why = open_between[pair]
         if not ok:
             if not is_unreachable(conn, world_id, buyer):
-                report.interrupted.append(f"{seller} -> {buyer} ({good}): {why}")
+                report.interrupted.append(
+                    f"{_called(conn, world_id, seller)} to {_called(conn, world_id, buyer)} "
+                    f"({good.replace('_', ' ')}): {why}")
             continue
 
         # A seller ships what it has. It cannot ship a cargo it does not possess.
@@ -1407,7 +1417,8 @@ def assess_trade(
             # which is a different fact from a blockade and says so.
             if not is_unreachable(conn, world_id, buyer):
                 report.interrupted.append(
-                    f"{seller} -> {buyer} ({good}): priced out at {unit_price:.2f}"
+                    f"{_called(conn, world_id, seller)} to {_called(conn, world_id, buyer)} "
+                    f"({good.replace('_', ' ')}): priced out at {unit_price:.2f}"
                 )
             continue
 

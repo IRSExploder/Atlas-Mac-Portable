@@ -55,6 +55,12 @@ _LAYERS = (
     (MapLayer.INDEPENDENCE, "Independence", "Which held ground is on its way out"),
 )
 
+#: The map modes a player is shown without technical details: who owns what, where the
+#: fighting is, who likes you, what land is worth, and where it is restless. The rest are
+#: the engine's diagnostic lenses and come back with technical details on.
+_PLAIN_LAYERS = frozenset({MapLayer.POLITICAL, MapLayer.FRONTS, MapLayer.ATTITUDE,
+                           MapLayer.DEVELOPMENT, MapLayer.UNREST})
+
 _UNIT_DOMAINS = (
     (UnitDomain.LAND, "Land", "Show ground formations"),
     (UnitDomain.SEA, "Sea", "Show fleets and naval formations"),
@@ -103,7 +109,16 @@ class MapChrome(QWidget):
         self._legend = _Legend(theme, self)
         self._readout = _Readout(theme, self)
 
+        from .plain import technical
+
+        self.set_technical(technical())
         self.apply_theme(theme)
+
+    def set_technical(self, on: bool) -> None:
+        """Show the projection placard and every map mode, or only what a player needs."""
+        self._where.setVisible(on)
+        self._layers.show_layers(None if on else _PLAIN_LAYERS)
+        self.resizeEvent(None)
 
     # -- data --------------------------------------------------------------
 
@@ -156,14 +171,16 @@ class MapChrome(QWidget):
     # -- geometry ----------------------------------------------------------
 
     def resizeEvent(self, event) -> None:
-        super().resizeEvent(event)
+        if event is not None:
+            super().resizeEvent(event)
         self._map.setGeometry(self.rect())
         self._vignette.setGeometry(self.rect())
 
         self._where.move(_INSET, _INSET)
         self._where.adjustSize()
+        placard = self._where.width() if self._where.isVisible() else 0
         self._layers.set_available_width(
-            self.width() - self._where.width() - 2 * _INSET - _BAR_GAP)
+            self.width() - placard - 2 * _INSET - _BAR_GAP)
         self._layers.adjustSize()
         self._layers.move(self.width() - self._layers.width() - _INSET, _INSET)
         self._unit_layers.adjustSize()
@@ -285,6 +302,7 @@ class _LayerBar(_Frosted):
         self._available = 10_000
         self._chips: dict[str, Chip] = {}
         self._order: list[Chip] = []
+        self._allowed: frozenset[MapLayer] | None = None
         for layer, label, tip in _LAYERS:
             chip = Chip(label, theme=theme, selected=(layer is MapLayer.POLITICAL))
             chip.setToolTip(tip)
@@ -309,6 +327,11 @@ class _LayerBar(_Frosted):
         self._available = width
         self._reflow()
 
+    def show_layers(self, allowed: frozenset[MapLayer] | None) -> None:
+        """Only these map modes (``None``: all of them)."""
+        self._allowed = allowed
+        self._reflow()
+
     def _reflow(self) -> None:
         while self._rows.count():
             item = self._rows.takeAt(0)
@@ -318,7 +341,11 @@ class _LayerBar(_Frosted):
         room = self._available - 10
         row: QHBoxLayout | None = None
         used = 0
-        for chip in self._order:
+        for (layer, _label, _tip), chip in zip(_LAYERS, self._order, strict=True):
+            shown = self._allowed is None or layer in self._allowed
+            chip.setVisible(shown)
+            if not shown:
+                continue
             chip.adjustSize()
             wanted = chip.width() + 4
             if row is None or used + wanted > room:

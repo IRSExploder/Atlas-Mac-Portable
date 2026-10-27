@@ -122,7 +122,8 @@ _EXTRA_ALIASES: dict[str, tuple[str, ...]] = {
     "declare_war": ("go to war",),
     "sue_for_peace": ("seek terms", "terms", "end the war"),
     "move_units": ("send troops", "send the army", "deploy", "occupy", "retreat",
-                   "pull back"),
+                   "pull back", "capture", "conquer", "seize", "take over", "take",
+                   "overrun", "storm"),
     "raise_units": ("train", "draft"),
     "economic_investment": ("boost the economy", "industrialise", "industrialize"),
     "espionage": ("spy on", "investigate", "scout"),
@@ -395,17 +396,35 @@ def _fill_move(conn: sqlite3.Connection, world_id: str, nation_id: str, action: 
             conn, world_id, r)]
         from_region = (near or stationed)[0]
         if from_region == to_region:
+            owner = conn.execute(
+                "SELECT owner_nation_id FROM region WHERE world_id = ? AND id = ?",
+                (world_id, to_region)).fetchone()
+            if owner is not None and owner[0] == nation_id:
+                place = conn.execute("SELECT name FROM region WHERE world_id = ? AND id = ?",
+                                     (world_id, to_region)).fetchone()
+                return f"{place[0] if place else 'that ground'} is already yours"
             return "your forces are already there"
     action["from_region"], action["to_region"] = from_region, to_region
     return None
 
 
+#: Verbs that mean "make it ours". What they become depends on where the war stands: an
+#: invasion while there is fighting to do, an annexation once the other side has surrendered.
+_CONQUEST = frozenset({"capture", "conquer", "seize", "take over", "take", "overrun",
+                       "storm", "invade", "attack", "occupy"})
+
+#: Words that point back at the previous order's target: "declare war on Iran and invade it".
+_BACK_REFERENCE = re.compile(r"\b(it|them|there|its land|their land)\b", re.IGNORECASE)
+
+
 def _parse_clause(conn: sqlite3.Connection, world_id: str, nation_id: str, clause: str,
-                  aliases: dict[str, tuple[str, ...]]) -> tuple[dict | None, str | None]:
+                  aliases: dict[str, tuple[str, ...]],
+                  previous: dict | None = None) -> tuple[dict | None, str | None]:
     """One clause -> (action, None) or (None, reason it cannot be carried out)."""
     from .capabilities import available_to, by_type
+    from .conquest import annexable
 
-    action_type, _verb = _choose_type(conn, world_id, clause, aliases)
+    action_type, verb = _choose_type(conn, world_id, clause, aliases)
     if action_type is None:
         return None, f"no order recognised; {_HINT}"
 
@@ -413,6 +432,31 @@ def _parse_clause(conn: sqlite3.Connection, world_id: str, nation_id: str, claus
     hay = clause.lower()
     nations = _nations_in(conn, world_id, clause, exclude=nation_id)
     regions = _mentions(conn, world_id, "region", clause)
+    if not nations and not regions and previous and _BACK_REFERENCE.search(clause):
+        if previous.get("target_nation"):
+            nations = [str(previous["target_nation"])]
+        elif previous.get("to_region"):
+            regions = [(0, str(previous["to_region"]))]
+    if not nations and regions and action_type in ("move_units", "annex"):
+        owner = conn.execute("SELECT owner_nation_id FROM region WHERE world_id = ? AND id = ?",
+                             (world_id, regions[-1][1])).fetchone()
+        if owner is not None and owner[0] and owner[0] != nation_id:
+            nations = [str(owner[0])]
+
+    # A conquest verb against a country that has already surrendered to you is a request to
+    # annex it; while it still holds ground it is an invasion.
+    if action_type == "move_units" and verb in _CONQUEST and nations and annexable(
+            conn, world_id, nation_id, nations[0])[0]:
+        action_type = "annex"
+        action = _blank_action("annex", clause)
+    if action_type == "annex":
+        if not nations:
+            return None, "name the country to annex"
+        regions_ok, why = annexable(conn, world_id, nation_id, nations[0])
+        if not regions_ok:
+            return None, why
+        action["target_nation"] = nations[0]
+        return action, None
     action["tone"] = _tone(clause)
     if nations:
         action["target_nation"] = nations[0]
@@ -429,6 +473,14 @@ def _parse_clause(conn: sqlite3.Connection, world_id: str, nation_id: str, claus
             conn, world_id, nation_id, nations[0]):
         return None, f"you are already at war with {_name(conn, world_id, nations[0])}"
     elif action_type == "move_units":
+        declared = bool(previous and previous.get("type") == "declare_war"
+                        and nations and previous.get("target_nation") == nations[0])
+        if declared and not regions:
+            # War declared in this same set of orders: aim at their border province now,
+            # rather than refusing because the declaration has not taken effect yet.
+            front = _front_region(conn, world_id, nation_id, nations[0])
+            if front is not None:
+                regions = [(0, front[1])]
         refusal = _fill_move(conn, world_id, nation_id, action, clause, regions, nations)
         if refusal:
             return None, refusal
@@ -495,14 +547,23 @@ def parse_orders(conn: sqlite3.Connection, world_id: str, *, nation_id: str,
     aliases = _aliases()
     actions: list[dict] = []
     rejected: list[dict] = []
-    for clause in (c.strip(" ,") for c in _CLAUSES.split(raw_text)):
-        if len(clause) < 3:
-            continue
-        action, refusal = _parse_clause(conn, world_id, nation_id, clause, aliases)
-        if action is not None:
-            actions.append(action)
-        else:
-            rejected.append({"order": clause, "reason": refusal or "not understood"})
+    verbs = sorted({a for phrases in aliases.values() for a in phrases}, key=len, reverse=True)
+    # "Declare war on Iran and invade it" is two orders. Split on "and" only where a verb
+    # follows, so "Bosnia and Herzegovina" and "rail and steel" stay whole.
+    joined = re.compile(r",?\s+and\s+(?=(?:" + "|".join(re.escape(v) for v in verbs)
+                        + r")\b)", re.IGNORECASE)
+    previous: dict | None = None
+    for sentence in (c.strip(" ,") for c in _CLAUSES.split(raw_text)):
+        for clause in (c.strip(" ,") for c in joined.split(sentence)):
+            if len(clause) < 3:
+                continue
+            action, refusal = _parse_clause(conn, world_id, nation_id, clause, aliases,
+                                            previous)
+            if action is not None:
+                actions.append(action)
+                previous = action
+            else:
+                rejected.append({"order": clause, "reason": refusal or "not understood"})
     return {"actions": actions, "rejected": rejected}
 
 
@@ -837,15 +898,24 @@ def world_sim_batch(conn: sqlite3.Connection, world_id: str, *, player: str | No
     wars = {tuple(sorted((str(a), str(b)))) for a, b in conn.execute(
         "SELECT nation_a, nation_b FROM relation WHERE world_id = ? AND at_war = 1",
         (world_id,))}
-    span = (f"{round(days / 365)} year(s)" if days >= 360 else
-            f"{round(days / 30)} month(s)" if days >= 28 else f"{round(days)} day(s)")
+    def amount(n: int, one: str, many: str) -> str:
+        words = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six"}
+        return f"{words.get(n, str(n))} {one if n == 1 else many}"
+
+    span = (amount(round(days / 365), "year", "years") if days >= 360 else
+            amount(round(days / 30), "month", "months") if days >= 28 else
+            amount(round(days), "day", "days"))
+    passes = "passes" if span.startswith("one ") else "pass"
     if wars:
         shown = "; ".join(f"{_name(conn, world_id, a)} against {_name(conn, world_id, b)}"
                           for a, b in sorted(wars)[:4])
         more = f", and {len(wars) - 4} more" if len(wars) > 4 else ""
-        narrative = (f"{span.capitalize()} pass. {len(wars)} war(s) go on: {shown}{more}.")
+        goes = "goes" if len(wars) == 1 else "go"
+        narrative = (f"{span.capitalize()} {passes}. "
+                     f"{amount(len(wars), 'war', 'wars').capitalize()} {goes} on: "
+                     f"{shown}{more}.")
     else:
-        narrative = f"{span.capitalize()} pass under an uneasy peace."
+        narrative = f"{span.capitalize()} {passes} under an uneasy peace."
     return {"narrative": narrative, "diffs": [], "events": events,
             "contests": [], "declarations": []}
 

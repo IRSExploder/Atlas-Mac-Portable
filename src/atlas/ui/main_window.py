@@ -599,6 +599,11 @@ class AtlasWindow(QMainWindow):
         self._find.setKey(QKeySequence(preferences.key_for("find")))
         self._settings.setKey(QKeySequence(preferences.key_for("settings")))
         self.apply_theme(colour_safe(base) if preferences.colour_safe else base)
+        # Technical details: the map modes, placard and status strip follow at once; the
+        # event feed is redrawn; the next turn summary reads the preference as it opens.
+        self._chrome.set_technical(preferences.technical)
+        self._status.set_technical(preferences.technical)
+        self._left.refresh()
 
     def open_settings(self) -> None:
         """The settings sheet over the game; Save applies at once and is remembered."""

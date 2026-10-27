@@ -91,6 +91,11 @@ class Preferences:
     reduced_motion: bool = False
     #: ``action -> key sequence``, overriding :data:`SHORTCUTS` where present.
     shortcuts: dict[str, str] = field(default_factory=dict)
+    #: Whether to show the engine's own workings: odds and before/after figures in the
+    #: headlines, why each item was picked, the turn's bookkeeping, every power's refused
+    #: decisions, the map's projection and the seed. Off for players; on for whoever is
+    #: working on the engine. See :mod:`atlas.ui.plain`.
+    technical: bool = False
 
     def key_for(self, action: str) -> str:
         """What ``action`` is bound to now: the person's binding, or the default."""
@@ -154,6 +159,7 @@ def _from_dict(stored: object) -> Preferences | None:
         text_scale=float(scale) if scale in offered else 1.0,
         colour_safe=bool(stored.get("colour_safe", False)),
         reduced_motion=bool(stored.get("reduced_motion", False)),
+        technical=bool(stored.get("technical", False)),
         # Only actions that exist. A binding for an action that has been removed would sit
         # in the workspace for ever and shadow nothing.
         shortcuts={str(action): str(key) for action, key in shortcuts.items()

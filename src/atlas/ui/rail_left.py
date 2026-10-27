@@ -201,7 +201,7 @@ class LeftRail(Rail):
             return
 
         sql = """
-            SELECT e.id, e.turn, e.date, e.kind, e.text, e.actor_nation_id,
+            SELECT e.id, e.turn, e.date, e.kind, e.text, e.actor_nation_id, e.origin,
                    n.name AS actor_name
               FROM event e LEFT JOIN nation n ON n.id = e.actor_nation_id
              WHERE e.world_id = ?
@@ -219,9 +219,15 @@ class LeftRail(Rail):
         if kinds:
             sql += f" AND e.kind IN ({','.join('?' * len(kinds))})"
             params += list(kinds)
-        sql += " ORDER BY e.turn DESC, e.id DESC LIMIT 250"
+        sql += " ORDER BY e.turn DESC, e.id DESC LIMIT 800"
 
         rows = self._conn.execute(sql, tuple(params)).fetchall()
+        # Other powers' routine administration and the engine's own notices, unless
+        # technical details are on. See `atlas.ui.plain`.
+        from .plain import plain_line, routine_event
+
+        rows = [row for row in rows if not routine_event(
+            row["kind"], row["text"], row["actor_nation_id"], self._observer, row["origin"])]
         if not rows:
             self._events_body.addWidget(
                 TextLabel("Nothing recorded yet.", style="prose", colour="ink_faint",
@@ -240,8 +246,8 @@ class LeftRail(Rail):
             family, colour = _KIND_FAMILY.get(row["kind"], ("NOTE", "ink_dim"))
             self._events_body.addWidget(
                 _EventRow(
-                    family, colour, row["actor_name"] or "The world", row["text"],
-                    theme=self._theme,
+                    family, colour, row["actor_name"] or "The world",
+                    plain_line(row["text"]), theme=self._theme,
                 )
             )
         self._events_body.addStretch(1)

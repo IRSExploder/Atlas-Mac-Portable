@@ -466,8 +466,8 @@ def organisation_decision(
     """
     if conn is not None and accused and _repeat_aggressor(conn, world_id, accused, date):
         return {"action": "sanction", "justification":
-                "The body sanctions a government that has made war again.", "refused": None}
-    return {"action": "condemn", "justification": "The body condemns the act.",
+                "Moved against a government that has made war again.", "refused": None}
+    return {"action": "condemn", "justification": "Moved over an act of aggression.",
             "refused": None}
 
 

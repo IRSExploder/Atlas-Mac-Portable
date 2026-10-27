@@ -61,7 +61,17 @@ class StatusStrip(QFrame):
         self._dot.set_state("down" if problem else ("warn" if busy else "ok"))
         self._state.set_colour("danger" if problem else "ink_dim", self._theme)
 
+    def set_technical(self, on: bool) -> None:
+        """The seed and the database path are for whoever is working on the engine."""
+        for label in (self._seed, self._path):
+            label.setVisible(on)
+        for divider in self.findChildren(Divider):
+            divider.setVisible(on)
+
     def set_world(self, db_path: str, seed: int) -> None:
+        from .plain import technical
+
+        self.set_technical(technical())
         self._path.setText(db_path)
         self._path.setToolTip(
             "The live world lives outside your synced folders on purpose. "

@@ -114,6 +114,8 @@ class OrderOutcome:
     #: What to write instead. The most useful field in the record and the only one that
     #: makes a refusal actionable rather than merely honest.
     suggestion: str = ""
+    #: What it achieved, in a line, when the handler can say ("Turkey annexed Iran").
+    result: str = ""
 
     def rendered(self) -> str:
         parts = [f"{self.order_text or self.action_type}: {self.status}"]

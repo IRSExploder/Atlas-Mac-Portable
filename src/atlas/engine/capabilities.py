@@ -203,6 +203,22 @@ def _somebody_to_make_peace_with(
     return _at_war_with(conn, world_id, nation_id, target)
 
 
+def _somebody_to_annex(
+    conn: sqlite3.Connection, world_id: str, nation_id: str, target: str = ""
+) -> bool:
+    """A beaten country whose land you occupy. :func:`atlas.engine.conquest.annexable`
+    is the full rule; with a target it is asked exactly that."""
+    from .conquest import annexable
+
+    if target:
+        return bool(annexable(conn, world_id, nation_id, target)[0])
+    candidates = conn.execute(
+        "SELECT DISTINCT owner_nation_id FROM region WHERE world_id = ?"
+        " AND controller_nation_id = ? AND owner_nation_id <> ?",
+        (world_id, nation_id, nation_id)).fetchall()
+    return any(annexable(conn, world_id, nation_id, str(row[0]))[0] for row in candidates)
+
+
 #: What the menu says for a capability whose entry records no cost.
 #:
 #: Not "free", which would be a claim about consequences: declaring war costs nothing out
@@ -351,6 +367,21 @@ CAPABILITIES: tuple[Capability, ...] = (
         ),
         grave="Ground signed away at a table does not come back with the next turn. A "
               "settlement is the one place a player can lose a province without a battle.",
+    ),
+    Capability(
+        action_type="annex",
+        explain="make a beaten country's occupied land your own",
+        aliases=("annex", "incorporate", "absorb"),
+        required=("target_nation",),
+        targets=("nation",),
+        cost="no direct cost; the world condemns it and the land may rise against you",
+        handled_by="atlas.engine.conquest",
+        available=_somebody_to_annex,
+        example=("annex Iran", "annex"),
+        notes=("Only once the war is over and the other country holds no ground at all: "
+               "take every province it holds, it surrenders, then annex what you occupy. "
+               "A country still standing gives land up only in a peace treaty.",),
+        grave="Annexed land is yours by law, and its people remember who they were.",
     ),
     Capability(
         action_type="economic_investment",

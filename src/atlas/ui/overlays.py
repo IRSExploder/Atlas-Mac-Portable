@@ -33,6 +33,7 @@ from ..engine.turn_engine import JumpReport
 from ..humanize import count
 from ..state.models import TurnStatus
 from ..state.visibility import by_salience
+from .plain import plain_line, someone_elses_pocket, technical
 from .preferences import key_for
 from .theme import PANEL, PANEL_INSET, SPACE, Theme
 from .widgets import (
@@ -523,9 +524,11 @@ class _AffectedRow(PressFeedback, QFrame):
         column.addWidget(self._what)
         # Why it is in *this* block rather than in the columns below: the engine's own
         # sentence, unedited. A summary that said only what changed and never why is the
-        # log the dispatch already is.
+        # log the dispatch already is. It is the engine's reasoning ("salience 3 of 3"),
+        # so it is shown with technical details and the click still opens the cause.
         self._why = TextLabel(item.reason_selected, style="mono_small", colour="ink_dim",
                               theme=theme, wrap=True)
+        self._why.setVisible(technical())
         column.addWidget(self._why)
 
     def _takes_press(self, event) -> bool:
@@ -590,6 +593,12 @@ class SummaryOverlay(Overlay):
 
         self._sub = TextLabel("", style="prose", colour="ink_dim", theme=theme, wrap=True)
         self.body.addWidget(self._sub)
+        # The world simulator's own account of the turn, which used to be thrown away.
+        self.body.addSpacing(SPACE.sm)
+        self._story = TextLabel("", style="prose", colour="ink_bright", theme=theme,
+                                wrap=True)
+        self._story.setVisible(False)
+        self.body.addWidget(self._story)
         #: The provinces the player has pinned, as of the report being shown.
         self._watching: frozenset[str] = frozenset()
         self.body.addSpacing(SPACE.xl)
@@ -640,9 +649,12 @@ class SummaryOverlay(Overlay):
         columns.setContentsMargins(0, 0, 12, 0)
         columns.setSpacing(0)
         self._columns: list[_SummaryColumn] = []
+        self._dividers: list[QWidget] = []
         for index, title in enumerate(("What happened", "What it cost", "What was refused")):
             if index:
-                columns.addWidget(Divider(vertical=True, theme=theme))
+                divider = Divider(vertical=True, theme=theme)
+                self._dividers.append(divider)
+                columns.addWidget(divider)
                 columns.addSpacing(22)
             column = _SummaryColumn(title, theme=theme)
             column.region_chosen.connect(self.region_chosen)
@@ -722,6 +734,18 @@ class SummaryOverlay(Overlay):
                 break
             if headline not in happened:
                 happened.append(headline)
+        detail = technical()
+        if not detail:
+            me = None
+            if conn is not None and world_id and viewer:
+                row = conn.execute("SELECT name FROM nation WHERE world_id = ? AND id = ?",
+                                   (world_id, viewer)).fetchone()
+                me = str(row[0]) if row else None
+            happened = list(dict.fromkeys(
+                plain_line(line) for line in happened if not someone_elses_pocket(line, me)))
+        story = str(getattr(report, "narrative", "") or "").strip()
+        self._story.setText(story)
+        self._story.setVisible(bool(story) and not abandoned)
         # **A headline that names one province becomes a way to look at it.** The reader
         # has the name in front of them and the map is behind the overlay; making them
         # retype it into the search box is the kind of small tax that adds up. Derived
@@ -775,7 +799,19 @@ class SummaryOverlay(Overlay):
             f"{'s' if report.applied_batches != 1 else ''} carried out, "
             f"{count(report.events_recorded)} entered in the record"
         )
-        self._columns[1].set_entries(cost, theme)
+        self._columns[1].set_title("What it cost" if detail else "Your orders")
+        if detail:
+            self._columns[1].set_entries(cost, theme)
+        else:
+            # **Your orders instead of the engine's bookkeeping**: each sentence you wrote,
+            # and whether it was carried out -- the refusals that matter to a player are
+            # these, and they are now beside the order that caused them.
+            self._columns[1].set_entries(
+                list(getattr(report, "your_orders", []) or [])
+                or ["You gave no orders this turn."], theme, style="body_small",
+                colour="ink")
+        self._columns[2].setVisible(detail)
+        self._dividers[1].setVisible(detail)
 
         # Individual writes refused inside a batch that otherwise stood belong here too,
         # and they did not used to appear anywhere at all: a partial apply reports as
@@ -813,6 +849,15 @@ class SummaryOverlay(Overlay):
         changed = [item for item in attention_for(
             conn, world_id, viewer, turn=turn, watching=self._watching)
             if item.novelty > 0]
+        if not technical():
+            # Another pair's war reaches this block because they border you; that is a
+            # reason to watch, not something that happened to you.
+            enemies = {str(row[0]) for row in conn.execute(
+                "SELECT nation_b FROM relation WHERE world_id = ? AND nation_a = ?"
+                " AND at_war = 1", (world_id, viewer))}
+            changed = [item for item in changed
+                       if item.source != "news" or not item.nation_id
+                       or item.nation_id == viewer or item.nation_id in enemies]
         self._affected.setVisible(bool(changed))
         if not changed:
             return
@@ -858,6 +903,9 @@ class _SummaryColumn(QWidget):
         self._entries.setSpacing(9)
         layout.addLayout(self._entries)
         layout.addStretch(1)
+
+    def set_title(self, title: str) -> None:
+        self._title.setText(title)
 
     def set_entries(self, entries: list[str], theme: Theme, *,
                     style: str = "body_small", colour: str = "ink_dim",
