@@ -28,7 +28,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from .preferences import SCALES, SHORTCUTS, Preferences
+from .preferences import SCALES, SHORTCUTS, Preferences, load_app_preferences
 from .theme import Theme
 from .widgets import Chip, Divider, SectionLabel, TextLabel, restyle
 
@@ -100,6 +100,10 @@ class SettingsScreen(QDialog):
         self._colour_safe = preferences.colour_safe
         self._reduced_motion = preferences.reduced_motion
         self._technical = preferences.technical
+        # Read from the player's own defaults, where the guide records itself: the sheet is
+        # handed a save's preferences, which never carry it, and saving those used to put
+        # the guide back on the next new game.
+        self._guide_seen = load_app_preferences().guide_seen
 
         root = QVBoxLayout(self)
         root.setContentsMargins(28, 24, 28, 24)
@@ -135,6 +139,12 @@ class SettingsScreen(QDialog):
             "every power's refused decisions, all fourteen map modes, the seed")
         self._technical_chip.clicked.connect(self._toggle_technical)
         toggles.addWidget(self._technical_chip)
+        self._guide_chip = Chip("Show the guide again", theme=theme,
+                                selected=not self._guide_seen)
+        self._guide_chip.setToolTip(
+            "The three getting-started cards, on the next new game you start")
+        self._guide_chip.clicked.connect(self._toggle_guide)
+        toggles.addWidget(self._guide_chip)
         toggles.addStretch(1)
         root.addLayout(toggles)
 
@@ -213,6 +223,10 @@ class SettingsScreen(QDialog):
         self._technical = not self._technical
         self._technical_chip.set_selected(self._technical)
 
+    def _toggle_guide(self) -> None:
+        self._guide_seen = not self._guide_seen
+        self._guide_chip.set_selected(not self._guide_seen)
+
     def _toggle_motion(self) -> None:
         self._reduced_motion = not self._reduced_motion
         self._motion_chip.set_selected(self._reduced_motion)
@@ -230,7 +244,7 @@ class SettingsScreen(QDialog):
                 shortcuts[action] = key
         return Preferences(text_scale=self._scale, colour_safe=self._colour_safe,
                            reduced_motion=self._reduced_motion, shortcuts=shortcuts,
-                           technical=self._technical)
+                           technical=self._technical, guide_seen=self._guide_seen)
 
     # -- the API key: acts at once, independently of Save -----------------------------------
 

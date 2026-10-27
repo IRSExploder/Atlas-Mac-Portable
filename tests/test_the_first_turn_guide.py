@@ -61,3 +61,24 @@ def test_shown_on_a_first_game_and_never_again(monkeypatch):
     assert _window(technical=False, seen=False, monkeypatch=monkeypatch) == ["Turkey"]
     assert _window(technical=False, seen=True, monkeypatch=monkeypatch) == []
     assert _window(technical=True, seen=False, monkeypatch=monkeypatch) == []
+
+
+def test_saving_settings_does_not_bring_the_guide_back(qapp, monkeypatch):
+    """The sheet is handed a save's preferences, which never carry the guide's flag; saving
+    them used to reset it and the guide came back on the next new game."""
+    from atlas.ui import settings
+
+    monkeypatch.setattr(settings, "load_app_preferences",
+                        lambda: preferences.Preferences(guide_seen=True))
+    sheet = settings.SettingsScreen(preferences.Preferences(), theme=DARK)
+    assert sheet.preferences().guide_seen is True
+    sheet._guide_chip.clicked.emit()            # "Show the guide again"
+    assert sheet.preferences().guide_seen is False
+
+
+def test_headlines_open_with_a_capital(monkeypatch):
+    from atlas.ui.plain import plain_line
+
+    monkeypatch.setattr(preferences, "_CURRENT", preferences.Preferences())
+    assert plain_line("the government no longer governs Suriname.") == (
+        "The government no longer governs Suriname.")

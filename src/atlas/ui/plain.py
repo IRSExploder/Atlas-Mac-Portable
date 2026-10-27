@@ -36,7 +36,10 @@ def plain_line(text: str) -> str:
     said = _WORKING.sub("", str(text))
     # Identifiers leaking into prose ("watered_down", "condemn_annexation").
     said = re.sub(r"(?<=[a-z])_(?=[a-z])", " ", said)
-    return re.sub(r"\s{2,}", " ", said).strip()
+    said = re.sub(r"\s{2,}", " ", said).strip()
+    # A line opens with a capital: "the government no longer governs Suriname" is a body's
+    # name or a phrase lifted mid-sentence, and in a list of headlines it reads as a typo.
+    return said[:1].upper() + said[1:]
 
 
 def someone_elses_pocket(line: str, viewer_name: str | None) -> bool:

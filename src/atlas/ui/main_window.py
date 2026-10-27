@@ -815,7 +815,10 @@ class AtlasWindow(QMainWindow):
         # committed to.
         names = nation_names(self._conn, self._world_id)
         entries = [
-            f"{c['kind'].replace('_', ' ')} ({c['status']}) with "
+            # "Defensive pact: Germany, France, Poland" -- what is signed and with whom. The
+            # status is only worth a word when the pact is not simply in force.
+            f"{c['kind'].replace('_', ' ').capitalize()}"
+            + ("" if c["status"] == "active" else f" ({c['status']})") + ": "
             + (", ".join(names.get(p, p) for p in c["parties"] if p != self._player)
                or "nobody else")
             for c in standing_commitments(self._conn, self._player)

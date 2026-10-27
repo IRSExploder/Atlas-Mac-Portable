@@ -251,7 +251,7 @@ class LeftRail(Rail):
             family, colour = _KIND_FAMILY.get(row["kind"], ("NOTE", "ink_dim"))
             self._events_body.addWidget(
                 _EventRow(
-                    family, colour, row["actor_name"] or "The world",
+                    family, colour, plain_line(row["actor_name"] or "The world"),
                     plain_line(row["text"]), theme=self._theme,
                 )
             )

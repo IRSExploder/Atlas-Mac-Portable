@@ -372,9 +372,7 @@ class _NationListPage(QWidget):
         self._body.addStretch(1)
 
     def show_commitments(self, entries: list[str], theme: Theme) -> None:
-        self._commitments.setText(
-            "Standing agreements: " + "; ".join(entries) if entries else ""
-        )
+        self._commitments.setText("\n".join(entries) if entries else "")
         self._commitments.setVisible(bool(entries))
         self._commitments.apply_theme(theme)
 
