@@ -96,6 +96,12 @@ press **Advance**: anything not yet checked is read back first, with anything th
 undone marked in red, and **Issue orders and advance** runs the turn. Nothing is checked
 behind your back, and typed orders never miss the turn they were written for.
 
+**Or click.** Select a province on the map: the Region panel lists **Orders here**
+(declare war, sue for peace, annex, move forces, send word, invest...), and the
+right-click menu offers the same. A click only *writes the sentence into the orders box*,
+so there is one list of orders and it is the one you can see: edit or delete a line like
+anything you typed. Things you cannot do yet are listed underneath with the reason.
+
 ## Reading the screen
 
 By default the interface hides the engine's working: odds and before -> after numbers in

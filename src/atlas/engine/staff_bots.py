@@ -212,6 +212,7 @@ def _mentions(conn: sqlite3.Connection, world_id: str, kind: str,
     hay = normalise(clause)
     raw = clause.lower()
     found: dict[str, int] = {}
+    spans: dict[str, tuple[int, int]] = {}
     verbatim: dict[str, int] = {}
     for entry_id, name in reference.vocabulary(conn, world_id, kind):
         for needle in {normalise(entry_id.replace("_", " ")), normalise(name)}:
@@ -220,8 +221,16 @@ def _mentions(conn: sqlite3.Connection, world_id: str, kind: str,
             hit = _words(needle).search(hay)
             if hit:
                 found[entry_id] = min(found.get(entry_id, hit.start()), hit.start())
+                start, end = spans.get(entry_id, hit.span())
+                spans[entry_id] = (min(start, hit.start()), max(end, hit.end()))
         if entry_id in found and _words(name.lower()).search(raw):
             verbatim[entry_id] = len(name)
+    # "Northern Cyprus" also contains "Cyprus": a name found only inside a longer name
+    # that was found is part of that name, not a second place.
+    inside = {e for e, (start, end) in spans.items() for other, (s2, e2) in spans.items()
+              if other != e and s2 <= start and end <= e2 and (e2 - s2) > (end - start)}
+    for entry_id in inside:
+        found.pop(entry_id, None)
     # Normalising drops "Republic of", so "China" also reads as "Republic of China".
     # Where several entries match at one place, the longest name written out in full wins.
     by_pos: dict[int, list[str]] = {}
@@ -523,6 +532,11 @@ def _parse_clause(conn: sqlite3.Connection, world_id: str, nation_id: str, claus
                 break
         if regions:
             action["to_region"] = regions[-1][1]
+            if not action["target_nation"]:
+                # "Air strike in Westfell": aimed at whoever holds Westfell.
+                holder = _holder(conn, world_id, action["to_region"])
+                if holder and holder != nation_id:
+                    action["target_nation"] = holder
     elif action_type == "economic_investment":
         action["quantity"] = _quantity(clause)
 

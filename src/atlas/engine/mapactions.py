@@ -27,6 +27,7 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass
 
+from .conquest import annexable
 from .workbench import BLOCKED, INERT, REFUSED, VALID, OrderCard, review_orders
 
 __all__ = ["MapAction", "actions_for_region"]
@@ -83,15 +84,57 @@ def _holder(conn: sqlite3.Connection, world_id: str, region_id: str) -> tuple[st
     return str(row["name"]), str(row["holder"] or "")
 
 
+def _nation_name(conn: sqlite3.Connection, world_id: str, nation_id: str) -> str:
+    row = conn.execute("SELECT name FROM nation WHERE world_id = ? AND id = ?",
+                       (world_id, nation_id)).fetchone()
+    return str(row["name"]) if row else nation_id
+
+
 def _candidates(
     conn: sqlite3.Connection, world_id: str, nation_id: str, region_id: str
 ) -> list[tuple[str, dict, str]]:
-    """``(label, action, needs)`` for everything worth asking the engine about here."""
+    """``(label, action, needs)`` for everything worth asking the engine about here.
+
+    **Every summary is a sentence the parser reads back as the same order**, because the
+    window no longer files these in a list of its own: it writes the sentence into the
+    orders box, where the player can see it, edit it or delete it, and Advance reads the box
+    like anything typed. One list of orders, and it is the one on the screen.
+    """
     name, holder = _holder(conn, world_id, region_id)
     if not name:
         return []
     mine = holder == nation_id
+    owner_row = conn.execute("SELECT owner_nation_id FROM region WHERE world_id = ? AND id = ?",
+                             (world_id, region_id)).fetchone()
+    owner = str(owner_row["owner_nation_id"] or "") if owner_row else ""
     out: list[tuple[str, dict, str]] = []
+
+    if holder and not mine:
+        # The country, not just the province: what a player most often wants to do to
+        # somebody is about them as a whole.
+        them = _nation_name(conn, world_id, holder)
+        war = conn.execute(
+            "SELECT at_war FROM relation WHERE world_id = ? AND nation_a = ? AND nation_b = ?",
+            (world_id, nation_id, holder)).fetchone()
+        if war is not None and war["at_war"]:
+            out.append((f"Sue for peace with {them}", {
+                "type": "sue_for_peace", "summary": f"Sue for peace with {them}",
+                "target_nation": holder}, ""))
+        else:
+            out.append((f"Declare war on {them}", {
+                "type": "declare_war", "summary": f"Declare war on {them}",
+                "target_nation": holder}, ""))
+        about = "" if name == them else f" about {name}"
+        out.append((f"Send word to {them}", {
+            "type": "diplomatic_message", "summary": f"Send word to {them}{about}",
+            "target_nation": holder}, ""))
+    if mine and owner and owner != nation_id and annexable(conn, world_id, nation_id, owner)[0]:
+        # Ground you hold and somebody else owns, once the war is over and they hold nothing:
+        # the one place annexation can start. Offered only then -- the rules are in
+        # `engine.conquest`, and the turn summary says when the moment has come.
+        theirs = _nation_name(conn, world_id, owner)
+        out.append((f"Annex {theirs}", {
+            "type": "annex", "summary": f"Annex {theirs}", "target_nation": owner}, ""))
 
     if mine:
         out.append((f"Fortify {name}", {
@@ -110,13 +153,11 @@ def _candidates(
 
     if holder and not mine:
         for kind in _REGION_GAMBITS:
-            out.append((f"{kind.replace('_', ' ').title()} in {name}", {
-                "type": "gambit", "summary": f"{kind.replace('_', ' ')} in {name}",
+            said = kind.replace("_", " ")
+            out.append((f"{said.capitalize()} in {name}", {
+                "type": "gambit", "summary": f"{said.capitalize()} in {name}",
                 "gambit_kind": kind, "target_nation": holder,
                 "region": region_id, "aim": "forces"}, ""))
-        out.append((f"Send word to {holder}", {
-            "type": "diplomatic_message", "summary": f"Send word to {holder} about {name}",
-            "target_nation": holder}, ""))
 
     out.append((f"Invest in {name}", {
         "type": "economic_investment", "summary": f"Invest in {name}",

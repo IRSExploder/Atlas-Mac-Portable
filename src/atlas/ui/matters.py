@@ -198,6 +198,11 @@ class _MatterRow(PressFeedback, QFrame):
         # list, and this is where that promise is kept in front of a player.
         self._why = TextLabel(item.reason_selected, style="prose", colour="ink_dim",
                               theme=theme, wrap=True)
+        # The ranking's working ("salience 3 of 3", "1.15 of unrest is left over"): with
+        # technical details. The subject and what can be done about it are the row.
+        from .plain import technical
+
+        self._why.setVisible(technical())
         column.addWidget(self._why)
         self._kids.append(self._why)
 
@@ -422,13 +427,16 @@ class MattersDrawer(Rail):
         # a shortlist and must say there is more; fewer than three is everything the
         # ranking found, and telling a player there is a rest when there is not is the
         # same lie in the other direction.
+        from .plain import technical
+
         self._footer.setText(
-            f"{_WORDS[SHOWN]} of however many there are, off the same reading every "
-            "other panel uses — so what is first here is first there. What needs you "
-            "has the rest."
-            if len(found) >= SHOWN else
-            "All of them: nothing else has a claim on you this turn. Off the same "
-            "reading every other panel uses, so what is first here is first there.")
+            (f"{_WORDS[SHOWN]} of however many there are, off the same reading every "
+             "other panel uses — so what is first here is first there. What needs you "
+             "has the rest."
+             if len(found) >= SHOWN else
+             "All of them: nothing else has a claim on you this turn. Off the same "
+             "reading every other panel uses, so what is first here is first there.")
+            if technical() else "")
         # Only the rows are new; the whole recursive pass is for a theme *change* and a
         # data load has no business running it. See `ui.alerts`.
         for row in self._rows:

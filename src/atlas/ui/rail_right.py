@@ -187,6 +187,9 @@ class RightRail(Rail):
     def orders_text(self) -> str:
         return self._orders.text()
 
+    def add_order_line(self, sentence: str) -> None:
+        self._orders.add_line(sentence)
+
     # -- theme -------------------------------------------------------------
 
     def apply_theme(self, theme: Theme) -> None:
@@ -660,6 +663,9 @@ class _OrdersBlock(QWidget):
     def text(self) -> str:
         return self._input.text()
 
+    def add_line(self, sentence: str) -> None:
+        self._input.add_line(sentence)
+
     def set_example(self, conn, world_id: str, player: str | None) -> None:
         """Show an order that could be given in *this* world rather than in 1936."""
         self._input.set_placeholder(example_order(conn, world_id, player))
@@ -844,6 +850,12 @@ class _InputBox(QWidget):
 
     def text(self) -> str:
         return self._edit.toPlainText().strip()
+
+    def add_line(self, sentence: str) -> None:
+        """Append one order on its own line, after whatever is already written."""
+        current = self._edit.toPlainText().rstrip()
+        self._edit.setPlainText(f"{current}\n{sentence}" if current else sentence)
+        self._edit.moveCursor(self._edit.textCursor().MoveOperation.End)
 
     def clear(self) -> None:
         self._edit.clear()

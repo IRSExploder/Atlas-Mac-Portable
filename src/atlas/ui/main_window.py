@@ -390,6 +390,7 @@ class AtlasWindow(QMainWindow):
         self._left = LeftRail(self._theme)
         self._left.region_selected.connect(self._on_region_clicked)
         self._left.air_requested.connect(self._open_air)
+        self._left.order_chosen.connect(self._on_panel_order)
 
         self._map = MapView(self._pack, self._projection)
         self._map.region_clicked.connect(self._on_map_clicked)
@@ -647,6 +648,14 @@ class AtlasWindow(QMainWindow):
         self._redraw()
         self._left.bind(self._conn, self._world_id, self._player)
         self._right.bind(self._conn, self._world_id, self._player)
+        if self._pending_orders and not self._right.orders_text():
+            # A draft kept from last time is shown in the box, as what it is: orders already
+            # read and confirmed, which Advance will carry without reading them again.
+            restored = "\n".join(str(order.get("summary") or order.get("type") or "")
+                                  for order in self._pending_orders).strip()
+            if restored:
+                self._right.add_order_line(restored)
+                self._queued_text = self._right.orders_text()
 
         snapshot = load_player_snapshot(self._conn, self._world_id, nation_id=self._player)
         self._top.set_world(self._world_id, _scenario_name(self._conn, self._world_id))
@@ -923,10 +932,7 @@ class AtlasWindow(QMainWindow):
         It flows into the workbench preview and into the turn exactly as a typed order
         does, because it is one -- there is no second path into the engine.
         """
-        self._pending_orders.append(dict(entry.action))
-        self._keep_orders()
-        self._status.set_state(
-            f"{entry.label} — added to your orders; check them before the turn.")
+        self._write_order(str(entry.action.get("summary") or entry.label))
 
     def _take_doable(self, action: object, label: str) -> None:
         """An act taken from a search result's own list of what could be ordered about it.
@@ -935,10 +941,29 @@ class AtlasWindow(QMainWindow):
         in. Only whole orders reach here -- `engine.against` marks the ones that still need a
         sentence written, and the row for those is not clickable.
         """
-        self._pending_orders.append(dict(action))
-        self._keep_orders()
+        said = action.get("summary") if isinstance(action, dict) else None
+        self._write_order(str(said or label))
+
+    def _write_order(self, sentence: str) -> None:
+        """An order chosen on the map, in search or on a panel: written into the orders box.
+
+        **One list of orders, and it is the one on the screen.** These used to be appended
+        to a draft the box never showed, so the box said one thing and the turn carried
+        another -- and a typed order, once read, replaced the draft and dropped them without
+        a word. Now the sentence goes into the box, where it can be seen, edited or deleted,
+        and Advance reads the box like anything typed. Every sentence written here reads
+        back as the same order (`tests/test_map_orders_are_sentences_in_the_box.py`).
+        """
+        self._right.add_order_line(sentence)
         self._status.set_state(
-            f"{label} — added to your orders; check them before the turn.")
+            f"Added to your orders: “{sentence}”. Edit it there, or press Advance.")
+
+    def _on_panel_order(self, entry) -> None:
+        """A button on the region panel: the same as choosing it on the map's menu."""
+        if entry.needs:
+            self._await_second_region(entry)
+        else:
+            self._take_action(entry)
 
     def _await_second_region(self, entry) -> None:
         self._awaiting = entry
@@ -977,17 +1002,23 @@ class AtlasWindow(QMainWindow):
         super().keyPressEvent(event)
 
     def _complete_action(self, region_id: str) -> None:
+        if self._awaiting is not None and self._awaiting.action.get("to_region") == region_id:
+            self._status.set_state(
+                "That is where they are going. Click the province they should come from "
+                "(Escape to cancel).")
+            return
         entry, self._awaiting = self._awaiting, None
         action = dict(entry.action)
-        action[entry.needs] = region_id
         name = self._conn.execute(
             "SELECT name FROM region WHERE id = ?", (region_id,)).fetchone()
-        action["summary"] = (
-            f"{action.get('summary', entry.label)} from "
-            f"{name['name'] if name else region_id}")
-        self._pending_orders.append(action)
-        self._keep_orders()
-        self._status.set_state(f"{action['summary']} — added to your orders.")
+        there = name["name"] if name else region_id
+        if entry.needs == "from_region" and action.get("to_region"):
+            to = self._conn.execute(
+                "SELECT name FROM region WHERE id = ?", (action["to_region"],)).fetchone()
+            sentence = f"Move forces from {there} into {to['name'] if to else action['to_region']}"
+        else:
+            sentence = f"{action.get('summary', entry.label)} from {there}"
+        self._write_order(sentence)
 
     def _on_region_hovered(self, region_id: str) -> None:
         row = self._conn.execute(

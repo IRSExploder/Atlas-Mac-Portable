@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 from ..engine.focus import FOCUS_CAP, rank_candidates, tracked_nations
 from ..humanize import count, duration, exact
 from ..humanize import strength as force_of
+from .plain import technical
 from .theme import Theme
 from .widgets import (
     Chip,
@@ -100,6 +101,9 @@ class LeftRail(Rail):
     #: rather than only on the right-click menu, because a mechanic nobody knows exists is
     #: not discovered by right-clicking to see whether it is there.
     air_requested = Signal(str)
+    #: An order chosen from the province panel's buttons (a `mapactions.MapAction`). The
+    #: window writes it into the orders box, exactly as the map's right-click menu does.
+    order_chosen = Signal(object)
 
     def __init__(self, theme: Theme, parent: QWidget | None = None) -> None:
         super().__init__("The record", width=scaled(348), opens_right=False, theme=theme,
@@ -368,6 +372,8 @@ class LeftRail(Rail):
             )
             self._region_body.addSpacing(16)
 
+        self._add_region_orders()
+
         # **Rounded, and given no unit it does not have.** Both of these are the engine's
         # own abstract quantities -- the world's population sums to about 3,600 of
         # whatever they are -- so the honest presentation is a whole number and the stored
@@ -442,10 +448,56 @@ class LeftRail(Rail):
         ).fetchone()[0]
         self._region_body.addSpacing(10)
         self._region_body.addWidget(
-            TextLabel(f"{row['id']} · borders {count(borders)} region(s) · {row['terrain']}",
+            TextLabel(f"{row['id']} · borders {count(borders)} region(s) · {row['terrain']}"
+                      if technical() else
+                      f"{str(row['terrain']).capitalize()} · borders {count(borders)}",
                       style="mono", colour="ink_ghost", theme=self._theme)
         )
         self._region_body.addStretch(1)
+
+    def _add_region_orders(self) -> None:
+        """What you can order here, as buttons: the map's right-click menu, where it shows.
+
+        A Mac has no obvious right click, and a menu nobody opens is a feature nobody has.
+        Each button writes its order into the orders box (see `AtlasWindow._write_order`),
+        so a click and a typed sentence end up in the same place and read the same way.
+        """
+        if not self._observer:
+            return
+        from ..engine.mapactions import actions_for_region
+
+        found = actions_for_region(self._conn, self._world_id, self._observer,
+                                   self._selected_region)
+        if not found:
+            return
+        self._region_body.addWidget(SectionLabel("Orders here", theme=self._theme))
+        self._region_body.addSpacing(8)
+        for entry in [e for e in found if e.enabled]:
+            label = entry.label + ("…" if entry.needs else "")
+            chip = Chip(label, theme=self._theme, padding=(12, 5))
+            chip.setToolTip(
+                ("Then click the province your forces should come from. " if entry.needs
+                 else "") + "Adds this to your orders box. Nothing happens until you advance.")
+            chip.clicked.connect(lambda e=entry: self.order_chosen.emit(e))
+            line = QHBoxLayout()
+            line.addWidget(chip)
+            line.addStretch(1)
+            self._region_body.addLayout(line)
+            self._region_body.addSpacing(5)
+        # Not possible yet, grouped by reason: "Air strike, Incite, Sabotage: only open
+        # against somebody you are at war with" is one fact, not three.
+        reasons: dict[str, list[str]] = {}
+        for entry in (e for e in found if not e.enabled):
+            what = entry.label.split(" in ")[0] if " in " in entry.label else entry.label
+            why = entry.why_not.rstrip(".")
+            _, _, rest = why.partition(" is only ")
+            reasons.setdefault(f"only {rest}" if rest else why, []).append(what)
+        for said, acts in reasons.items():
+            self._region_body.addWidget(TextLabel(
+                f"Not yet: {', '.join(acts)}. {said[:1].upper() + said[1:]}.",
+                style="body_small", colour="ink_faint", theme=self._theme, wrap=True))
+            self._region_body.addSpacing(3)
+        self._region_body.addSpacing(16)
 
     # -- stats -------------------------------------------------------------
 
