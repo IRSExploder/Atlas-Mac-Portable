@@ -10,7 +10,11 @@
 cd "$(dirname "$0")" || exit 1
 MODE="${ATLAS_MODE:---api}"
 VENV="${ATLAS_VENV:-$HOME/.atlas-venv}"
-BUILD="$(cat BUILD_ID 2>/dev/null || git rev-parse HEAD 2>/dev/null || echo dev)"
+# What build this folder holds: a BUILD_ID file when the package has one, otherwise a
+# fingerprint of the game's own files, so a GitHub download or a clone is recognised too.
+BUILD="$(cat BUILD_ID 2>/dev/null ||
+  find pyproject.toml src -type f ! -path '*__pycache__*' ! -path '*.egg-info*' -print0 | sort -z |
+  xargs -0 shasum -a 256 | shasum -a 256 | cut -c1-16)"
 STAMP="$VENV/.atlas-build"
 
 pause_on_error() {
