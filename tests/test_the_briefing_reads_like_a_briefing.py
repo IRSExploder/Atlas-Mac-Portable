@@ -73,3 +73,36 @@ def test_a_war_is_told_in_provinces_and_a_beaten_enemy_can_be_annexed(conn):
     brief = build_brief(_report(), [], conn=conn, world_id="sandbox", viewer="aurelia")
     assert brief.wars == []
     assert brief.next_steps == ["You can annex Karthos now: write “Annex Karthos”."]
+
+
+def test_a_war_is_not_announced_again_every_turn(conn):
+    """Standing conditions go in the war's status once, not in "For you" every turn."""
+    _war(conn, "aurelia", "karthos")
+    report = _report(significant=["Aurelia in North is cut off and going short (2.3 -> 2.1)"])
+    at_war = SimpleNamespace(subject="You are at war with Karthos", source_event_ids=[],
+                             nation_id="aurelia")
+    brief = build_brief(report, [], conn=conn, world_id="sandbox", viewer="aurelia",
+                        affected=[at_war])
+
+    assert brief.for_you == []
+    assert brief.wars[0].lines[-1] == ("Cut off from supply: your forces in North are "
+                                       "running short.")
+
+
+def test_one_coup_is_one_line_however_many_ways_it_was_reported(conn):
+    report = _report(fell=["Veyra: the government was removed"])
+    report.sessions = ["The government no longer governs Veyra."]
+    brief = build_brief(report, [], conn=conn, world_id="sandbox", viewer="aurelia")
+    assert [line.text for line in brief.world] == ["Veyra: the government was removed"]
+
+
+def test_the_feed_drops_air_bulletins_even_about_you():
+    from atlas.ui.plain import routine_event
+
+    assert routine_event("battle", "Fighting in the air over Iraq. Turkey holds the sky.",
+                         "tur", "tur")
+    assert not routine_event("battle", "Turkey attacked Iran in Iran.", "tur", "tur")
+    assert routine_event("move", "Russia moved 8 formation(s) toward the fighting.",
+                         "rus", "tur")
+    assert not routine_event("move", "Turkey moved 4 formation(s) toward the fighting.",
+                             "tur", "tur")

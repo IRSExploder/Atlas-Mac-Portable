@@ -62,11 +62,21 @@ _ROUTINE_TEXT = (
     "air superiority not flown for",
     "a month of air fighting cost",
 )
+#: Bulletins that repeat every turn for every place, **yours included**: an air war writes
+#: one per province and sea it flies over, every month, and a player's own air force
+#: produced twenty-five identical lines a turn. The turn summary keeps what they decided.
+_SPAM_FRAGMENTS = (
+    "fighting in the air over",
+    "holds the sky",
+    "took the sky over",
+    "air superiority not flown for",
+    "a month of air fighting cost",
+)
 _ROUTINE_FRAGMENTS = (
     "changed their mind about their government",
-    # Dozens a turn in any air war; the turn summary keeps the ones that matter.
-    "fighting in the air over",
     "strength in replacements",
+    # Another power shuffling its armies: the fronts say what came of it.
+    "formation(s) toward the fighting",
     "set its objectives",
     "lays down",
     # Research starting somewhere else in the world, a dozen a month.
@@ -78,13 +88,16 @@ def routine_event(kind: str, text: str, actor: str | None, viewer: str | None,
                   origin: str | None = None) -> bool:
     """Whether an event is bookkeeping a player need not read: hidden unless technical.
 
-    Anything the player's own country did, or that names them, is never routine.
+    Anything the player's own country did is never routine, except the bulletins in
+    `_SPAM_FRAGMENTS`, which repeat for every place every turn whoever they are about.
     """
     if technical():
         return False
+    said = str(text or "").strip().lower()
+    if any(fragment in said for fragment in _SPAM_FRAGMENTS):
+        return True
     if viewer and actor == viewer:
         return False
-    said = str(text or "").strip().lower()
     if said.startswith(_ROUTINE_TEXT):
         return True
     if any(fragment in said for fragment in _ROUTINE_FRAGMENTS):

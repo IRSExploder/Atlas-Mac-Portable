@@ -35,6 +35,9 @@ __all__ = ["Brief", "BriefLine", "BriefView", "WarState", "build_brief"]
 FOR_YOU_SHOWN = 5
 WORLD_SHOWN = 6
 
+#: "Ukraine in Luhans'k is cut off and going short": who, and where.
+_POCKET = re.compile(r"^(.+?) in (.+?) is cut off and going short")
+
 #: The air war, sky by sky: dozens a month in any war with aircraft in it. The fronts say
 #: what the sky decided.
 _AIR_NOISE = ("the sky over", "the sky.", "fighting in the air", "air superiority",
@@ -207,6 +210,29 @@ def build_brief(report, headlines: list[str], *, conn: sqlite3.Connection | None
         lowered = text.lower()
         return any(noise in lowered for noise in _AIR_NOISE)
 
+    # **Standing conditions are not news.** "You are at war with Russia" and "Ukraine in
+    # Luhans'k is cut off" are true every turn of a war, and said every turn they were the
+    # same notification over and over. They belong in the war's status, said once.
+    pockets: list[str] = []
+
+    def standing(text: str) -> bool:
+        lowered = text.lower()
+        if lowered.startswith("you are at war with"):
+            return True
+        cut = _POCKET.match(text)
+        if cut:
+            if about_me(cut.group(1)) and cut.group(2) not in pockets:
+                pockets.append(cut.group(2))
+            return True
+        return False
+
+    def this_turn(item) -> bool:
+        if conn is None or not item.source_event_ids:
+            return True
+        row = conn.execute("SELECT turn FROM event WHERE id = ?",
+                           (item.source_event_ids[0],)).fetchone()
+        return row is None or row[0] == getattr(report, "turn", row[0])
+
     # 1. For you: the turn's gravest lines that name you, then what the attention ranking
     #    says changed for you, then the event headlines. One line per fact, however many
     #    places reported it.
@@ -215,13 +241,17 @@ def build_brief(report, headlines: list[str], *, conn: sqlite3.Connection | None
     ranked = [line for line in report.significant() if line not in told_as_orders]
     for line in ranked:
         text = _sentence(line)
-        if not readable(text) or not about_me(text) or airy(text) or _covered(text, seen):
+        if not readable(text) or not about_me(text) or airy(text) or standing(text) \
+                or _covered(text, seen):
             continue
         seen.append(_norm(text))
         brief.for_you.append(BriefLine(text))
     for item in affected or []:
         text = _sentence(item.subject)
-        if not readable(text) or airy(text) or _covered(text, seen):
+        mine = about_me(text) or getattr(item, "nation_id", None) == viewer \
+            or re.search(r"\byou(r)?\b", text.lower()) is not None
+        if not readable(text) or airy(text) or standing(text) or not mine \
+                or not this_turn(item) or _covered(text, seen):
             continue
         seen.append(_norm(text))
         brief.for_you.append(BriefLine(
@@ -229,7 +259,8 @@ def build_brief(report, headlines: list[str], *, conn: sqlite3.Connection | None
             event_id=item.source_event_ids[0] if item.source_event_ids else None))
     for line in headlines:
         text = _sentence(line)
-        if not readable(text) or not about_me(text) or airy(text) or _covered(text, seen):
+        if not readable(text) or not about_me(text) or airy(text) or standing(text) \
+                or _covered(text, seen):
             continue
         seen.append(_norm(text))
         brief.for_you.append(BriefLine(text))
@@ -264,6 +295,13 @@ def build_brief(report, headlines: list[str], *, conn: sqlite3.Connection | None
     if conn is not None and viewer:
         brief.wars = _wars(conn, world_id, viewer)
         brief.next_steps = _next_steps(conn, world_id, viewer, brief.wars)
+    if pockets:
+        places = ", ".join(pockets[:-1]) + (" and " if len(pockets) > 1 else "") + pockets[-1]
+        line = f"Cut off from supply: your forces in {places} are running short."
+        if brief.wars:
+            brief.wars[0].lines.append(line)
+        else:
+            brief.for_you.insert(0, BriefLine(line))
 
     # 4. Around the world: an allow-list, not a block-list. Only the kinds of fact that
     #    change the map or the balance of power -- the report's gravest fields, then this
@@ -276,10 +314,20 @@ def build_brief(report, headlines: list[str], *, conn: sqlite3.Connection | None
                    getattr(report, "eliminated", []) or []]
     if conn is not None:
         candidates += _grave_events(conn, world_id, viewer, getattr(report, "turn", None))
+    # One line per country or pair of countries: a coup is reported by the report's field
+    # and by its event, in two phrasings, and both of them are the same news.
+    names = [str(row[0]) for row in conn.execute(
+        "SELECT name FROM nation WHERE world_id = ?", (world_id,))] if conn is not None else []
+    told: set[frozenset[str]] = set()
     for line in candidates:
         text = _sentence(line)
         if not readable(text) or about_me(text) or airy(text) or _covered(text, seen):
             continue
+        who = frozenset(name for name in names if re.search(
+            rf"(?<!\w){re.escape(name)}(?!\w)", text))
+        if who and who in told:
+            continue
+        told.add(who)
         seen.append(_norm(text))
         brief.world.append(BriefLine(text))
         if len(brief.world) >= WORLD_SHOWN:
