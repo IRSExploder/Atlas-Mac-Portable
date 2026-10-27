@@ -546,6 +546,16 @@ class _Legend(_Frosted):
             if entry.swatch is SwatchKind.PLAYER:
                 row.set_swatch(self._player_colour, theme)
             self._layout.addWidget(row)
+            if entry.swatch is SwatchKind.PLAYER and not detail \
+                    and legend.layer is MapLayer.POLITICAL:
+                # The calm map's one shared colour: see `map.render._calm_fill`.
+                from ..map.render import ALLY_FILL, ENEMY_FILL
+
+                for said, colour in (("Your allies", ALLY_FILL),
+                                     ("At war with you", ENEMY_FILL)):
+                    extra = _LegendRow(said, SwatchKind.PLAYER, theme=theme)
+                    extra.set_swatch(colour, theme)
+                    self._layout.addWidget(extra)
         if legend.blank:
             self._layout.addWidget(_LegendRow(legend.blank, SwatchKind.BLANK, theme=theme))
 

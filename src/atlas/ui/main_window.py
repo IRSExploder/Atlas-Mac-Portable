@@ -833,6 +833,8 @@ class AtlasWindow(QMainWindow):
             dissolve=self._map.dissolve,
             viewport=self._map.viewport_rect(),
             bounds=self._bounds,
+            # The calm map unless the player asked for the engine's own: see `build_scene`.
+            calm=not self._preferences.technical,
         )
         self._map.show_scene(description)
 

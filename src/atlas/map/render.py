@@ -293,6 +293,35 @@ MEASURED_LAYERS = (MapLayer.DEVELOPMENT, MapLayer.UNREST, MapLayer.AIR, MapLayer
                    MapLayer.TRADE, MapLayer.OBLIGATIONS, MapLayer.INDEPENDENCE)
 
 
+#: The one colour a calm map gives every power at war with the player, whatever its own.
+ENEMY_FILL = "#B5473F"
+#: And every power bound to the player by an alliance or a defensive pact. One shared hue
+#: for the same reason: an ally whose own colour happened to be red read as an enemy.
+ALLY_FILL = "#3E8A8F"
+
+
+def _calm_fill(view: MapViewState, nation_id: str, colour: str, palette: MapPalette) -> str:
+    """The political map read for a player: you in full, allies teal, enemies red, the rest
+    quiet.
+
+    **Two hundred saturated colours say nothing.** Every power in its own bright flag colour
+    made the one fact a player looks for -- where am I, and who is fighting me -- the hardest
+    to find on the screen. So the player's own ground keeps its colour, every power at war
+    with the player shares one red, allies are softened a little and everybody else a lot.
+    The colours are still each power's own, so neighbours stay told apart.
+    """
+    if nation_id == view.observer_nation_id:
+        return colour
+    feeling = view.attitude.get(nation_id)
+    if feeling is not None and feeling[2]:
+        return _muted(ENEMY_FILL, palette.ocean, 0.12)
+    if feeling is not None and feeling[1] in ("alliance", "defensive"):
+        return _muted(ALLY_FILL, palette.ocean, 0.12)
+    # Toward the theme's own neutral land, which takes the saturation out: a hint of hue to
+    # tell neighbours apart by, and no more.
+    return _muted(colour, palette.unclaimed, 0.8)
+
+
 def _ramp(cold: str, hot: str, share: float) -> str:
     """A colour ``share`` of the way from cold to hot, clamped.
 
@@ -439,6 +468,7 @@ def build_scene(
     dissolve: bool = False,
     viewport: tuple[float, float, float, float] | None = None,
     bounds: dict[str, tuple[float, float, float, float]] | None = None,
+    calm: bool = False,
 ) -> SceneDescription:
     """Derive a complete scene description from world state. Pure.
 
@@ -451,6 +481,11 @@ def build_scene(
     hairlines. It changes how many items carry an answer, never the answer: every region
     is still decided one at a time, immediately above, and contested or newly-changed
     ground is deliberately left out of the merge so that the war is visible at any zoom.
+
+    ``calm`` is the political map read for a player rather than the referee: their own
+    country in full colour and outlined, enemies one red, everyone else muted (see
+    `_calm_fill`); and, zoomed out, only their own and their enemies' forces on it. Only the
+    political layer is affected -- every other layer is already a reading of its own.
 
     ``viewport`` drops everything outside the rectangle currently on screen, given as
     ``(x0, y0, x1, y1)`` in projected units, using the lon/lat ``bounds`` the pack keeps
@@ -466,6 +501,15 @@ def build_scene(
     #: each afterwards. Nothing is decided here that is not decided for every region --
     #: dissolving only changes how many items carry the same answer.
     quiet: dict[str, list] = {}
+
+    calm = calm and layer is MapLayer.POLITICAL
+    me = view.observer_nation_id
+    enemies = {nation for nation, (_score, _treaty, at_war) in view.attitude.items() if at_war}
+
+    def edge(colour: str) -> str:
+        # The player's own border: their colour lifted toward white, so it reads on both
+        # themes without borrowing the selection or "changed hands" inks.
+        return _muted(colour, "#FFFFFF", 0.55)
 
     for region in view.regions:
         known = region.region_id in view.known_region_ids
@@ -486,13 +530,15 @@ def build_scene(
             fill = palette.ocean
             selectable = False
         elif charted:
-            fill = _muted(owner.colour, palette.ocean, 0.35)
+            fill = (_calm_fill(view, owner.nation_id, owner.colour, palette) if calm
+                    else _muted(owner.colour, palette.ocean, 0.35))
             selectable = True
         elif not known:
             fill = palette.unknown
             selectable = True
         elif owner is not None:
-            fill = owner.colour
+            fill = (_calm_fill(view, owner.nation_id, owner.colour, palette) if calm
+                    else owner.colour)
             selectable = True
         else:
             fill = palette.unclaimed
@@ -610,8 +656,8 @@ def build_scene(
                 geo_key=held[0].geo_key,
                 lod=lod,
                 fill=held[0].fill,
-                outline=palette.outline,
-                outline_width=0.5,
+                outline=edge(nation.colour) if calm and nation_id == me else palette.outline,
+                outline_width=1.8 if calm and nation_id == me else 0.5,
                 z=1,
                 # One name per country: on the part the player has seen, if any.
                 label=nation.name if seen or (nation_id, True) not in quiet else "",
@@ -676,8 +722,8 @@ def build_scene(
     # Tracked nations get a marker at their capital, so the player can see *why* some
     # powers behave more distinctly than others rather than wondering at it.
     for nation in sorted(view.nations.values(), key=lambda n: n.nation_id):
-        if not nation.is_tracked or not nation.capital_region_id:
-            continue
+        if calm or not nation.is_tracked or not nation.capital_region_id:
+            continue  # which powers the engine follows closely is its business, not the map's
         if nation.capital_region_id not in view.known_region_ids:
             continue
         position = place(nation.capital_region_id)
@@ -741,6 +787,10 @@ def build_scene(
     for (region_id, domain), stack in sorted(stacks.items()):
         position = place(region_id)
         if position is None:
+            continue
+        if calm and dissolve and not ({me} | enemies) & set(stack["owners"]):
+            # Zoomed out, a counter for every garrison on the continent is noise: yours and
+            # your enemies' are the ones a player plans around. Zoom in to see the rest.
             continue
         count = int(stack["count"])
         strength = float(stack["strength"])

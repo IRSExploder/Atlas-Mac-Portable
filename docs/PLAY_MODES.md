@@ -122,6 +122,10 @@ The record (events, the province panel and its **Orders here**) slides out from 
 you click a province, and folds away with its edge tab; **What is waiting** opens from the
 Attention button. The ⌂ button on the map shows the whole world.
 
+**A calm map.** Your country keeps its colour and is outlined; every power at war with you is
+red and every ally teal, whatever their own colours; everybody else is muted to a quiet slate.
+Zoomed out, only your forces and your enemies' carry counters; zoom in to see everyone's.
+
 By default the interface hides the engine's working: odds and before -> after numbers in
 headlines, other powers' routine administration in the feed, debug map layers and the save
 path. The turn summary leads with what happened to you, then your orders and whether each
