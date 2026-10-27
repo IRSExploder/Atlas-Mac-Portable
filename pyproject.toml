@@ -21,6 +21,8 @@ bake = [
 # The metered Anthropic API path (`--api`). Off unless asked for; see providers/api_provider.
 api = [
     "anthropic>=2.3",
+    # The key typed into Settings goes to the macOS Keychain (or the OS equivalent).
+    "keyring>=25",
 ]
 dev = [
     "pytest>=8.0",
@@ -44,6 +46,9 @@ atlas = [
     "scenarios/*.json",
     "scenarios/territory/*.json",
     "testing/manifests/*.json",
+    # The bundled faces and their OFL licences. Without them an installed copy falls back
+    # to system fonts silently; `atlas selftest` checks they register.
+    "ui/fonts/*",
 ]
 
 [tool.ruff]

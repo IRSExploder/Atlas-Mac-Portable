@@ -5,7 +5,8 @@ subscription CLIs, and `atlas.providers.environment` strips ``ANTHROPIC_API_KEY`
 children so a stray key can never silently turn a flat-rate call into a billed one. This
 provider therefore reads its key from its *own* variable, :data:`API_KEY_ENV`, and passes it
 to the SDK explicitly: setting it cannot change what any CLI does, and nothing reaches this
-module unless the player asked for ``--api``.
+module unless the player asked for ``--api``. A key typed into the app's Settings is kept in
+the system keychain by :mod:`atlas.providers.keystore`; the variable, when set, wins.
 
 **One model per role, chosen here, and reported honestly.** In API mode every role's pin
 points at this provider with the model configured for it (:func:`api_role_models`), so the
@@ -68,7 +69,13 @@ _EFFORTS = frozenset({"low", "medium", "high", "xhigh", "max"})
 
 
 def api_key() -> str:
-    return os.environ.get(API_KEY_ENV, "").strip()
+    """The key to use now: the environment variable if set, else the one saved in the app."""
+    from_env = os.environ.get(API_KEY_ENV, "").strip()
+    if from_env:
+        return from_env
+    from .keystore import stored_key
+
+    return stored_key()
 
 
 def _model_for(role: Role) -> str:
@@ -129,7 +136,8 @@ def _classify(exc: Exception) -> Failure:
     said = str(getattr(exc, "message", "") or exc)
     if isinstance(exc, (anthropic.AuthenticationError, anthropic.PermissionDeniedError)):
         return _failure(FailureKind.NOT_AUTHENTICATED,
-                        f"the API key in {API_KEY_ENV} was refused", said)
+                        "the Anthropic API key was refused; check it under Settings > AI "
+                        "providers", said)
     if isinstance(exc, anthropic.RateLimitError):
         return _failure(FailureKind.RATE_LIMITED, "the API is rate limiting this key", said)
     if isinstance(exc, (anthropic.APITimeoutError, anthropic.DeadlineExceededError)):
@@ -164,14 +172,20 @@ class ApiProvider:
 
     def __init__(self, key: str | None = None, *, client: Any = None,
                  max_retries: int = 2) -> None:
-        self._key = api_key() if key is None else key
+        # ``None`` means "look it up on every call", so a key saved in Settings mid-session
+        # is used from the next call on, with no restart.
+        self._fixed_key = key
         self._client = client
+        self._client_key = ""
         self._injected = client is not None
         self._loop: object = None
         self._max_retries = max_retries
 
+    def _key(self) -> str:
+        return self._fixed_key if self._fixed_key is not None else api_key()
+
     def available(self) -> bool:
-        return bool(self._key) or self._client is not None
+        return self._injected or bool(self._key())
 
     def _sdk(self):
         """The async client for the running event loop.
@@ -185,11 +199,12 @@ class ApiProvider:
         if self._injected:
             return self._client
         loop = asyncio.get_running_loop()
-        if self._client is None or self._loop is not loop:
+        key = self._key()
+        if self._client is None or self._loop is not loop or self._client_key != key:
             from anthropic import AsyncAnthropic
 
-            self._client = AsyncAnthropic(api_key=self._key, max_retries=self._max_retries)
-            self._loop = loop
+            self._client = AsyncAnthropic(api_key=key, max_retries=self._max_retries)
+            self._loop, self._client_key = loop, key
         return self._client
 
     async def _call(self, request: ProviderRequest, model: str, *, structured: bool):
@@ -223,7 +238,8 @@ class ApiProvider:
 
         if not self.available():
             return result(ok=False, failure=_failure(
-                FailureKind.NOT_AUTHENTICATED, f"{API_KEY_ENV} is not set"))
+                FailureKind.NOT_AUTHENTICATED,
+                "no Anthropic API key yet: add it under Settings > AI providers"))
 
         try:
             try:

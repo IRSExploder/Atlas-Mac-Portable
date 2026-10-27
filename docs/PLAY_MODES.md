@@ -9,15 +9,27 @@ need none of them. All three work with `atlas start`, `atlas new` and `atlas pla
 | **No AI** | `atlas start --no-ai` | Rule-based bots in every seat. Free and offline, but the narrative is mechanical. | Free |
 | **CLIs** (original) | `atlas start` | claude / codex / agy, pinned per role (see `atlas doctor`). | Your subscriptions |
 
+## On a Mac
+
+Double-click **`Atlas.command`**. The first run installs the game into `~/.atlas-venv` and
+bakes the maps (a few minutes, needs internet); later runs open straight away, and a newer
+build in the folder is installed automatically. It starts in API mode. **`Atlas (no
+AI).command`** starts with bots only. If macOS says the file is from an unidentified
+developer, right-click it, choose **Open**, then **Open** again (once).
+
 ## API mode
 
-**The key** goes in `ATLAS_ANTHROPIC_API_KEY`. Do not use `ANTHROPIC_API_KEY`: ATLAS strips
-that variable from every CLI it launches, so a stray key cannot switch a subscription CLI to
-metered billing, and `atlas doctor` warns when it sees it. The separate name keeps that guard
-meaningful.
+**The key:** open **Settings > AI providers**, paste it, press **Save key**, then **Test**. It
+is stored in your Mac's Keychain (or the system keychain elsewhere; a private file only
+where there is none) and takes effect on the next call, with no restart. **Remove** deletes
+it.
+
+Alternatively set `ATLAS_ANTHROPIC_API_KEY`, which wins over a saved key. Do not use
+`ANTHROPIC_API_KEY`: ATLAS strips that variable from every CLI it launches, so a stray key
+cannot switch a subscription CLI to metered billing, and `atlas doctor` warns when it sees
+it. The separate name keeps that guard meaningful.
 
 ```bash
-export ATLAS_ANTHROPIC_API_KEY=...        # macOS: put it in ~/.zprofile
 atlas probe --provider api                # one call per seat, each with its real schema
 atlas start --api
 ```

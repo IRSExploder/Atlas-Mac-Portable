@@ -236,9 +236,9 @@ def _offline_providers(args: argparse.Namespace) -> dict | None:
 
         api = ApiProvider()
         if not api.available():
-            raise SystemExit(
-                f"--api needs an Anthropic API key in {API_KEY_ENV}. Set it in your "
-                "environment (not ANTHROPIC_API_KEY, which ATLAS keeps away from the CLIs).")
+            # Not fatal: the window opens, and the key can be added under Settings > AI
+            # providers. The provider reads it on every call, so no restart is needed.
+            print(f"api: no key yet; add it in Settings > AI providers, or set {API_KEY_ENV}")
         # The hybrid: a model where prose and judgement show, a rule where they do not.
         bots.set_bots(roles=bots.SCOPES | {"parser"})
         pins = api_role_models()
@@ -396,7 +396,8 @@ def _cmd_start(args: argparse.Namespace) -> int:
 
     offline = _offline_providers(args)
     if getattr(args, "api", False):
-        status = "Claude API (metered) writes the world and talks; bots play the rest."
+        status = ("Claude API mode (metered): Claude writes the world, talks, the council and "
+                  "odd orders; rule-based bots play the rest. Your key is set below.")
     elif getattr(args, "no_ai", False):
         status = "No AI: rule-based bots play every seat; no model is called."
     elif offline is not None:
