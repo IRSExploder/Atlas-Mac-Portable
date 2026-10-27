@@ -85,9 +85,10 @@ plus same inputs always gives the same battle, which is what makes rewind trustw
 
 ## Setup
 
-**On macOS:** double-click `Atlas.command` (Claude API plus rule-based bots; add your key
-under Settings > AI providers) or `Atlas (no AI).command` (bots only). See
-`docs/PLAY_MODES.md`.
+**On macOS:** download `Atlas-macOS-arm64.dmg` from the `atlas-mac` release and drag Atlas to
+Applications (built by `.github/workflows/mac-app.yml`; nothing else to install). It plays
+with Claude once a key is saved under Settings > AI providers, and with rule-based bots
+until then. From a checkout, `Atlas.command` does the same. See `docs/PLAY_MODES.md`.
 
 ```bash
 py -m venv %LOCALAPPDATA%\atlas-venv

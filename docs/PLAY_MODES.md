@@ -11,7 +11,16 @@ need none of them. All three work with `atlas start`, `atlas new` and `atlas pla
 
 ## On a Mac
 
-Double-click **`Atlas.command`**. The first run installs the game into `~/.atlas-venv` and
+**The app.** Download `Atlas-macOS-arm64.dmg` from the rolling `atlas-mac` release and drag
+Atlas to Applications. Python, Qt and the maps are inside; nothing else is installed. It is
+not signed with a Developer ID, so the first launch needs System Settings > Privacy &
+Security > Open Anyway. Opened with no key it plays with bots; with a key saved it starts
+in API mode (reopen after saving the key). Saves go to `~/Library/Application Support/Atlas`.
+Every push that touches the game rebuilds it: `.github/workflows/mac-app.yml` runs
+`scripts/build_mac.py` on an Apple-silicon runner, smoke-tests the app and replaces the
+release asset. Apple silicon only; an Intel Mac uses the source route below.
+
+**From a checkout.** Double-click **`Atlas.command`**. The first run installs the game into `~/.atlas-venv` and
 bakes the maps (a few minutes, needs internet); later runs open straight away, and a newer
 build in the folder is installed automatically. It starts in API mode. **`Atlas (no
 AI).command`** starts with bots only. If macOS says the file is from an unidentified
