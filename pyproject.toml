@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atlas"
+version = "0.1.0"
+description = "AI-driven alternate-history grand strategy sandbox"
+requires-python = ">=3.12"
+dependencies = [
+    "PySide6>=6.9",
+]
+
+[project.optional-dependencies]
+# Heavy geometry deps used ONLY by the offline `atlas map bake` pipeline.
+bake = [
+    "shapely>=2.0",
+    "topojson>=1.9",
+    "requests>=2.31",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.6",
+]
+
+[project.scripts]
+atlas = "atlas.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+# `scenarios/territory/*.json` is not covered by `scenarios/*.json` -- a glob does not
+# recurse -- and without it an installed wheel plays every province-drawn era at country
+# granularity and says nothing. Same reasoning for the audit manifests, which `atlas audit`
+# reads at runtime.
+atlas = [
+    "state/*.sql",
+    "scenarios/*.json",
+    "scenarios/territory/*.json",
+    "testing/manifests/*.json",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "TID"]
+ignore = [
+    "E501",   # line length is handled by the formatter
+    # TID is enabled for banned-api (TID251) below, which is what keeps ambient
+    # randomness out of the engine. TID252 bans parent-relative imports, which are
+    # idiomatic inside a package and used throughout.
+    "TID252",
+    # PEP 695 type parameters. TypeVar reads more plainly for the one generic helper
+    # here, and the modern syntax buys nothing at this scale.
+    "UP046",
+    "UP047",
+]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+# The engine must never draw ambient entropy: all randomness flows through
+# atlas.sim.rng, derived from the world's stored seed. See docs in that module.
+"random.random".msg = "Use atlas.sim.rng.derive() - ambient entropy breaks replay."
+"random.randint".msg = "Use atlas.sim.rng.derive() - ambient entropy breaks replay."
+"random.choice".msg = "Use atlas.sim.rng.derive() - ambient entropy breaks replay."
+"secrets".msg = "Use atlas.sim.rng.derive() - ambient entropy breaks replay."
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "live: hits a real provider CLI; deselected by default (run with -m live)",
+    "qt: needs a QApplication; runs under QT_QPA_PLATFORM=offscreen",
+    "slow: long soak runs; included by default, deselect with -m 'not slow'",
+]
+addopts = "-m 'not live'"
+asyncio_mode = "auto"

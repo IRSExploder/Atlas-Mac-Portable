@@ -1,0 +1,26 @@
+{
+  "$comment": "Which geometry packs this release was verified against. Packs are derived artefacts baked from Natural Earth sources and live outside the repository, so without this nothing pinned which build a green audit actually ran on. Regenerate with `atlas map pin`.",
+  "packs": [
+    {
+      "name": "admin0-50m.pack",
+      "baked_by": 2,
+      "source": "admin0-50m",
+      "sha256": "cd69d4367465f438d0d3c8c2774eb00a604e70f5028a1c7ac33be3239949d82a",
+      "bytes": 2269036
+    },
+    {
+      "name": "admin1-10m.pack",
+      "baked_by": 2,
+      "source": "admin1-10m",
+      "sha256": "5f38e2c523ae96d6a8ed1c19ba4de72cc09acf798c7a1204c5d75d892d6357f9",
+      "bytes": 24456945
+    },
+    {
+      "name": "marine-10m.pack",
+      "baked_by": 2,
+      "source": "marine-10m",
+      "sha256": "d247b832a2a5bc7fad114ac713566c10e07e673e1e978891ba86a8924dfa259a",
+      "bytes": 1025766
+    }
+  ]
+}

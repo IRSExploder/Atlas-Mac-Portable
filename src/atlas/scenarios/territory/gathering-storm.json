@@ -1,0 +1,1648 @@
+{
+ "scenario": "gathering-storm",
+ "source": "admin1-10m",
+ "note": "Generated from Natural Earth admin-1 by scripts/gen_territory.py, then corrected by the OVERRIDES table for borders that moved inside what is now one country. Regenerating overwrites hand edits made here.",
+ "countries": [
+  "AUT",
+  "BIH",
+  "BLR",
+  "CZE",
+  "DEU",
+  "ERI",
+  "ESP",
+  "ETH",
+  "FRA",
+  "GBR",
+  "HRV",
+  "HUN",
+  "ITA",
+  "KOS",
+  "MDA",
+  "MKD",
+  "MNE",
+  "POL",
+  "ROU",
+  "RUS",
+  "SOM",
+  "SRB",
+  "SVK",
+  "SVN",
+  "UKR"
+ ],
+ "nations": {
+  "aut": {
+   "capital": "Wien",
+   "regions": {
+    "Burgenland": [
+     "admin1-10m:AUT-2322"
+    ],
+    "Karnten": [
+     "admin1-10m:AUT-2325"
+    ],
+    "Niederosterreich": [
+     "admin1-10m:AUT-2330"
+    ],
+    "Oberosterreich": [
+     "admin1-10m:AUT-2326"
+    ],
+    "Salzburg": [
+     "admin1-10m:AUT-2327"
+    ],
+    "Steiermark": [
+     "admin1-10m:AUT-2323"
+    ],
+    "Tirol": [
+     "admin1-10m:AUT-2329"
+    ],
+    "Vorarlberg": [
+     "admin1-10m:AUT-2320"
+    ],
+    "Wien": [
+     "admin1-10m:AUT-2331"
+    ]
+   }
+  },
+  "cze": {
+   "capital": "CZE Prague",
+   "regions": {
+    "CZE Jihocesky": [
+     "admin1-10m:CZE-1593",
+     "admin1-10m:CZE-1594"
+    ],
+    "CZE Jihomoravsky": [
+     "admin1-10m:CZE-10370",
+     "admin1-10m:CZE-10372"
+    ],
+    "CZE Kralovehradecky": [
+     "admin1-10m:CZE-10373",
+     "admin1-10m:CZE-1598"
+    ],
+    "CZE Plzensky": [
+     "admin1-10m:CZE-10369",
+     "admin1-10m:CZE-1596"
+    ],
+    "CZE Prague": [
+     "admin1-10m:CZE-1595"
+    ],
+    "CZE Zlinsky": [
+     "admin1-10m:CZE-10371",
+     "admin1-10m:SVK-1055"
+    ],
+    "SVK Banskobystricky": [
+     "admin1-10m:SVK-1052",
+     "admin1-10m:SVK-1058"
+    ],
+    "SVK Bratislavsky": [
+     "admin1-10m:SVK-1051",
+     "admin1-10m:SVK-1056"
+    ],
+    "SVK Kosicky": [
+     "admin1-10m:SVK-1057"
+    ],
+    "SVK Nitriansky": [
+     "admin1-10m:SVK-1053",
+     "admin1-10m:SVK-1054"
+    ],
+    "Sudetenland": [
+     "admin1-10m:CZE-10368",
+     "admin1-10m:CZE-1590",
+     "admin1-10m:CZE-1597",
+     "admin1-10m:CZE-1612"
+    ]
+   }
+  },
+  "esp": {
+   "capital": "Madrid",
+   "regions": {
+    "Asturias": [
+     "admin1-10m:ESP-5805",
+     "admin1-10m:ESP-5815"
+    ],
+    "Canary Is.": [
+     "admin1-10m:ESP-5829",
+     "admin1-10m:ESP-5842"
+    ],
+    "Cantabria": [
+     "admin1-10m:ESP-5802",
+     "admin1-10m:ESP-5813",
+     "admin1-10m:ESP-5816",
+     "admin1-10m:ESP-5818",
+     "admin1-10m:ESP-5822",
+     "admin1-10m:ESP-5848"
+    ],
+    "Extremadura": [
+     "admin1-10m:ESP-5806",
+     "admin1-10m:ESP-5807",
+     "admin1-10m:ESP-5810",
+     "admin1-10m:ESP-5811",
+     "admin1-10m:ESP-5830",
+     "admin1-10m:ESP-5839",
+     "admin1-10m:ESP-5841",
+     "admin1-10m:ESP-5843",
+     "admin1-10m:ESP-5845",
+     "admin1-10m:ESP-5850",
+     "admin1-10m:ESP-5852"
+    ],
+    "Galicia": [
+     "admin1-10m:ESP-5804",
+     "admin1-10m:ESP-5812",
+     "admin1-10m:ESP-5817",
+     "admin1-10m:ESP-5821",
+     "admin1-10m:ESP-5824",
+     "admin1-10m:ESP-5826",
+     "admin1-10m:ESP-5827",
+     "admin1-10m:ESP-5832",
+     "admin1-10m:ESP-5834",
+     "admin1-10m:ESP-5838",
+     "admin1-10m:ESP-5840",
+     "admin1-10m:ESP-5844"
+    ],
+    "Islas Baleares": [
+     "admin1-10m:ESP-5808"
+    ],
+    "La Rioja": [
+     "admin1-10m:ESP-5828",
+     "admin1-10m:ESP-5837"
+    ],
+    "Madrid": [
+     "admin1-10m:ESP-5833"
+    ],
+    "Melilla": [
+     "admin1-10m:ESP-5801",
+     "admin1-10m:ESP-5823",
+     "admin1-10m:ESP-5835",
+     "admin1-10m:ESP-5851"
+    ],
+    "Murcia": [
+     "admin1-10m:ESP-5825",
+     "admin1-10m:ESP-5836",
+     "admin1-10m:ESP-5847",
+     "admin1-10m:ESP-5853"
+    ],
+    "Valenciana": [
+     "admin1-10m:ESP-5803",
+     "admin1-10m:ESP-5809",
+     "admin1-10m:ESP-5814",
+     "admin1-10m:ESP-5820",
+     "admin1-10m:ESP-5831",
+     "admin1-10m:ESP-5846",
+     "admin1-10m:ESP-5849"
+    ]
+   }
+  },
+  "eth": {
+   "capital": "Addis Ababa",
+   "regions": {
+    "Addis Ababa": [
+     "admin1-10m:ETH-3133"
+    ],
+    "Afar": [
+     "admin1-10m:ETH-3111"
+    ],
+    "Amhara": [
+     "admin1-10m:ETH-3109"
+    ],
+    "Benshangul-Gumaz": [
+     "admin1-10m:ETH-3132"
+    ],
+    "Dire Dawa": [
+     "admin1-10m:ETH-3135"
+    ],
+    "Gambela Peoples": [
+     "admin1-10m:ETH-3130"
+    ],
+    "Harari People": [
+     "admin1-10m:ETH-3136"
+    ],
+    "Oromiya": [
+     "admin1-10m:ETH-3131"
+    ],
+    "Somali": [
+     "admin1-10m:ETH-3134"
+    ],
+    "Southern Nations, Nationalities and Peoples": [
+     "admin1-10m:ETH-3129"
+    ],
+    "Tigray": [
+     "admin1-10m:ETH-3110"
+    ]
+   }
+  },
+  "fra": {
+   "capital": "Ile-de-France",
+   "regions": {
+    "Alsace-Lorraine": [
+     "admin1-10m:FRA-5273",
+     "admin1-10m:FRA-5296",
+     "admin1-10m:FRA-5325",
+     "admin1-10m:FRA-5328"
+    ],
+    "Bourgogne-Franche-Comte": [
+     "admin1-10m:FRA-5268",
+     "admin1-10m:FRA-5270",
+     "admin1-10m:FRA-5282",
+     "admin1-10m:FRA-5287",
+     "admin1-10m:FRA-5300",
+     "admin1-10m:FRA-5301",
+     "admin1-10m:FRA-5312",
+     "admin1-10m:FRA-5323",
+     "admin1-10m:FRA-5326",
+     "admin1-10m:FRA-5329",
+     "admin1-10m:FRA-5339",
+     "admin1-10m:FRA-5348",
+     "admin1-10m:FRA-5355",
+     "admin1-10m:FRA-5356"
+    ],
+    "Bretagne": [
+     "admin1-10m:FRA-5283",
+     "admin1-10m:FRA-5292",
+     "admin1-10m:FRA-5308",
+     "admin1-10m:FRA-5316",
+     "admin1-10m:FRA-5321",
+     "admin1-10m:FRA-5324",
+     "admin1-10m:FRA-5327",
+     "admin1-10m:FRA-5340",
+     "admin1-10m:FRA-5353"
+    ],
+    "Guadeloupe": [
+     "admin1-10m:FRA-1442",
+     "admin1-10m:FRA-4603"
+    ],
+    "Guyane francaise": [
+     "admin1-10m:FRA-2000"
+    ],
+    "Hauts-de-France": [
+     "admin1-10m:FRA-5262",
+     "admin1-10m:FRA-5263",
+     "admin1-10m:FRA-5264",
+     "admin1-10m:FRA-5267",
+     "admin1-10m:FRA-5276",
+     "admin1-10m:FRA-5288",
+     "admin1-10m:FRA-5299",
+     "admin1-10m:FRA-5302",
+     "admin1-10m:FRA-5311",
+     "admin1-10m:FRA-5315",
+     "admin1-10m:FRA-5330",
+     "admin1-10m:FRA-5331",
+     "admin1-10m:FRA-5334",
+     "admin1-10m:FRA-5335",
+     "admin1-10m:FRA-5338",
+     "admin1-10m:FRA-5341",
+     "admin1-10m:FRA-5345"
+    ],
+    "Ile-de-France": [
+     "admin1-10m:FRA-5289",
+     "admin1-10m:FRA-5306",
+     "admin1-10m:FRA-5333",
+     "admin1-10m:FRA-5342",
+     "admin1-10m:FRA-5344",
+     "admin1-10m:FRA-5349",
+     "admin1-10m:FRA-5350",
+     "admin1-10m:FRA-5357"
+    ],
+    "Mayotte": [
+     "admin1-10m:FRA-4602"
+    ],
+    "Normandie": [
+     "admin1-10m:FRA-5275",
+     "admin1-10m:FRA-5277",
+     "admin1-10m:FRA-5278",
+     "admin1-10m:FRA-5280",
+     "admin1-10m:FRA-5284",
+     "admin1-10m:FRA-5285",
+     "admin1-10m:FRA-5286",
+     "admin1-10m:FRA-5290",
+     "admin1-10m:FRA-5295",
+     "admin1-10m:FRA-5303",
+     "admin1-10m:FRA-5313",
+     "admin1-10m:FRA-5319",
+     "admin1-10m:FRA-5322",
+     "admin1-10m:FRA-5332",
+     "admin1-10m:FRA-5336",
+     "admin1-10m:FRA-5343",
+     "admin1-10m:FRA-5354"
+    ],
+    "Occitanie": [
+     "admin1-10m:FRA-5269",
+     "admin1-10m:FRA-5271",
+     "admin1-10m:FRA-5272",
+     "admin1-10m:FRA-5279",
+     "admin1-10m:FRA-5291",
+     "admin1-10m:FRA-5293",
+     "admin1-10m:FRA-5294",
+     "admin1-10m:FRA-5298",
+     "admin1-10m:FRA-5305",
+     "admin1-10m:FRA-5307",
+     "admin1-10m:FRA-5309",
+     "admin1-10m:FRA-5310",
+     "admin1-10m:FRA-5314",
+     "admin1-10m:FRA-5317",
+     "admin1-10m:FRA-5318",
+     "admin1-10m:FRA-5320",
+     "admin1-10m:FRA-5337",
+     "admin1-10m:FRA-5346",
+     "admin1-10m:FRA-5347"
+    ],
+    "Provence-Alpes-Cote-d'Azur": [
+     "admin1-10m:FRA-5265",
+     "admin1-10m:FRA-5266",
+     "admin1-10m:FRA-5274",
+     "admin1-10m:FRA-5281",
+     "admin1-10m:FRA-5297",
+     "admin1-10m:FRA-5304",
+     "admin1-10m:FRA-5351",
+     "admin1-10m:FRA-5352"
+    ],
+    "Reunion": [
+     "admin1-10m:FRA-4601"
+    ]
+   }
+  },
+  "gbr": {
+   "capital": "Greater London",
+   "regions": {
+    "East": [
+     "admin1-10m:GBR-2042",
+     "admin1-10m:GBR-2053",
+     "admin1-10m:GBR-2317",
+     "admin1-10m:GBR-2318",
+     "admin1-10m:GBR-2319",
+     "admin1-10m:GBR-2676",
+     "admin1-10m:GBR-2679",
+     "admin1-10m:GBR-2752",
+     "admin1-10m:GBR-2760",
+     "admin1-10m:GBR-5697",
+     "admin1-10m:GBR-5698"
+    ],
+    "East Midlands": [
+     "admin1-10m:GBR-2035",
+     "admin1-10m:GBR-2036",
+     "admin1-10m:GBR-2038",
+     "admin1-10m:GBR-2040",
+     "admin1-10m:GBR-2054",
+     "admin1-10m:GBR-2058",
+     "admin1-10m:GBR-2059",
+     "admin1-10m:GBR-2081",
+     "admin1-10m:GBR-2674",
+     "admin1-10m:GBR-2677",
+     "admin1-10m:GBR-2678",
+     "admin1-10m:GBR-2748",
+     "admin1-10m:GBR-2749",
+     "admin1-10m:GBR-2751",
+     "admin1-10m:GBR-2755",
+     "admin1-10m:GBR-2758",
+     "admin1-10m:GBR-2759",
+     "admin1-10m:GBR-2761",
+     "admin1-10m:GBR-2762",
+     "admin1-10m:GBR-2763",
+     "admin1-10m:GBR-2764",
+     "admin1-10m:GBR-3409",
+     "admin1-10m:GBR-5699",
+     "admin1-10m:GBR-5700",
+     "admin1-10m:GBR-5701",
+     "admin1-10m:GBR-5702",
+     "admin1-10m:GBR-5703",
+     "admin1-10m:GBR-5704"
+    ],
+    "East Wales": [
+     "admin1-10m:GBR-2039",
+     "admin1-10m:GBR-2043",
+     "admin1-10m:GBR-2044",
+     "admin1-10m:GBR-2045",
+     "admin1-10m:GBR-2046",
+     "admin1-10m:GBR-2047",
+     "admin1-10m:GBR-2048",
+     "admin1-10m:GBR-2050",
+     "admin1-10m:GBR-2051",
+     "admin1-10m:GBR-2052",
+     "admin1-10m:GBR-2104",
+     "admin1-10m:GBR-2105",
+     "admin1-10m:GBR-2106",
+     "admin1-10m:GBR-2110",
+     "admin1-10m:GBR-2112",
+     "admin1-10m:GBR-2113",
+     "admin1-10m:GBR-2114",
+     "admin1-10m:GBR-2115",
+     "admin1-10m:GBR-2118",
+     "admin1-10m:GBR-2119",
+     "admin1-10m:GBR-2125",
+     "admin1-10m:GBR-2128",
+     "admin1-10m:GBR-2129",
+     "admin1-10m:GBR-2130",
+     "admin1-10m:GBR-2131",
+     "admin1-10m:GBR-2134",
+     "admin1-10m:GBR-2141",
+     "admin1-10m:GBR-2142",
+     "admin1-10m:GBR-2756",
+     "admin1-10m:GBR-2757",
+     "admin1-10m:GBR-5988"
+    ],
+    "Greater London": [
+     "admin1-10m:GBR-2060",
+     "admin1-10m:GBR-2061",
+     "admin1-10m:GBR-2062",
+     "admin1-10m:GBR-2063",
+     "admin1-10m:GBR-2064",
+     "admin1-10m:GBR-2065",
+     "admin1-10m:GBR-2066",
+     "admin1-10m:GBR-2067",
+     "admin1-10m:GBR-2068",
+     "admin1-10m:GBR-2069",
+     "admin1-10m:GBR-2070",
+     "admin1-10m:GBR-2071",
+     "admin1-10m:GBR-2072",
+     "admin1-10m:GBR-2073",
+     "admin1-10m:GBR-2074",
+     "admin1-10m:GBR-2075",
+     "admin1-10m:GBR-2076",
+     "admin1-10m:GBR-2077",
+     "admin1-10m:GBR-2078",
+     "admin1-10m:GBR-2079",
+     "admin1-10m:GBR-2080",
+     "admin1-10m:GBR-2675",
+     "admin1-10m:GBR-2753",
+     "admin1-10m:GBR-2754",
+     "admin1-10m:GBR-2765",
+     "admin1-10m:GBR-2766",
+     "admin1-10m:GBR-2767",
+     "admin1-10m:GBR-2768",
+     "admin1-10m:GBR-2769",
+     "admin1-10m:GBR-2770",
+     "admin1-10m:GBR-2771",
+     "admin1-10m:GBR-4809",
+     "admin1-10m:GBR-5705"
+    ],
+    "North East": [
+     "admin1-10m:GBR-2028",
+     "admin1-10m:GBR-2029",
+     "admin1-10m:GBR-2030",
+     "admin1-10m:GBR-2031",
+     "admin1-10m:GBR-2032",
+     "admin1-10m:GBR-2033",
+     "admin1-10m:GBR-2034",
+     "admin1-10m:GBR-2055",
+     "admin1-10m:GBR-2056",
+     "admin1-10m:GBR-2057",
+     "admin1-10m:GBR-2120",
+     "admin1-10m:GBR-2124",
+     "admin1-10m:GBR-2140",
+     "admin1-10m:GBR-5661",
+     "admin1-10m:GBR-5662",
+     "admin1-10m:GBR-5663",
+     "admin1-10m:GBR-5664",
+     "admin1-10m:GBR-5665",
+     "admin1-10m:GBR-5671",
+     "admin1-10m:GBR-5672",
+     "admin1-10m:GBR-5673",
+     "admin1-10m:GBR-5674",
+     "admin1-10m:GBR-5675",
+     "admin1-10m:GBR-5686",
+     "admin1-10m:GBR-5687",
+     "admin1-10m:GBR-5688",
+     "admin1-10m:GBR-5689"
+    ],
+    "North Eastern": [
+     "admin1-10m:GBR-2012",
+     "admin1-10m:GBR-2013",
+     "admin1-10m:GBR-2121",
+     "admin1-10m:GBR-2750",
+     "admin1-10m:GBR-2775",
+     "admin1-10m:GBR-2776",
+     "admin1-10m:GBR-2777",
+     "admin1-10m:GBR-2778",
+     "admin1-10m:GBR-2779",
+     "admin1-10m:GBR-5690",
+     "admin1-10m:GBR-5691",
+     "admin1-10m:GBR-5692",
+     "admin1-10m:GBR-5693",
+     "admin1-10m:GBR-5694",
+     "admin1-10m:GBR-5695",
+     "admin1-10m:GBR-5696"
+    ],
+    "Northern Ireland": [
+     "admin1-10m:GBR-2014",
+     "admin1-10m:GBR-2082",
+     "admin1-10m:GBR-2083",
+     "admin1-10m:GBR-2084",
+     "admin1-10m:GBR-2085",
+     "admin1-10m:GBR-2086",
+     "admin1-10m:GBR-2087",
+     "admin1-10m:GBR-2088",
+     "admin1-10m:GBR-2089",
+     "admin1-10m:GBR-2090",
+     "admin1-10m:GBR-2091",
+     "admin1-10m:GBR-2092",
+     "admin1-10m:GBR-2093",
+     "admin1-10m:GBR-2094",
+     "admin1-10m:GBR-2095",
+     "admin1-10m:GBR-2096",
+     "admin1-10m:GBR-2097",
+     "admin1-10m:GBR-2098",
+     "admin1-10m:GBR-2099",
+     "admin1-10m:GBR-2100",
+     "admin1-10m:GBR-2101",
+     "admin1-10m:GBR-2102",
+     "admin1-10m:GBR-2103",
+     "admin1-10m:GBR-2135",
+     "admin1-10m:GBR-2136",
+     "admin1-10m:GBR-2137",
+     "admin1-10m:GBR-2744",
+     "admin1-10m:GBR-2745",
+     "admin1-10m:GBR-2746",
+     "admin1-10m:GBR-2747",
+     "admin1-10m:GBR-2772",
+     "admin1-10m:GBR-2773"
+    ],
+    "South Western": [
+     "admin1-10m:GBR-2001",
+     "admin1-10m:GBR-2002",
+     "admin1-10m:GBR-2003",
+     "admin1-10m:GBR-2004",
+     "admin1-10m:GBR-2005",
+     "admin1-10m:GBR-2006",
+     "admin1-10m:GBR-2007",
+     "admin1-10m:GBR-2008",
+     "admin1-10m:GBR-2009",
+     "admin1-10m:GBR-2010",
+     "admin1-10m:GBR-2011",
+     "admin1-10m:GBR-2015",
+     "admin1-10m:GBR-2016",
+     "admin1-10m:GBR-2017",
+     "admin1-10m:GBR-2018",
+     "admin1-10m:GBR-2019",
+     "admin1-10m:GBR-2020",
+     "admin1-10m:GBR-2021",
+     "admin1-10m:GBR-2022",
+     "admin1-10m:GBR-2023",
+     "admin1-10m:GBR-2024",
+     "admin1-10m:GBR-2025",
+     "admin1-10m:GBR-2026",
+     "admin1-10m:GBR-2138"
+    ],
+    "West Wales and the Valleys": [
+     "admin1-10m:GBR-2108",
+     "admin1-10m:GBR-2111",
+     "admin1-10m:GBR-2116",
+     "admin1-10m:GBR-2117",
+     "admin1-10m:GBR-2122",
+     "admin1-10m:GBR-2123",
+     "admin1-10m:GBR-2126",
+     "admin1-10m:GBR-2127",
+     "admin1-10m:GBR-2132",
+     "admin1-10m:GBR-2133",
+     "admin1-10m:GBR-2139",
+     "admin1-10m:GBR-2774",
+     "admin1-10m:GBR-5666",
+     "admin1-10m:GBR-5667",
+     "admin1-10m:GBR-5668",
+     "admin1-10m:GBR-5669",
+     "admin1-10m:GBR-5670",
+     "admin1-10m:GBR-5676",
+     "admin1-10m:GBR-5677",
+     "admin1-10m:GBR-5678",
+     "admin1-10m:GBR-5679",
+     "admin1-10m:GBR-5680",
+     "admin1-10m:GBR-5681",
+     "admin1-10m:GBR-5682",
+     "admin1-10m:GBR-5683",
+     "admin1-10m:GBR-5684",
+     "admin1-10m:GBR-5685",
+     "admin1-10m:GBR-5706",
+     "admin1-10m:GBR-5707",
+     "admin1-10m:GBR-5708"
+    ]
+   }
+  },
+  "ger": {
+   "capital": "Berlin",
+   "regions": {
+    "Baden-Wurttemberg": [
+     "admin1-10m:DEU-1573",
+     "admin1-10m:DEU-1578",
+     "admin1-10m:DEU-1579"
+    ],
+    "Berlin": [
+     "admin1-10m:DEU-1599"
+    ],
+    "Brandenburg East": [
+     "admin1-10m:POL-3143"
+    ],
+    "Bremen": [
+     "admin1-10m:DEU-1574",
+     "admin1-10m:DEU-1575",
+     "admin1-10m:DEU-1576"
+    ],
+    "East Prussia": [
+     "admin1-10m:POL-3139",
+     "admin1-10m:RUS-2324"
+    ],
+    "Mecklenburg-Vorpommern": [
+     "admin1-10m:DEU-1601",
+     "admin1-10m:DEU-3487",
+     "admin1-10m:DEU-3488"
+    ],
+    "Pomerania": [
+     "admin1-10m:POL-3142"
+    ],
+    "Saarland": [
+     "admin1-10m:DEU-1572",
+     "admin1-10m:DEU-1580",
+     "admin1-10m:DEU-1581"
+    ],
+    "Silesia": [
+     "admin1-10m:POL-3141",
+     "admin1-10m:POL-3167"
+    ],
+    "Thuringen": [
+     "admin1-10m:DEU-1577",
+     "admin1-10m:DEU-1591",
+     "admin1-10m:DEU-1600"
+    ]
+   }
+  },
+  "hun": {
+   "capital": "Central Hungary",
+   "regions": {
+    "Central Hungary": [
+     "admin1-10m:HUN-3160",
+     "admin1-10m:HUN-3164",
+     "admin1-10m:HUN-4907"
+    ],
+    "Central Transdanubia": [
+     "admin1-10m:HUN-3158",
+     "admin1-10m:HUN-3162",
+     "admin1-10m:HUN-3163",
+     "admin1-10m:HUN-4906",
+     "admin1-10m:HUN-4908",
+     "admin1-10m:HUN-4909",
+     "admin1-10m:HUN-4925"
+    ],
+    "Great Southern Plain": [
+     "admin1-10m:HUN-3161",
+     "admin1-10m:HUN-3171",
+     "admin1-10m:HUN-3172",
+     "admin1-10m:HUN-4915",
+     "admin1-10m:HUN-4916",
+     "admin1-10m:HUN-4917",
+     "admin1-10m:HUN-4919"
+    ],
+    "Northern Great Plain": [
+     "admin1-10m:HUN-3169",
+     "admin1-10m:HUN-3173",
+     "admin1-10m:HUN-3175",
+     "admin1-10m:HUN-4918",
+     "admin1-10m:HUN-4923",
+     "admin1-10m:HUN-4924"
+    ],
+    "Northern Hungary": [
+     "admin1-10m:HUN-3166",
+     "admin1-10m:HUN-3168",
+     "admin1-10m:HUN-3174",
+     "admin1-10m:HUN-4920",
+     "admin1-10m:HUN-4921",
+     "admin1-10m:HUN-4922"
+    ],
+    "Southern Transdanubia": [
+     "admin1-10m:HUN-3155",
+     "admin1-10m:HUN-3157",
+     "admin1-10m:HUN-3165",
+     "admin1-10m:HUN-4912",
+     "admin1-10m:HUN-4913",
+     "admin1-10m:HUN-4914"
+    ],
+    "Western Transdanubia": [
+     "admin1-10m:HUN-3138",
+     "admin1-10m:HUN-3156",
+     "admin1-10m:HUN-3159",
+     "admin1-10m:HUN-4903",
+     "admin1-10m:HUN-4904",
+     "admin1-10m:HUN-4905",
+     "admin1-10m:HUN-4910",
+     "admin1-10m:HUN-4911"
+    ]
+   }
+  },
+  "ita": {
+   "capital": "Lazio",
+   "regions": {
+    "Apulia": [
+     "admin1-10m:ITA-5389",
+     "admin1-10m:ITA-5390",
+     "admin1-10m:ITA-5403",
+     "admin1-10m:ITA-5404",
+     "admin1-10m:ITA-5405",
+     "admin1-10m:ITA-5406",
+     "admin1-10m:ITA-5407",
+     "admin1-10m:ITA-5408"
+    ],
+    "Calabria": [
+     "admin1-10m:ITA-5391",
+     "admin1-10m:ITA-5392",
+     "admin1-10m:ITA-5393",
+     "admin1-10m:ITA-5394",
+     "admin1-10m:ITA-5395"
+    ],
+    "Campania": [
+     "admin1-10m:ITA-5396",
+     "admin1-10m:ITA-5397",
+     "admin1-10m:ITA-5398",
+     "admin1-10m:ITA-5399",
+     "admin1-10m:ITA-5400",
+     "admin1-10m:ITA-5401",
+     "admin1-10m:ITA-5402"
+    ],
+    "Lazio": [
+     "admin1-10m:ITA-5422",
+     "admin1-10m:ITA-5423",
+     "admin1-10m:ITA-5424",
+     "admin1-10m:ITA-5425",
+     "admin1-10m:ITA-5426"
+    ],
+    "Liguria": [
+     "admin1-10m:ITA-5367",
+     "admin1-10m:ITA-5368",
+     "admin1-10m:ITA-5369",
+     "admin1-10m:ITA-5370",
+     "admin1-10m:ITA-5371",
+     "admin1-10m:ITA-5372",
+     "admin1-10m:ITA-5373",
+     "admin1-10m:ITA-5374",
+     "admin1-10m:ITA-5375",
+     "admin1-10m:ITA-5376",
+     "admin1-10m:ITA-5377",
+     "admin1-10m:ITA-5378"
+    ],
+    "Lombardia": [
+     "admin1-10m:ITA-5358",
+     "admin1-10m:ITA-5359",
+     "admin1-10m:ITA-5360",
+     "admin1-10m:ITA-5361",
+     "admin1-10m:ITA-5362",
+     "admin1-10m:ITA-5363",
+     "admin1-10m:ITA-5364",
+     "admin1-10m:ITA-5365",
+     "admin1-10m:ITA-5366",
+     "admin1-10m:ITA-5443",
+     "admin1-10m:ITA-5444",
+     "admin1-10m:ITA-5445",
+     "admin1-10m:ITA-5446",
+     "admin1-10m:ITA-5447",
+     "admin1-10m:ITA-5448",
+     "admin1-10m:ITA-5449",
+     "admin1-10m:ITA-5450",
+     "admin1-10m:ITA-5451",
+     "admin1-10m:ITA-5452",
+     "admin1-10m:ITA-5453",
+     "admin1-10m:ITA-5454"
+    ],
+    "Marche": [
+     "admin1-10m:ITA-5427",
+     "admin1-10m:ITA-5428",
+     "admin1-10m:ITA-5429",
+     "admin1-10m:ITA-5430",
+     "admin1-10m:ITA-5431",
+     "admin1-10m:ITA-5455",
+     "admin1-10m:ITA-5456",
+     "admin1-10m:ITA-5457",
+     "admin1-10m:ITA-5458"
+    ],
+    "Sicily": [
+     "admin1-10m:ITA-5409",
+     "admin1-10m:ITA-5410",
+     "admin1-10m:ITA-5411",
+     "admin1-10m:ITA-5412",
+     "admin1-10m:ITA-5413",
+     "admin1-10m:ITA-5414",
+     "admin1-10m:ITA-5415",
+     "admin1-10m:ITA-5416",
+     "admin1-10m:ITA-5417",
+     "admin1-10m:ITA-5418",
+     "admin1-10m:ITA-5419",
+     "admin1-10m:ITA-5420",
+     "admin1-10m:ITA-5421"
+    ],
+    "Toscana": [
+     "admin1-10m:ITA-5379",
+     "admin1-10m:ITA-5380",
+     "admin1-10m:ITA-5381",
+     "admin1-10m:ITA-5382",
+     "admin1-10m:ITA-5383",
+     "admin1-10m:ITA-5384",
+     "admin1-10m:ITA-5385",
+     "admin1-10m:ITA-5386",
+     "admin1-10m:ITA-5387",
+     "admin1-10m:ITA-5388",
+     "admin1-10m:ITA-5459",
+     "admin1-10m:ITA-5460"
+    ],
+    "Valle d'Aosta": [
+     "admin1-10m:ITA-5434",
+     "admin1-10m:ITA-5435",
+     "admin1-10m:ITA-5436",
+     "admin1-10m:ITA-5437",
+     "admin1-10m:ITA-5438",
+     "admin1-10m:ITA-5439",
+     "admin1-10m:ITA-5440",
+     "admin1-10m:ITA-5441",
+     "admin1-10m:ITA-5442"
+    ],
+    "Veneto": [
+     "admin1-10m:ITA-5432",
+     "admin1-10m:ITA-5433",
+     "admin1-10m:ITA-5461",
+     "admin1-10m:ITA-5462",
+     "admin1-10m:ITA-5463",
+     "admin1-10m:ITA-5464",
+     "admin1-10m:ITA-5465",
+     "admin1-10m:ITA-5466",
+     "admin1-10m:ITA-5467"
+    ]
+   }
+  },
+  "m_eri": {
+   "capital": "Maekel",
+   "regions": {
+    "Anseba": [
+     "admin1-10m:ERI-1561"
+    ],
+    "Debub": [
+     "admin1-10m:ERI-1562"
+    ],
+    "Debubawi Keyih Bahri": [
+     "admin1-10m:ERI-1565"
+    ],
+    "Gash Barka": [
+     "admin1-10m:ERI-1560"
+    ],
+    "Maekel": [
+     "admin1-10m:ERI-1564"
+    ],
+    "Semenawi Keyih Bahri": [
+     "admin1-10m:ERI-1563"
+    ]
+   }
+  },
+  "m_som": {
+   "capital": "Banaadir",
+   "regions": {
+    "Bakool": [
+     "admin1-10m:SOM-2312"
+    ],
+    "Banaadir": [
+     "admin1-10m:SOM-2407"
+    ],
+    "Bari": [
+     "admin1-10m:SOM-1"
+    ],
+    "Bay": [
+     "admin1-10m:SOM-2313"
+    ],
+    "Galguduud": [
+     "admin1-10m:SOM-2408"
+    ],
+    "Gedo": [
+     "admin1-10m:SOM-2314"
+    ],
+    "Hiiraan": [
+     "admin1-10m:SOM-2409"
+    ],
+    "Jubbada Dhexe": [
+     "admin1-10m:SOM-2315"
+    ],
+    "Jubbada Hoose": [
+     "admin1-10m:SOM-2645"
+    ],
+    "Mudug": [
+     "admin1-10m:SOM-2412"
+    ],
+    "Nugaal": [
+     "admin1-10m:SOM-2413"
+    ],
+    "Shabeellaha Dhexe": [
+     "admin1-10m:SOM-2410"
+    ],
+    "Shabeellaha Hoose": [
+     "admin1-10m:SOM-2316"
+    ]
+   }
+  },
+  "pol": {
+   "capital": "Masovian",
+   "regions": {
+    "Eastern Borderlands": [
+     "admin1-10m:BLR-2338",
+     "admin1-10m:BLR-2344",
+     "admin1-10m:UKR-286",
+     "admin1-10m:UKR-289",
+     "admin1-10m:UKR-291",
+     "admin1-10m:UKR-292",
+     "admin1-10m:UKR-318"
+    ],
+    "Greater Poland": [
+     "admin1-10m:POL-3144"
+    ],
+    "Lesser Poland": [
+     "admin1-10m:POL-3170"
+    ],
+    "Lublin": [
+     "admin1-10m:POL-3151"
+    ],
+    "Masovian": [
+     "admin1-10m:POL-3148"
+    ],
+    "Podlachian": [
+     "admin1-10m:POL-3150"
+    ],
+    "Polish Corridor": [
+     "admin1-10m:POL-3140",
+     "admin1-10m:POL-3145"
+    ],
+    "Silesian": [
+     "admin1-10m:POL-3146"
+    ],
+    "Subcarpathian": [
+     "admin1-10m:POL-3152"
+    ],
+    "Swietokrzyskie": [
+     "admin1-10m:POL-3149"
+    ],
+    "Łodz": [
+     "admin1-10m:POL-3147"
+    ]
+   }
+  },
+  "rou": {
+   "capital": "ROU Bucharest",
+   "regions": {
+    "MDA Balti": [
+     "admin1-10m:MDA-1618",
+     "admin1-10m:MDA-1622",
+     "admin1-10m:MDA-1624",
+     "admin1-10m:MDA-1631",
+     "admin1-10m:MDA-1632",
+     "admin1-10m:MDA-1635",
+     "admin1-10m:MDA-1642",
+     "admin1-10m:MDA-1653"
+    ],
+    "MDA Briceni": [
+     "admin1-10m:MDA-1613",
+     "admin1-10m:MDA-1615",
+     "admin1-10m:MDA-1617",
+     "admin1-10m:MDA-1621",
+     "admin1-10m:ROU-129",
+     "admin1-10m:ROU-132",
+     "admin1-10m:ROU-308",
+     "admin1-10m:ROU-317"
+    ],
+    "MDA Criuleni": [
+     "admin1-10m:MDA-1628",
+     "admin1-10m:MDA-1629",
+     "admin1-10m:MDA-1634",
+     "admin1-10m:MDA-1637",
+     "admin1-10m:MDA-1638",
+     "admin1-10m:MDA-1645",
+     "admin1-10m:MDA-1649",
+     "admin1-10m:MDA-1650"
+    ],
+    "MDA Leova": [
+     "admin1-10m:MDA-1626",
+     "admin1-10m:MDA-1639",
+     "admin1-10m:MDA-1641",
+     "admin1-10m:MDA-1646",
+     "admin1-10m:MDA-1647",
+     "admin1-10m:MDA-1648",
+     "admin1-10m:ROU-133",
+     "admin1-10m:ROU-4847"
+    ],
+    "MDA Ocnita": [
+     "admin1-10m:MDA-1614",
+     "admin1-10m:MDA-1616",
+     "admin1-10m:MDA-1619",
+     "admin1-10m:MDA-1620",
+     "admin1-10m:MDA-1623",
+     "admin1-10m:ROU-313",
+     "admin1-10m:ROU-315",
+     "admin1-10m:ROU-316"
+    ],
+    "MDA Stefan Voda": [
+     "admin1-10m:MDA-1651"
+    ],
+    "MDA Taraclia": [
+     "admin1-10m:MDA-1625",
+     "admin1-10m:MDA-1627",
+     "admin1-10m:MDA-1630",
+     "admin1-10m:MDA-1633",
+     "admin1-10m:MDA-1640",
+     "admin1-10m:MDA-1643",
+     "admin1-10m:MDA-1644",
+     "admin1-10m:MDA-1652"
+    ],
+    "ROU Bistrita-Nasaud": [
+     "admin1-10m:ROU-127",
+     "admin1-10m:ROU-130",
+     "admin1-10m:ROU-295",
+     "admin1-10m:ROU-299",
+     "admin1-10m:ROU-302",
+     "admin1-10m:ROU-305",
+     "admin1-10m:ROU-307",
+     "admin1-10m:ROU-311"
+    ],
+    "ROU Bucharest": [
+     "admin1-10m:ROU-128"
+    ],
+    "ROU Covasna": [
+     "admin1-10m:ROU-131",
+     "admin1-10m:ROU-287",
+     "admin1-10m:ROU-306",
+     "admin1-10m:ROU-309",
+     "admin1-10m:ROU-310",
+     "admin1-10m:ROU-312",
+     "admin1-10m:ROU-314",
+     "admin1-10m:ROU-4844"
+    ],
+    "ROU Gorj": [
+     "admin1-10m:ROU-122",
+     "admin1-10m:ROU-123",
+     "admin1-10m:ROU-126",
+     "admin1-10m:ROU-294",
+     "admin1-10m:ROU-296",
+     "admin1-10m:ROU-298",
+     "admin1-10m:ROU-303",
+     "admin1-10m:ROU-304"
+    ],
+    "ROU Timis": [
+     "admin1-10m:ROU-124",
+     "admin1-10m:ROU-276",
+     "admin1-10m:ROU-277",
+     "admin1-10m:ROU-278",
+     "admin1-10m:ROU-280",
+     "admin1-10m:ROU-297",
+     "admin1-10m:ROU-300",
+     "admin1-10m:ROU-301"
+    ]
+   }
+  },
+  "sov": {
+   "capital": "RUS Central",
+   "regions": {
+    "BLR Gomel": [
+     "admin1-10m:BLR-2339",
+     "admin1-10m:BLR-2340",
+     "admin1-10m:UKR-322"
+    ],
+    "BLR Minsk": [
+     "admin1-10m:BLR-2345",
+     "admin1-10m:BLR-4825",
+     "admin1-10m:UKR-324"
+    ],
+    "BLR Vitebsk": [
+     "admin1-10m:BLR-2341",
+     "admin1-10m:RUS-2333",
+     "admin1-10m:RUS-2334",
+     "admin1-10m:RUS-2335",
+     "admin1-10m:RUS-2336",
+     "admin1-10m:RUS-2337",
+     "admin1-10m:RUS-2353",
+     "admin1-10m:RUS-2354",
+     "admin1-10m:RUS-2359",
+     "admin1-10m:RUS-2381",
+     "admin1-10m:RUS-2383",
+     "admin1-10m:UKR-323"
+    ],
+    "RUS Central": [
+     "admin1-10m:RUS-2342",
+     "admin1-10m:RUS-2343",
+     "admin1-10m:RUS-2355",
+     "admin1-10m:RUS-2356",
+     "admin1-10m:RUS-2358",
+     "admin1-10m:RUS-2360",
+     "admin1-10m:RUS-2361",
+     "admin1-10m:RUS-2362",
+     "admin1-10m:RUS-2363",
+     "admin1-10m:RUS-2364",
+     "admin1-10m:RUS-2365",
+     "admin1-10m:RUS-2366",
+     "admin1-10m:RUS-2368",
+     "admin1-10m:RUS-2370",
+     "admin1-10m:RUS-2374",
+     "admin1-10m:RUS-2375",
+     "admin1-10m:RUS-2376",
+     "admin1-10m:RUS-2377"
+    ],
+    "RUS Far Eastern": [
+     "admin1-10m:RUS-2321",
+     "admin1-10m:RUS-2609",
+     "admin1-10m:RUS-2611",
+     "admin1-10m:RUS-2612",
+     "admin1-10m:RUS-2613",
+     "admin1-10m:RUS-2614",
+     "admin1-10m:RUS-2615",
+     "admin1-10m:RUS-2616",
+     "admin1-10m:RUS-3468"
+    ],
+    "RUS Siberian": [
+     "admin1-10m:RUS-2167",
+     "admin1-10m:RUS-2397",
+     "admin1-10m:RUS-2399",
+     "admin1-10m:RUS-2400",
+     "admin1-10m:RUS-2401",
+     "admin1-10m:RUS-2402",
+     "admin1-10m:RUS-2403",
+     "admin1-10m:RUS-2602",
+     "admin1-10m:RUS-2603",
+     "admin1-10m:RUS-2605",
+     "admin1-10m:RUS-2606",
+     "admin1-10m:RUS-2610"
+    ],
+    "RUS Urals": [
+     "admin1-10m:RUS+99?",
+     "admin1-10m:RUS-2379",
+     "admin1-10m:RUS-2380",
+     "admin1-10m:RUS-2382",
+     "admin1-10m:RUS-2386",
+     "admin1-10m:RUS-2396",
+     "admin1-10m:RUS-2398"
+    ],
+    "UKR Kharkiv": [
+     "admin1-10m:UKR-327",
+     "admin1-10m:UKR-328",
+     "admin1-10m:UKR-329"
+    ],
+    "UKR Kherson": [
+     "admin1-10m:RUS-2279",
+     "admin1-10m:RUS-2280",
+     "admin1-10m:RUS-2303",
+     "admin1-10m:RUS-2304",
+     "admin1-10m:RUS-2305",
+     "admin1-10m:RUS-2306",
+     "admin1-10m:RUS-2357",
+     "admin1-10m:RUS-2367",
+     "admin1-10m:RUS-2369",
+     "admin1-10m:RUS-2371",
+     "admin1-10m:RUS-2372",
+     "admin1-10m:RUS-2373",
+     "admin1-10m:RUS-2378",
+     "admin1-10m:RUS-2384",
+     "admin1-10m:RUS-2385",
+     "admin1-10m:RUS-2387",
+     "admin1-10m:RUS-2388",
+     "admin1-10m:RUS-2389",
+     "admin1-10m:RUS-2390",
+     "admin1-10m:RUS-2391",
+     "admin1-10m:RUS-2392",
+     "admin1-10m:RUS-2393",
+     "admin1-10m:RUS-2394",
+     "admin1-10m:RUS-2395",
+     "admin1-10m:RUS-2416",
+     "admin1-10m:RUS-2417",
+     "admin1-10m:RUS-283",
+     "admin1-10m:RUS-3200",
+     "admin1-10m:RUS-5482",
+     "admin1-10m:UKR-330",
+     "admin1-10m:UKR-4827"
+    ],
+    "UKR Kiev City": [
+     "admin1-10m:UKR-319",
+     "admin1-10m:UKR-321",
+     "admin1-10m:UKR-4826"
+    ],
+    "UKR Mykolayiv": [
+     "admin1-10m:UKR-284",
+     "admin1-10m:UKR-285",
+     "admin1-10m:UKR-320"
+    ],
+    "UKR Sumy": [
+     "admin1-10m:UKR-325",
+     "admin1-10m:UKR-326",
+     "admin1-10m:UKR-331"
+    ],
+    "UKR Transcarpathia": [
+     "admin1-10m:UKR-288",
+     "admin1-10m:UKR-290",
+     "admin1-10m:UKR-293"
+    ]
+   }
+  },
+  "yug": {
+   "capital": "SRB Grad Beograd",
+   "regions": {
+    "HRV Licko-Senjska": [
+     "admin1-10m:BIH-2224",
+     "admin1-10m:BIH-2225",
+     "admin1-10m:BIH-2226",
+     "admin1-10m:BIH-2227",
+     "admin1-10m:BIH-2228",
+     "admin1-10m:BIH-2887",
+     "admin1-10m:BIH-2889",
+     "admin1-10m:BIH-2890",
+     "admin1-10m:BIH-2891",
+     "admin1-10m:HRV-1491",
+     "admin1-10m:HRV-1493",
+     "admin1-10m:HRV-1582",
+     "admin1-10m:HRV-1583",
+     "admin1-10m:HRV-1584",
+     "admin1-10m:HRV-1588",
+     "admin1-10m:HRV-1589",
+     "admin1-10m:SVN-1039",
+     "admin1-10m:SVN-1040",
+     "admin1-10m:SVN-1041",
+     "admin1-10m:SVN-1042",
+     "admin1-10m:SVN-1043",
+     "admin1-10m:SVN-1044",
+     "admin1-10m:SVN-1045",
+     "admin1-10m:SVN-1046",
+     "admin1-10m:SVN-1047",
+     "admin1-10m:SVN-1048",
+     "admin1-10m:SVN-1049",
+     "admin1-10m:SVN-1050",
+     "admin1-10m:SVN-196",
+     "admin1-10m:SVN-197",
+     "admin1-10m:SVN-198",
+     "admin1-10m:SVN-199",
+     "admin1-10m:SVN-200",
+     "admin1-10m:SVN-201",
+     "admin1-10m:SVN-202",
+     "admin1-10m:SVN-203",
+     "admin1-10m:SVN-208",
+     "admin1-10m:SVN-211",
+     "admin1-10m:SVN-216",
+     "admin1-10m:SVN-219",
+     "admin1-10m:SVN-221",
+     "admin1-10m:SVN-222",
+     "admin1-10m:SVN-226",
+     "admin1-10m:SVN-227",
+     "admin1-10m:SVN-228",
+     "admin1-10m:SVN-229",
+     "admin1-10m:SVN-230",
+     "admin1-10m:SVN-231",
+     "admin1-10m:SVN-232",
+     "admin1-10m:SVN-234",
+     "admin1-10m:SVN-235",
+     "admin1-10m:SVN-256",
+     "admin1-10m:SVN-263",
+     "admin1-10m:SVN-264",
+     "admin1-10m:SVN-265",
+     "admin1-10m:SVN-266",
+     "admin1-10m:SVN-267",
+     "admin1-10m:SVN-268",
+     "admin1-10m:SVN-269",
+     "admin1-10m:SVN-270",
+     "admin1-10m:SVN-271",
+     "admin1-10m:SVN-272",
+     "admin1-10m:SVN-5884",
+     "admin1-10m:SVN-926",
+     "admin1-10m:SVN-927",
+     "admin1-10m:SVN-928",
+     "admin1-10m:SVN-929",
+     "admin1-10m:SVN-930",
+     "admin1-10m:SVN-931",
+     "admin1-10m:SVN-938",
+     "admin1-10m:SVN-948",
+     "admin1-10m:SVN-956",
+     "admin1-10m:SVN-958",
+     "admin1-10m:SVN-959",
+     "admin1-10m:SVN-976",
+     "admin1-10m:SVN-979",
+     "admin1-10m:SVN-986",
+     "admin1-10m:SVN-988",
+     "admin1-10m:SVN-996"
+    ],
+    "HRV Osjecko-Baranjska": [
+     "admin1-10m:HRV-1603",
+     "admin1-10m:HRV-1605",
+     "admin1-10m:MNE-1496",
+     "admin1-10m:MNE-1499",
+     "admin1-10m:MNE-1500",
+     "admin1-10m:MNE-1506",
+     "admin1-10m:MNE-1507",
+     "admin1-10m:MNE-1511",
+     "admin1-10m:MNE-1514",
+     "admin1-10m:MNE-1515",
+     "admin1-10m:MNE-1518"
+    ],
+    "HRV Varazdinska": [
+     "admin1-10m:BIH-3153",
+     "admin1-10m:BIH-4801",
+     "admin1-10m:BIH-4802",
+     "admin1-10m:BIH-4803",
+     "admin1-10m:BIH-4804",
+     "admin1-10m:BIH-4805",
+     "admin1-10m:BIH-4806",
+     "admin1-10m:BIH-4807",
+     "admin1-10m:BIH-4808",
+     "admin1-10m:HRV-1490",
+     "admin1-10m:HRV-1492",
+     "admin1-10m:HRV-1587",
+     "admin1-10m:HRV-1602",
+     "admin1-10m:HRV-1604",
+     "admin1-10m:HRV-1606",
+     "admin1-10m:HRV-1607",
+     "admin1-10m:HRV-1608",
+     "admin1-10m:HRV-1609",
+     "admin1-10m:HRV-1610"
+    ],
+    "KOS Pec": [
+     "admin1-10m:KOS-5886",
+     "admin1-10m:KOS-5887",
+     "admin1-10m:KOS-5888",
+     "admin1-10m:KOS-5892",
+     "admin1-10m:KOS-5893",
+     "admin1-10m:KOS-5894",
+     "admin1-10m:KOS-5895",
+     "admin1-10m:KOS-5896",
+     "admin1-10m:KOS-5897",
+     "admin1-10m:KOS-5898",
+     "admin1-10m:KOS-5899",
+     "admin1-10m:KOS-5900",
+     "admin1-10m:KOS-5901",
+     "admin1-10m:KOS-5902",
+     "admin1-10m:KOS-5903",
+     "admin1-10m:KOS-5906",
+     "admin1-10m:KOS-5908",
+     "admin1-10m:KOS-5909",
+     "admin1-10m:KOS-5910",
+     "admin1-10m:KOS-5911",
+     "admin1-10m:MKD-2894",
+     "admin1-10m:MKD-2895",
+     "admin1-10m:MKD-2897",
+     "admin1-10m:MKD-2898",
+     "admin1-10m:MKD-2899",
+     "admin1-10m:MKD-2916",
+     "admin1-10m:MKD-2918",
+     "admin1-10m:MKD-2944",
+     "admin1-10m:MKD-2950",
+     "admin1-10m:MKD-2951",
+     "admin1-10m:MKD-2952",
+     "admin1-10m:MKD-2954",
+     "admin1-10m:MKD-2955",
+     "admin1-10m:MKD-2958",
+     "admin1-10m:MKD-2959",
+     "admin1-10m:MKD-2960",
+     "admin1-10m:MKD-2961",
+     "admin1-10m:MKD-2962",
+     "admin1-10m:MKD-4845",
+     "admin1-10m:SRB-1061",
+     "admin1-10m:SRB-834",
+     "admin1-10m:SRB-839"
+    ],
+    "MKD Bosilovo": [
+     "admin1-10m:MKD-2997"
+    ],
+    "MKD Drugovo": [
+     "admin1-10m:KOS-5912",
+     "admin1-10m:KOS-5913",
+     "admin1-10m:KOS-5914",
+     "admin1-10m:KOS-5915",
+     "admin1-10m:MKD-2896",
+     "admin1-10m:MKD-2902",
+     "admin1-10m:MKD-2903",
+     "admin1-10m:MKD-2908",
+     "admin1-10m:MKD-2913",
+     "admin1-10m:MKD-2921",
+     "admin1-10m:MKD-2923",
+     "admin1-10m:MKD-2928",
+     "admin1-10m:MKD-2929",
+     "admin1-10m:MKD-2935",
+     "admin1-10m:MKD-2937",
+     "admin1-10m:MKD-2938",
+     "admin1-10m:MKD-2941",
+     "admin1-10m:MKD-2942",
+     "admin1-10m:MKD-2947",
+     "admin1-10m:MKD-2948",
+     "admin1-10m:MKD-2953",
+     "admin1-10m:MKD-2956",
+     "admin1-10m:MKD-2957",
+     "admin1-10m:MKD-2963",
+     "admin1-10m:MKD-5883",
+     "admin1-10m:SRB-1060",
+     "admin1-10m:SRB-831",
+     "admin1-10m:SRB-833"
+    ],
+    "MKD Skopje": [
+     "admin1-10m:KOS-5904",
+     "admin1-10m:KOS-5905",
+     "admin1-10m:KOS-5907",
+     "admin1-10m:MKD-2901",
+     "admin1-10m:MKD-2904",
+     "admin1-10m:MKD-2906",
+     "admin1-10m:MKD-2907",
+     "admin1-10m:MKD-2909",
+     "admin1-10m:MKD-2910",
+     "admin1-10m:MKD-2912",
+     "admin1-10m:MKD-2914",
+     "admin1-10m:MKD-2915",
+     "admin1-10m:MKD-2917",
+     "admin1-10m:MKD-2919",
+     "admin1-10m:MKD-2920",
+     "admin1-10m:MKD-2922",
+     "admin1-10m:MKD-2926",
+     "admin1-10m:MKD-2930",
+     "admin1-10m:MKD-2931",
+     "admin1-10m:MKD-2933",
+     "admin1-10m:MKD-2936",
+     "admin1-10m:MKD-2940",
+     "admin1-10m:MKD-2943",
+     "admin1-10m:MKD-2945",
+     "admin1-10m:MKD-2946",
+     "admin1-10m:MKD-4846",
+     "admin1-10m:SRB-279",
+     "admin1-10m:SRB-832",
+     "admin1-10m:SRB-835"
+    ],
+    "MNE Savnik": [
+     "admin1-10m:MNE-1497",
+     "admin1-10m:MNE-1512",
+     "admin1-10m:MNE-1513",
+     "admin1-10m:MNE-1516",
+     "admin1-10m:MNE-1517",
+     "admin1-10m:MNE-1519",
+     "admin1-10m:MNE-1520",
+     "admin1-10m:SRB-1059",
+     "admin1-10m:SRB-273",
+     "admin1-10m:SRB-274",
+     "admin1-10m:SRB-838"
+    ],
+    "SRB Grad Beograd": [
+     "admin1-10m:SRB-836"
+    ],
+    "SRB Nisavski": [
+     "admin1-10m:MKD-2905",
+     "admin1-10m:MKD-2911",
+     "admin1-10m:MKD-2924",
+     "admin1-10m:MKD-2925",
+     "admin1-10m:MKD-2927",
+     "admin1-10m:MKD-2932",
+     "admin1-10m:MKD-2934",
+     "admin1-10m:MKD-2939",
+     "admin1-10m:MKD-2993",
+     "admin1-10m:MKD-2994",
+     "admin1-10m:MKD-2995",
+     "admin1-10m:MKD-2996",
+     "admin1-10m:MKD-2998",
+     "admin1-10m:MKD-2999",
+     "admin1-10m:MKD-3000",
+     "admin1-10m:MKD-3003",
+     "admin1-10m:MKD-3004",
+     "admin1-10m:MKD-3005",
+     "admin1-10m:MKD-3006",
+     "admin1-10m:MKD-3007",
+     "admin1-10m:SRB-121",
+     "admin1-10m:SRB-125",
+     "admin1-10m:SRB-830",
+     "admin1-10m:SRB-841",
+     "admin1-10m:SRB-843",
+     "admin1-10m:SRB-844"
+    ],
+    "SRB Sremski": [
+     "admin1-10m:KOS-5889",
+     "admin1-10m:KOS-5890",
+     "admin1-10m:KOS-5891",
+     "admin1-10m:MNE-1501",
+     "admin1-10m:MNE-1503",
+     "admin1-10m:MNE-1508",
+     "admin1-10m:MNE-1509",
+     "admin1-10m:MNE-1510",
+     "admin1-10m:SRB-1505",
+     "admin1-10m:SRB-275",
+     "admin1-10m:SRB-281",
+     "admin1-10m:SRB-829",
+     "admin1-10m:SRB-837"
+    ],
+    "SVN Goriska": [
+     "admin1-10m:HRV-1586",
+     "admin1-10m:HRV-1592",
+     "admin1-10m:SVN-1000",
+     "admin1-10m:SVN-1001",
+     "admin1-10m:SVN-1002",
+     "admin1-10m:SVN-1003",
+     "admin1-10m:SVN-1004",
+     "admin1-10m:SVN-1005",
+     "admin1-10m:SVN-1006",
+     "admin1-10m:SVN-1007",
+     "admin1-10m:SVN-1008",
+     "admin1-10m:SVN-1009",
+     "admin1-10m:SVN-1010",
+     "admin1-10m:SVN-1011",
+     "admin1-10m:SVN-1012",
+     "admin1-10m:SVN-1013",
+     "admin1-10m:SVN-1014",
+     "admin1-10m:SVN-1015",
+     "admin1-10m:SVN-1016",
+     "admin1-10m:SVN-1017",
+     "admin1-10m:SVN-1018",
+     "admin1-10m:SVN-1019",
+     "admin1-10m:SVN-1020",
+     "admin1-10m:SVN-1021",
+     "admin1-10m:SVN-1022",
+     "admin1-10m:SVN-1023",
+     "admin1-10m:SVN-1024",
+     "admin1-10m:SVN-1025",
+     "admin1-10m:SVN-1026",
+     "admin1-10m:SVN-1027",
+     "admin1-10m:SVN-1028",
+     "admin1-10m:SVN-1029",
+     "admin1-10m:SVN-1030",
+     "admin1-10m:SVN-1031",
+     "admin1-10m:SVN-1032",
+     "admin1-10m:SVN-1033",
+     "admin1-10m:SVN-1034",
+     "admin1-10m:SVN-1035",
+     "admin1-10m:SVN-204",
+     "admin1-10m:SVN-205",
+     "admin1-10m:SVN-206",
+     "admin1-10m:SVN-207",
+     "admin1-10m:SVN-209",
+     "admin1-10m:SVN-210",
+     "admin1-10m:SVN-212",
+     "admin1-10m:SVN-213",
+     "admin1-10m:SVN-214",
+     "admin1-10m:SVN-215",
+     "admin1-10m:SVN-217",
+     "admin1-10m:SVN-218",
+     "admin1-10m:SVN-220",
+     "admin1-10m:SVN-223",
+     "admin1-10m:SVN-224",
+     "admin1-10m:SVN-225",
+     "admin1-10m:SVN-233",
+     "admin1-10m:SVN-236",
+     "admin1-10m:SVN-237",
+     "admin1-10m:SVN-238",
+     "admin1-10m:SVN-239",
+     "admin1-10m:SVN-240",
+     "admin1-10m:SVN-241",
+     "admin1-10m:SVN-242",
+     "admin1-10m:SVN-243",
+     "admin1-10m:SVN-244",
+     "admin1-10m:SVN-245",
+     "admin1-10m:SVN-247",
+     "admin1-10m:SVN-248",
+     "admin1-10m:SVN-249",
+     "admin1-10m:SVN-250",
+     "admin1-10m:SVN-251",
+     "admin1-10m:SVN-252",
+     "admin1-10m:SVN-253",
+     "admin1-10m:SVN-254",
+     "admin1-10m:SVN-255",
+     "admin1-10m:SVN-257",
+     "admin1-10m:SVN-258",
+     "admin1-10m:SVN-259",
+     "admin1-10m:SVN-260",
+     "admin1-10m:SVN-261",
+     "admin1-10m:SVN-5885",
+     "admin1-10m:SVN-937",
+     "admin1-10m:SVN-939",
+     "admin1-10m:SVN-940",
+     "admin1-10m:SVN-941",
+     "admin1-10m:SVN-942",
+     "admin1-10m:SVN-943",
+     "admin1-10m:SVN-944",
+     "admin1-10m:SVN-945",
+     "admin1-10m:SVN-946",
+     "admin1-10m:SVN-947",
+     "admin1-10m:SVN-949",
+     "admin1-10m:SVN-950",
+     "admin1-10m:SVN-951",
+     "admin1-10m:SVN-952",
+     "admin1-10m:SVN-953",
+     "admin1-10m:SVN-954",
+     "admin1-10m:SVN-955",
+     "admin1-10m:SVN-957",
+     "admin1-10m:SVN-960",
+     "admin1-10m:SVN-961",
+     "admin1-10m:SVN-962",
+     "admin1-10m:SVN-963",
+     "admin1-10m:SVN-964",
+     "admin1-10m:SVN-965",
+     "admin1-10m:SVN-966",
+     "admin1-10m:SVN-967",
+     "admin1-10m:SVN-968",
+     "admin1-10m:SVN-969",
+     "admin1-10m:SVN-970",
+     "admin1-10m:SVN-971",
+     "admin1-10m:SVN-972",
+     "admin1-10m:SVN-973",
+     "admin1-10m:SVN-974",
+     "admin1-10m:SVN-975",
+     "admin1-10m:SVN-977",
+     "admin1-10m:SVN-978",
+     "admin1-10m:SVN-980",
+     "admin1-10m:SVN-981",
+     "admin1-10m:SVN-982",
+     "admin1-10m:SVN-983",
+     "admin1-10m:SVN-984",
+     "admin1-10m:SVN-985",
+     "admin1-10m:SVN-987",
+     "admin1-10m:SVN-989",
+     "admin1-10m:SVN-990",
+     "admin1-10m:SVN-991",
+     "admin1-10m:SVN-992",
+     "admin1-10m:SVN-993",
+     "admin1-10m:SVN-994",
+     "admin1-10m:SVN-995",
+     "admin1-10m:SVN-997",
+     "admin1-10m:SVN-999"
+    ]
+   }
+  }
+ }
+}

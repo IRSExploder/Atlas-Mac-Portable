@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments. The project venv lives in %LOCALAPPDATA%\atlas-venv, outside
+# this tree, but a stray local one should never be committed.
+.venv/
+venv/
+env/
+
+# Test and lint caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Mutable game state (worlds, packs, run logs, the Natural Earth download cache) lives
+# in %LOCALAPPDATA%\Atlas by design -- SQLite in a synced tree corrupts through its
+# -wal sidecars. These patterns only catch a world written into the repo by an explicit
+# --path override.
+*.db
+*.db-wal
+*.db-shm
+*.pack
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+scratchpad/bundles/
+scratchpad/*.log
+
+# **Run output, not evidence.** The scratchpad holds two kinds of thing and only one of
+# them is worth keeping. The *scripts* are tracked -- several are cited by name from source
+# comments and handoffs as the way to reproduce a measurement, and a citation pointing at a
+# file nobody has is worse than no citation. What they *print*, and the screenshots they
+# render, are regenerable by running them and are ignored.
+scratchpad/shots/
+scratchpad/*_run.txt
+scratchpad/*_demo.txt
+scratchpad/suite_*.txt
+scratchpad/audit_*.txt
+scratchpad/century_head.txt
+scratchpad/long_haul.txt
+scratchpad/war_curves.txt
+scratchpad/pt*_verify.txt
+# The pricing long-game batteries print a progress line per run; the JSON beside it
+# is the evidence, and `pricing_report.py` builds the tables from that.
+scratchpad/pl_*.txt
+.tmp.driveupload/
+
+# Raw prompt/state dumps from scratchpad/dump_prompts.py and dump_state.py: ~13MB,
+# fully reproducible offline in minutes, and the readable comparison is committed instead.
+scratchpad/prompts_*.json
+scratchpad/state_*.json

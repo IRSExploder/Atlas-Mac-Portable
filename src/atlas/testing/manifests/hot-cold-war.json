@@ -1,0 +1,589 @@
+{
+  "$comment": "**An alternate history, audited as far as an audit reaches.** Every fact in this file is the real 1 January 1972 record, copied from cold-war.json, because the Fulda Gap scenario changes decisions and not the board: the same powers, armies, fleets, arsenals, treaties, leaders and dependencies. What the audit therefore proves is that the *record* is untouched -- and that is all it proves. **The era's counterfactual is larger than the two `occupied` rows below:** it also puts 15 pairs of powers at war, adds five history events, and posts 21 divisions abroad through `Scenario.deployments`. None of those is auditable, because `audit.SECTIONS` has no section for relations, history or deployments; the check count rising 85 -> 87 is exactly the two occupied rows and nothing else. If this and atlas/scenarios/hot_cold_war.py disagree, one of them is wrong and somebody has to decide which -- do not edit this into agreement.",
+  "era": "hot-cold-war",
+  "start_date": "1972-01-05",
+  "sources": "The real 1972 record as cold-war.json states it (treaty texts and membership, UN Security Council composition, SIPRI/NRDC arsenal figures scaled to this engine's warhead unit, the Ostpolitik ratification calendar), with one declared departure from history: on 4 January 1972 the Warsaw Pact crossed the inner-German border and holds Hessen and Niedersachsen on the morning of the fifth. No such war happened. The occupied entries below are that counterfactual and are not sourced to anything; the wars, the added history and the deployments are counterfactual too and no section of this manifest can hold them.",
+  "alliances": [
+    {
+      "name": "North Atlantic Treaty",
+      "kind": "defensive_pact",
+      "status": "active",
+      "members": [
+        "usa",
+        "gbr",
+        "fra",
+        "wger",
+        "ita",
+        "tur",
+        "m_bel",
+        "m_can",
+        "m_dnk",
+        "m_grc",
+        "m_isl",
+        "m_lux",
+        "m_nld",
+        "m_nor",
+        "m_prt"
+      ],
+      "because": "fifteen parties in 1972. France left the integrated military command in 1966 and never left the treaty, so it is a party. Spain is not -- it acceded in 1982."
+    },
+    {
+      "name": "Warsaw Treaty",
+      "kind": "defensive_pact",
+      "status": "active",
+      "members": [
+        "sov",
+        "eger",
+        "pol",
+        "cze",
+        "rou",
+        "m_bgr",
+        "m_hun"
+      ],
+      "because": "seven. Albania stopped participating after the invasion of Czechoslovakia in 1968 and is not a party; Yugoslavia never was."
+    },
+    {
+      "name": "US-Japan Mutual Cooperation and Security",
+      "kind": "defensive_pact",
+      "status": "active",
+      "members": [
+        "usa",
+        "jpn"
+      ],
+      "because": "the 1960 treaty, in force."
+    },
+    {
+      "name": "US-ROK Mutual Defense Treaty",
+      "kind": "defensive_pact",
+      "status": "active",
+      "members": [
+        "usa",
+        "kor"
+      ],
+      "because": "1953, and two American divisions on the peninsula."
+    },
+    {
+      "name": "PRC-DPRK Treaty of Friendship",
+      "kind": "defensive_pact",
+      "status": "active",
+      "members": [
+        "chn",
+        "prk"
+      ],
+      "because": "1961, automatic, and still in force."
+    },
+    {
+      "name": "USSR-DPRK Treaty of Friendship",
+      "kind": "defensive_pact",
+      "status": "active",
+      "members": [
+        "sov",
+        "prk"
+      ],
+      "because": "1961. Pyongyang holds both and honours neither exclusively -- both must exist for that to be playable."
+    }
+  ],
+  "organisations": [
+    {
+      "id": "unsc",
+      "kind": "universal",
+      "members": [
+        "usa",
+        "sov",
+        "gbr",
+        "fra",
+        "chn",
+        "ita",
+        "jpn",
+        "m_arg",
+        "m_bel",
+        "m_gin",
+        "m_ind",
+        "m_pan",
+        "m_sdn",
+        "m_som",
+        "m_yug"
+      ],
+      "permanent": [
+        "usa",
+        "sov",
+        "gbr",
+        "fra",
+        "chn"
+      ],
+      "because": "fifteen seats since the 1965 enlargement -- five permanent, ten elected. The permanent five are the victors of 1945; China's seat passed to the People's Republic in October 1971, three months before this world begins."
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "West Berlin",
+      "region": "r_m_wbe_west_berlin",
+      "held_by": "usa",
+      "because": "an occupied city under three Western garrisons, not a Land of the Federal Republic and not East German ground. Held by the United States here because the engine has one holder per region and the American garrison is the one the guarantee runs through."
+    },
+    {
+      "name": "Hong Kong",
+      "region": "r_hkg",
+      "held_by": "gbr",
+      "because": "a British colony until 1997."
+    },
+    {
+      "name": "British Honduras",
+      "region": "r_blz",
+      "held_by": "gbr",
+      "because": "British until 1981, and not a state called Belize."
+    }
+  ],
+  "cores": [
+    {
+      "region": "r_eger_berlin_and_brandenburg",
+      "home": "eger",
+      "because": "East Berlin is the capital of the German Democratic Republic and its own ground."
+    },
+    {
+      "region": "r_dvn_ha_noi",
+      "home": "dvn"
+    },
+    {
+      "region": "r_rvn_saigon",
+      "home": "rvn",
+      "because": "the two Vietnams are each other's claim and neither is the other's core -- if Saigon were a northern core the engine would read reunification as recovery."
+    },
+    {
+      "region": "r_m_wbe_west_berlin",
+      "home": null,
+      "because": "held by the United States and American ground in no sense at all. A colony or a garrison is not a core, and the day it becomes one a peace settlement has no way to hand it back."
+    }
+  ],
+  "ungoverned": [
+    {
+      "region": "r_ata",
+      "because": "the Antarctic Treaty of 1961. Nobody's state, and better modelled as ground with no government than as a nation with a treasury and a border guard on the ice."
+    }
+  ],
+  "not_yet": [
+    {
+      "name": "Slovenia",
+      "because": "Yugoslavia until 1991"
+    },
+    {
+      "name": "Croatia",
+      "because": "Yugoslavia until 1991"
+    },
+    {
+      "name": "Bosnia",
+      "because": "Yugoslavia until 1992"
+    },
+    {
+      "name": "Ukraine",
+      "because": "a Soviet republic until 1991"
+    },
+    {
+      "name": "Kazakhstan",
+      "because": "a Soviet republic until 1991"
+    },
+    {
+      "name": "Eritrea",
+      "because": "federated then annexed to Ethiopia; independent 1993"
+    },
+    {
+      "name": "Zimbabwe",
+      "because": "Rhodesia in 1972, and on this map it is called that"
+    },
+    {
+      "name": "Namibia",
+      "because": "South West Africa, administered by South Africa until 1990"
+    },
+    {
+      "name": "Timor",
+      "because": "Portuguese until 1975"
+    },
+    {
+      "name": "Belize",
+      "because": "British Honduras; the name changes in 1973 and independence comes in 1981"
+    },
+    {
+      "name": "Myanmar",
+      "because": "Burma until 1989"
+    },
+    {
+      "name": "Democratic Republic of the Congo",
+      "because": "Zaire from 1971 to 1997"
+    }
+  ],
+  "leaders": [
+    {
+      "nation": "usa",
+      "name": "Richard Nixon",
+      "title": "President"
+    },
+    {
+      "nation": "sov",
+      "name": "Leonid Brezhnev",
+      "title": "General Secretary"
+    },
+    {
+      "nation": "chn",
+      "name": "Mao Zedong",
+      "title": "Chairman"
+    },
+    {
+      "nation": "gbr",
+      "name": "Edward Heath",
+      "title": "Prime Minister"
+    },
+    {
+      "nation": "fra",
+      "name": "Georges Pompidou",
+      "title": "President"
+    },
+    {
+      "nation": "ita",
+      "name": "Emilio Colombo",
+      "title": "Presidente del Consiglio",
+      "because": "Colombo's government fell in January 1972 and Andreotti's first followed in February. On 1 January it is still Colombo."
+    },
+    {
+      "nation": "wger",
+      "name": "Willy Brandt",
+      "title": "Bundeskanzler"
+    },
+    {
+      "nation": "eger",
+      "name": "Erich Honecker",
+      "title": "General Secretary",
+      "because": "Honecker replaced Ulbricht in May 1971."
+    },
+    {
+      "nation": "pol",
+      "name": "Edward Gierek",
+      "title": "First Secretary",
+      "because": "Gierek replaced Gomulka after the December 1970 shootings."
+    },
+    {
+      "nation": "jpn",
+      "name": "Eisaku Satō",
+      "title": "Prime Minister"
+    },
+    {
+      "nation": "dvn",
+      "name": "Lê Duẩn",
+      "title": "First Secretary",
+      "because": "Ho Chi Minh died in 1969; Le Duan is the one running the war."
+    },
+    {
+      "nation": "rvn",
+      "name": "Nguyễn Văn Thiệu",
+      "title": "President"
+    },
+    {
+      "nation": "prk",
+      "name": "Kim Il Sung",
+      "title": "General Secretary"
+    },
+    {
+      "nation": "kor",
+      "name": "Park Chung-hee",
+      "title": "President"
+    },
+    {
+      "nation": "cub",
+      "name": "Fidel Castro",
+      "title": "Prime Minister"
+    },
+    {
+      "nation": "isr",
+      "name": "Golda Meir",
+      "title": "Prime Minister"
+    },
+    {
+      "nation": "egy",
+      "name": "Anwar Sadat",
+      "title": "President",
+      "because": "Nasser died in September 1970."
+    },
+    {
+      "nation": "tur",
+      "name": "Nihat Erim",
+      "title": "Prime Minister"
+    }
+  ],
+  "treaties": [
+    {
+      "name": "Treaty of Moscow",
+      "match": "Treaty of Moscow",
+      "kind": "non_aggression_pact",
+      "status": "pending",
+      "parties": [
+        "wger",
+        "sov"
+      ],
+      "because": "signed August 1970 and ratified in May 1972. On 1 January it is signed and not in force, and the difference is whether the engine can report it broken."
+    },
+    {
+      "name": "Treaty of Warsaw",
+      "match": "Treaty of Warsaw",
+      "kind": "non_aggression_pact",
+      "status": "pending",
+      "parties": [
+        "wger",
+        "pol"
+      ],
+      "because": "signed December 1970, ratified May 1972 in the same Bundestag fight."
+    },
+    {
+      "name": "Four Power Agreement on Berlin",
+      "match": "Four Power Agreement",
+      "kind": "military_access",
+      "status": "pending",
+      "parties": [
+        "usa",
+        "gbr",
+        "fra",
+        "sov"
+      ],
+      "because": "signed September 1971; the final protocol bringing it into force is June 1972."
+    },
+    {
+      "name": "Korean Armistice",
+      "match": "Korean Armistice",
+      "kind": "ceasefire",
+      "status": "active",
+      "parties": [
+        "prk",
+        "kor"
+      ],
+      "because": "in force since 1953 and never replaced by a peace."
+    },
+    {
+      "name": "Rogers ceasefire",
+      "match": "Rogers ceasefire",
+      "kind": "ceasefire",
+      "status": "active",
+      "parties": [
+        "egy",
+        "isr"
+      ],
+      "because": "August 1970, holding along the canal, and the thing October 1973 breaks."
+    },
+    {
+      "name": "Comecon",
+      "match": "Council for Mutual Economic Assistance",
+      "kind": "trade_agreement",
+      "status": "active",
+      "parties": [
+        "sov",
+        "eger",
+        "pol",
+        "cze",
+        "rou",
+        "m_bgr",
+        "m_hun"
+      ],
+      "because": "the same seven as the Warsaw Treaty, which is the point: the bloc is one thing with two instruments."
+    }
+  ],
+  "arsenals": [
+    {
+      "nation": "usa",
+      "warheads": 46,
+      "delivery": "triad",
+      "deterrent_boats": 4,
+      "because": "bombers, Minuteman, and Polaris/Poseidon boats -- all three legs."
+    },
+    {
+      "nation": "sov",
+      "warheads": 38,
+      "delivery": "triad",
+      "deterrent_boats": 5,
+      "because": "behind on warheads, ahead on throw-weight, and all three legs by 1972."
+    },
+    {
+      "nation": "gbr",
+      "warheads": 4,
+      "delivery": "sea",
+      "deterrent_boats": 2,
+      "because": "Polaris in four Resolution boats and nothing else -- the V-force gave up the strategic role in 1969. Two of the three modelled hulls carry it."
+    },
+    {
+      "nation": "fra",
+      "warheads": 3,
+      "delivery": "missile",
+      "deterrent_boats": 1,
+      "because": "the Plateau d'Albion silos are the force in 1972; Le Redoutable had been operational for three weeks."
+    },
+    {
+      "nation": "chn",
+      "warheads": 2,
+      "delivery": "aircraft",
+      "deterrent_boats": 0,
+      "because": "bombs on H-6 bombers. No Chinese ballistic-missile submarine went to sea until 1981, so the count is nought and says so rather than leaving it implied by the tier."
+    },
+    {
+      "nation": "isr",
+      "warheads": 1,
+      "delivery": "aircraft",
+      "deterrent_boats": 0,
+      "because": "undeclared, deliverable by aircraft, and no submarine leg for another quarter-century."
+    }
+  ],
+  "packs": [
+    "admin1-10m",
+    "admin0-50m",
+    "marine-10m"
+  ],
+  "delivery": {
+    "reach": {
+      "aircraft": 6
+    },
+    "launchers": [
+      "chn",
+      "isr"
+    ],
+    "because": "the two powers whose whole arsenal is carried by aircraft. Six hops is a combat radius: your own theatre and its neighbours, not the far side of the planet. Walked on this world's adjacency, so the boundary tested is the one a warhead meets."
+  },
+  "occupied": [
+    {
+      "region": "r_wger_hessen",
+      "owner": "wger",
+      "controller": "eger",
+      "because": "COUNTERFACTUAL: the Fulda Gap thrust, 4 January 1972. Owner and homeland stay West German -- this is an occupation, not an annexation."
+    },
+    {
+      "region": "r_wger_niedersachsen",
+      "owner": "wger",
+      "controller": "sov",
+      "because": "COUNTERFACTUAL: the Group of Soviet Forces on the North German Plain."
+    }
+  ],
+  "silent_on": {},
+  "doctrines": [
+    {
+      "nation": "usa",
+      "axis": "mobilisation",
+      "stance": "mass",
+      "because": "the draft did not end until 1973; in January 1972 this is a conscript army"
+    },
+    {
+      "nation": "usa",
+      "axis": "nuclear_posture",
+      "stance": "retaliation"
+    },
+    {
+      "nation": "usa",
+      "axis": "alignment",
+      "stance": "collective_security",
+      "because": "NATO"
+    },
+    {
+      "nation": "sov",
+      "axis": "mobilisation",
+      "stance": "mass"
+    },
+    {
+      "nation": "sov",
+      "axis": "nuclear_posture",
+      "stance": "retaliation"
+    },
+    {
+      "nation": "sov",
+      "axis": "alignment",
+      "stance": "collective_security",
+      "because": "the Warsaw Pact"
+    },
+    {
+      "nation": "gbr",
+      "axis": "mobilisation",
+      "stance": "professional",
+      "because": "all-volunteer since national service ended in 1963"
+    },
+    {
+      "nation": "gbr",
+      "axis": "nuclear_posture",
+      "stance": "minimum",
+      "because": "Polaris: four boats, one at sea"
+    },
+    {
+      "nation": "gbr",
+      "axis": "alignment",
+      "stance": "collective_security"
+    },
+    {
+      "nation": "fra",
+      "axis": "mobilisation",
+      "stance": "mass",
+      "because": "conscription until 1996"
+    },
+    {
+      "nation": "fra",
+      "axis": "nuclear_posture",
+      "stance": "minimum",
+      "because": "the force de frappe; dissuasion du faible au fort"
+    },
+    {
+      "nation": "chn",
+      "axis": "mobilisation",
+      "stance": "mass"
+    },
+    {
+      "nation": "chn",
+      "axis": "nuclear_posture",
+      "stance": "minimum",
+      "because": "no first use, declared with the first test in 1964"
+    },
+    {
+      "nation": "m_ind",
+      "axis": "alignment",
+      "stance": "neutrality",
+      "because": "the Non-Aligned Movement, which India led"
+    },
+    {
+      "nation": "jpn",
+      "axis": "mobilisation",
+      "stance": "professional",
+      "because": "the Self-Defense Forces: small and entirely volunteer"
+    },
+    {
+      "nation": "isr",
+      "axis": "mobilisation",
+      "stance": "mass",
+      "because": "universal conscription"
+    },
+    {
+      "nation": "isr",
+      "axis": "nuclear_posture",
+      "stance": "minimum"
+    },
+    {
+      "nation": "egy",
+      "axis": "mobilisation",
+      "stance": "mass"
+    },
+    {
+      "nation": "prk",
+      "axis": "mobilisation",
+      "stance": "mass"
+    },
+    {
+      "nation": "kor",
+      "axis": "mobilisation",
+      "stance": "mass"
+    },
+    {
+      "nation": "pol",
+      "axis": "mobilisation",
+      "stance": "mass"
+    },
+    {
+      "nation": "pol",
+      "axis": "alignment",
+      "stance": "collective_security"
+    },
+    {
+      "nation": "tur",
+      "axis": "alignment",
+      "stance": "collective_security",
+      "because": "NATO since 1952"
+    }
+  ]
+}

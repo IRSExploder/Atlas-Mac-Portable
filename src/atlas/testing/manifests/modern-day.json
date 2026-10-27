@@ -1,0 +1,973 @@
+{
+  "$comment": "What 1 January 2026 is, written against the world and not against the scenario module. Where this and atlas/scenarios/modern_day.py disagree, one of them is wrong.",
+  "era": "modern-day",
+  "start_date": "2026-01-01",
+  "sources": "Standing treaty relationships and declared or credibly attributed nuclear forces as of the start of 2026, with warhead counts scaled to this engine's unit rather than reported as absolute stockpiles. The Security Council's permanent five are unchanged since 1945. The line of control in Ukraine as of the start of 2026, rounded to whole oblasts by who holds the oblast capital -- see OCCUPIED in the scenario module for what that rounding costs in Zaporizhzhia and Kherson.",
+  "alliances": [
+    {
+      "name": "North Atlantic Treaty",
+      "kind": "defensive_pact",
+      "status": "active",
+      "members": [
+        "usa",
+        "gbr",
+        "fra",
+        "deu",
+        "tur",
+        "pol",
+        "ita"
+      ],
+      "because": "the seven NATO members this era promotes to powers. The alliance has thirty-two members and the rest are minors this scenario does not seat as parties -- recorded here as the fact it is, so that the day somebody widens it the audit notices. Poland and Italy joined this list as the roster gained them, which is the mechanism working: a new power that is a party has to become one here too."
+    },
+    {
+      "name": "US-Japan Mutual Cooperation and Security",
+      "kind": "defensive_pact",
+      "status": "active",
+      "members": [
+        "usa",
+        "jpn"
+      ]
+    },
+    {
+      "name": "US-ROK Mutual Defense Treaty",
+      "kind": "defensive_pact",
+      "status": "active",
+      "members": [
+        "usa",
+        "kor"
+      ]
+    },
+    {
+      "name": "DPRK-Russia Comprehensive Strategic Partnership",
+      "kind": "defensive_pact",
+      "status": "active",
+      "members": [
+        "prk",
+        "rus"
+      ],
+      "because": "June 2024, and explicitly mutual military assistance -- a real pact, not a friendship declaration."
+    },
+    {
+      "name": "PRC-DPRK Treaty of Friendship",
+      "kind": "defensive_pact",
+      "status": "active",
+      "members": [
+        "chn",
+        "prk"
+      ],
+      "because": "1961 and never lapsed; the oldest standing alliance either party has."
+    }
+  ],
+  "organisations": [
+    {
+      "id": "unsc",
+      "kind": "universal",
+      "members": [
+        "usa",
+        "chn",
+        "rus",
+        "gbr",
+        "fra",
+        "deu",
+        "jpn",
+        "ind",
+        "kor",
+        "tur",
+        "sau",
+        "isr",
+        "irn",
+        "pak",
+        "ukr",
+        "prk"
+      ],
+      "permanent": [
+        "usa",
+        "chn",
+        "rus",
+        "gbr",
+        "fra"
+      ],
+      "because": "the permanent five are the victors of 1945 and have not changed. The membership here is this era's powers rather than the elected ten of any particular year -- a deliberate simplification, recorded so it cannot drift into looking like the real roster."
+    }
+  ],
+  "leaders": [
+    {
+      "nation": "usa",
+      "name": "Donald Trump",
+      "title": "President"
+    },
+    {
+      "nation": "chn",
+      "name": "Xi Jinping",
+      "title": "General Secretary"
+    },
+    {
+      "nation": "rus",
+      "name": "Vladimir Putin",
+      "title": "President"
+    },
+    {
+      "nation": "gbr",
+      "name": "Andy Burnham",
+      "title": "Prime Minister"
+    },
+    {
+      "nation": "fra",
+      "name": "Emmanuel Macron",
+      "title": "President"
+    },
+    {
+      "nation": "deu",
+      "name": "Friedrich Merz",
+      "title": "Chancellor"
+    },
+    {
+      "nation": "jpn",
+      "name": "Sanae Takaichi",
+      "title": "Prime Minister"
+    },
+    {
+      "nation": "ind",
+      "name": "Narendra Modi",
+      "title": "Prime Minister"
+    },
+    {
+      "nation": "kor",
+      "name": "Lee Jae-myung",
+      "title": "President"
+    },
+    {
+      "nation": "tur",
+      "name": "Recep Tayyip Erdoğan",
+      "title": "President"
+    },
+    {
+      "nation": "isr",
+      "name": "Benjamin Netanyahu",
+      "title": "Prime Minister"
+    },
+    {
+      "nation": "prk",
+      "name": "Kim Jong Un",
+      "title": "Supreme Leader"
+    },
+    {
+      "nation": "irn",
+      "name": "Ali Khamenei",
+      "title": "Supreme Leader",
+      "because": "Supreme Leader since June 1989 and the office holder on the start date. This is the entry the scenario disagreed with: it shipped his son Mojtaba, a real person widely discussed as a successor who has never held the post. The manifest records what the period was, so it cannot assert a succession that has not happened -- and the disagreement is why the scenario was changed rather than this being written to match it."
+    },
+    {
+      "nation": "ukr",
+      "name": "Volodymyr Zelenskyy",
+      "title": "President",
+      "because": "President since May 2019. His term would ordinarily have ended in 2024; elections are suspended under the martial law in force since February 2022, so he is still in office and the reason is itself a fact about the era."
+    },
+    {
+      "nation": "sau",
+      "name": "Mohammed bin Salman",
+      "title": "Crown Prince",
+      "because": "Crown Prince since 2017 and Prime Minister since 2022. Recorded by the senior of the two titles: Salman is still king, and `Crown Prince` is the one that says the succession has not happened yet."
+    },
+    {
+      "nation": "pak",
+      "name": "Shehbaz Sharif",
+      "title": "Prime Minister",
+      "because": "Prime Minister since March 2024. **This entry is here because the scenario had nobody at all**: Pakistan is a nuclear power in two standing quarrels and was reading as 'the government'. The caveat worth keeping: the Chief of Army Staff is the larger fact about who decides in Pakistan, and no single leader row can carry that."
+    },
+    {
+      "nation": "pol",
+      "name": "Karol Nawrocki",
+      "title": "President",
+      "because": "President since August 2025. Poland's head of state is not its head of government -- Donald Tusk is Prime Minister -- and the two are from opposing camps. The engine seats one leader per nation, so this records the head of state and the split is noted rather than modelled."
+    },
+    {
+      "nation": "idn",
+      "name": "Prabowo Subianto",
+      "title": "President",
+      "because": "President since October 2024, elected on a five-year term."
+    },
+    {
+      "nation": "aus",
+      "name": "Anthony Albanese",
+      "title": "Prime Minister",
+      "because": "Prime Minister since May 2022, returned at the May 2025 election."
+    },
+    {
+      "nation": "bra",
+      "name": "Luiz Inácio Lula da Silva",
+      "title": "President",
+      "because": "President since January 2023, his third non-consecutive term."
+    },
+    {
+      "nation": "ita",
+      "name": "Giorgia Meloni",
+      "title": "Prime Minister",
+      "because": "Prime Minister since October 2022; the legislature runs to 2027."
+    },
+    {
+      "nation": "egy",
+      "name": "Abdel Fattah el-Sisi",
+      "title": "President",
+      "because": "President since June 2014, re-elected December 2023 on a term running to 2030."
+    },
+    {
+      "nation": "vnm",
+      "name": "To Lam",
+      "title": "General Secretary",
+      "because": "General Secretary of the Communist Party since August 2024, and the paramount office rather than the state presidency -- which Luong Cuong holds. Recorded the way China's is, because in both states the party post is the one that decides."
+    },
+    {
+      "nation": "twn",
+      "name": "Lai Ching-te",
+      "title": "President",
+      "because": "President since May 2024, elected on a four-year term. Also known as William Lai; the romanised Mandarin form is used here because that is how the office is styled at home."
+    }
+  ],
+  "treaties": [
+    {
+      "name": "China-Russia partnership without limits",
+      "match": "without limits",
+      "kind": "non_aggression_pact",
+      "status": "active",
+      "parties": [
+        "chn",
+        "rus"
+      ],
+      "because": "2022, and deliberately not a defence pact -- if it were seeded as one the engine would drag China into a European war it has spent four years not entering."
+    },
+    {
+      "name": "Saudi-Iranian normalisation",
+      "match": "Saudi-Iranian normalisation",
+      "kind": "non_aggression_pact",
+      "status": "active",
+      "parties": [
+        "sau",
+        "irn"
+      ],
+      "because": "2023, brokered by China. Relations restored; none of the underlying quarrels settled."
+    },
+    {
+      "name": "Abraham Accords",
+      "match": "Abraham Accords",
+      "kind": "trade_agreement",
+      "status": "active",
+      "parties": [
+        "isr",
+        "sau"
+      ],
+      "because": "a normalisation framework, not a security guarantee, and Saudi accession has been close and unsigned for years."
+    },
+    {
+      "name": "AUKUS",
+      "match": "AUKUS",
+      "kind": "alliance",
+      "status": "active",
+      "parties": [
+        "usa",
+        "gbr",
+        "aus"
+      ],
+      "because": "signed September 2021. **Australia is a party and, as of this roster, a power** -- this entry previously had to record that the A in AUKUS was not seated, which is exactly the sort of caveat a roster gap leaves behind."
+    },
+    {
+      "name": "North Atlantic Treaty, Article 5",
+      "match": "Article 5",
+      "kind": "defensive_pact",
+      "status": "active",
+      "parties": [
+        "usa",
+        "gbr",
+        "fra",
+        "deu",
+        "tur",
+        "pol",
+        "ita"
+      ],
+      "because": "Signed 4 April 1949 and never lapsed. The five NATO members that are powers in this era; the other twenty-seven are on the map as minors and are not parties here because they are not powers, not because they are not signatories."
+    },
+    {
+      "name": "US-Japan Treaty of Mutual Cooperation and Security",
+      "match": "US-Japan Treaty of Mutual Cooperation",
+      "kind": "defensive_pact",
+      "status": "active",
+      "parties": [
+        "usa",
+        "jpn"
+      ],
+      "because": "Signed 19 January 1960, replacing the 1951 treaty. Still the basis of the American basing presence in 2026."
+    },
+    {
+      "name": "US-ROK Mutual Defense Treaty",
+      "match": "US-ROK Mutual Defense Treaty",
+      "kind": "defensive_pact",
+      "status": "active",
+      "parties": [
+        "usa",
+        "kor"
+      ],
+      "because": "Signed 1 October 1953 after the armistice. The American garrison has never left."
+    },
+    {
+      "name": "DPRK-Russia Treaty on Comprehensive Strategic Partnership",
+      "match": "DPRK-Russia Treaty",
+      "kind": "defensive_pact",
+      "status": "active",
+      "parties": [
+        "prk",
+        "rus"
+      ],
+      "because": "Signed in Pyongyang 19 June 2024. Article 4 is a mutual-assistance clause, which makes it the first Russian defence pact in Asia since the Soviet-DPRK treaty lapsed in 1996 -- the newest entry on this list and the one most likely to be argued about."
+    },
+    {
+      "name": "China-DPRK Treaty of Friendship, Cooperation and Mutual Assistance",
+      "match": "China-DPRK Treaty of Friendship",
+      "kind": "defensive_pact",
+      "status": "active",
+      "parties": [
+        "chn",
+        "prk"
+      ],
+      "because": "Signed 11 July 1961 and renewed in 1981, 2001 and 2021. Its Article 2 is the only standing mutual-defence obligation China has with anybody."
+    },
+    {
+      "name": "China-Pakistan strategic partnership",
+      "match": "China-Pakistan strategic partnership",
+      "kind": "alliance",
+      "status": "active",
+      "parties": [
+        "chn",
+        "pak"
+      ],
+      "because": "Not a single instrument and deliberately recorded as an alliance rather than a pact: the corridor agreements from 2013, the arms relationship, and a shared border with India. There is no Article 5 here and the manifest should not imply one."
+    },
+    {
+      "name": "Egypt-Israel Treaty of Peace",
+      "match": "Egypt-Israel",
+      "kind": "non_aggression_pact",
+      "status": "active",
+      "parties": [
+        "egy",
+        "isr"
+      ],
+      "because": "Signed 26 March 1979 at the White House, ratified the same year. The first Arab recognition of Israel and the reason Israel's southern front has been quiet for forty-seven years. Recorded as a non-aggression pact rather than an alliance because that is exactly what it is: cold, unpopular in Egypt, and unbroken. It is in this table at all only now that both parties are powers."
+    }
+  ],
+  "arsenals": [
+    {
+      "nation": "rus",
+      "warheads": 40,
+      "delivery": "triad",
+      "deterrent_boats": 2,
+      "because": "roughly a dozen boomers, similarly outnumbered by attack hulls."
+    },
+    {
+      "nation": "usa",
+      "warheads": 38,
+      "delivery": "triad",
+      "deterrent_boats": 2,
+      "because": "fourteen Ohio-class boats among a very large attack fleet; the figure is the SSBN *share* of a scaled navy, not a hull count."
+    },
+    {
+      "nation": "chn",
+      "warheads": 18,
+      "delivery": "triad",
+      "because": "the fastest-growing of the three, and a triad since the Jin boats began deterrent patrols. six Jin-class -- the smallest SSBN share of any triad on this map, and the entry that moves survivability most when it is declared.",
+      "deterrent_boats": 1
+    },
+    {
+      "nation": "fra",
+      "warheads": 12,
+      "delivery": "sea",
+      "because": "the airborne component exists, the deterrent is the four Triomphant boats, and France retired its land-based missiles in 1996. four Triomphants; the same shape as Britain, with an air leg beside it.",
+      "deterrent_boats": 2
+    },
+    {
+      "nation": "ind",
+      "warheads": 9,
+      "delivery": "triad",
+      "deterrent_boats": 1,
+      "because": "two Arihants, new and few."
+    },
+    {
+      "nation": "gbr",
+      "warheads": 8,
+      "delivery": "sea",
+      "because": "Trident in four Vanguard boats and nothing else since 1998. four Vanguards against six attack boats, and since 1998 the only leg Britain has.",
+      "deterrent_boats": 2
+    },
+    {
+      "nation": "pak",
+      "warheads": 8,
+      "delivery": "missile",
+      "deterrent_boats": 0,
+      "because": "**zero is a statement.** The sea leg is cruise missiles on conventional hulls, which is not a boomer. At `missile` tier no hull counts anyway, so this changes no arithmetic and is here so the table does not read as though nobody looked."
+    },
+    {
+      "nation": "isr",
+      "warheads": 5,
+      "delivery": "missile",
+      "because": "undeclared. The submarine leg is widely attributed and not established, so `missile` is what the engine will stand behind. the Dolphins are conventionally powered; whatever they carry, they are not SSBNs.",
+      "deterrent_boats": 0
+    },
+    {
+      "nation": "prk",
+      "warheads": 3,
+      "delivery": "missile",
+      "deterrent_boats": 0,
+      "because": "one experimental hull that has never deterred anything."
+    }
+  ],
+  "packs": [
+    "admin1-10m",
+    "admin0-50m",
+    "marine-10m"
+  ],
+  "delivery": {
+    "reach": {
+      "aircraft": 6
+    },
+    "launchers": [
+      "prk",
+      "pak"
+    ],
+    "because": "no power in this era has an aircraft-only arsenal, so the boundary is walked from two whose ground is compact enough for six and seven hops to be different answers. It is the engine's boundary being tested, not their capability."
+  },
+  "dependencies": [
+    {
+      "region": "r_flk",
+      "held_by": "gbr",
+      "name": "Falkland Islands",
+      "because": "British since 1833 and fought over in 1982. Argentina's claim is live and is not sovereignty."
+    },
+    {
+      "region": "r_sgs",
+      "held_by": "gbr",
+      "name": "South Georgia and the South Sandwich Islands"
+    },
+    {
+      "region": "r_bmu",
+      "held_by": "gbr",
+      "name": "Bermuda"
+    },
+    {
+      "region": "r_cym",
+      "held_by": "gbr",
+      "name": "Cayman Islands"
+    },
+    {
+      "region": "r_vgb",
+      "held_by": "gbr",
+      "name": "British Virgin Islands"
+    },
+    {
+      "region": "r_aia",
+      "held_by": "gbr",
+      "name": "Anguilla"
+    },
+    {
+      "region": "r_msr",
+      "held_by": "gbr",
+      "name": "Montserrat"
+    },
+    {
+      "region": "r_tca",
+      "held_by": "gbr",
+      "name": "Turks and Caicos Islands"
+    },
+    {
+      "region": "r_shn",
+      "held_by": "gbr",
+      "name": "Saint Helena, Ascension and Tristan da Cunha"
+    },
+    {
+      "region": "r_iot",
+      "held_by": "gbr",
+      "name": "British Indian Ocean Territory",
+      "because": "Diego Garcia is the joint UK-US base. The 2024 agreement to transfer sovereignty to Mauritius had not taken effect on the start date."
+    },
+    {
+      "region": "r_pcn",
+      "held_by": "gbr",
+      "name": "Pitcairn Islands"
+    },
+    {
+      "region": "r_ggy",
+      "held_by": "gbr",
+      "name": "Guernsey",
+      "because": "**a Crown Dependency, not British territory.** Filed under `gbr` following the 1972 table because the engine has one relationship to offer and 'held by Britain' is far closer than 'sovereign state'. The imprecision is deliberate and recorded."
+    },
+    {
+      "region": "r_jey",
+      "held_by": "gbr",
+      "name": "Jersey",
+      "because": "Crown Dependency; see Guernsey."
+    },
+    {
+      "region": "r_imn",
+      "held_by": "gbr",
+      "name": "Isle of Man",
+      "because": "Crown Dependency; see Guernsey."
+    },
+    {
+      "region": "r_pyf",
+      "held_by": "fra",
+      "name": "French Polynesia"
+    },
+    {
+      "region": "r_ncl",
+      "held_by": "fra",
+      "name": "New Caledonia",
+      "because": "an overseas collectivity with a live independence movement; three referendums between 2018 and 2021 all returned No."
+    },
+    {
+      "region": "r_wlf",
+      "held_by": "fra",
+      "name": "Wallis and Futuna"
+    },
+    {
+      "region": "r_spm",
+      "held_by": "fra",
+      "name": "Saint Pierre and Miquelon"
+    },
+    {
+      "region": "r_maf",
+      "held_by": "fra",
+      "name": "Saint Martin"
+    },
+    {
+      "region": "r_blm",
+      "held_by": "fra",
+      "name": "Saint Barthelemy"
+    },
+    {
+      "region": "r_atf",
+      "held_by": "fra",
+      "name": "French Southern and Antarctic Lands",
+      "because": "the islands are French and uncontested; the Adelie Land claim on the continent is suspended by the Antarctic Treaty, which is why Antarctica itself is ungoverned rather than French."
+    },
+    {
+      "region": "r_pri",
+      "held_by": "usa",
+      "name": "Puerto Rico",
+      "because": "an unincorporated territory; its people are US citizens and it is not a state."
+    },
+    {
+      "region": "r_vir",
+      "held_by": "usa",
+      "name": "United States Virgin Islands"
+    },
+    {
+      "region": "r_gum",
+      "held_by": "usa",
+      "name": "Guam",
+      "because": "the westernmost American base, and the reason this table is not cosmetic: air reach and delivery range are both counted in hops from ground a power holds."
+    },
+    {
+      "region": "r_asm",
+      "held_by": "usa",
+      "name": "American Samoa"
+    },
+    {
+      "region": "r_mnp",
+      "held_by": "usa",
+      "name": "Northern Mariana Islands"
+    },
+    {
+      "region": "r_hkg",
+      "held_by": "chn",
+      "name": "Hong Kong",
+      "because": "a Special Administrative Region since 1997, not a state."
+    },
+    {
+      "region": "r_mac",
+      "held_by": "chn",
+      "name": "Macao",
+      "because": "a Special Administrative Region since 1999."
+    },
+    {
+      "region": "r_grl",
+      "held_by": "m_dnk",
+      "name": "Greenland",
+      "because": "self-governing within the Kingdom of Denmark since 2009; foreign policy and defence are Copenhagen's."
+    },
+    {
+      "region": "r_fro",
+      "held_by": "m_dnk",
+      "name": "Faroe Islands"
+    },
+    {
+      "region": "r_abw",
+      "held_by": "m_nld",
+      "name": "Aruba"
+    },
+    {
+      "region": "r_cuw",
+      "held_by": "m_nld",
+      "name": "Curacao"
+    },
+    {
+      "region": "r_sxm",
+      "held_by": "m_nld",
+      "name": "Sint Maarten"
+    },
+    {
+      "region": "r_cok",
+      "held_by": "m_nzl",
+      "name": "Cook Islands",
+      "because": "in free association with New Zealand."
+    },
+    {
+      "region": "r_niu",
+      "held_by": "m_nzl",
+      "name": "Niue",
+      "because": "in free association with New Zealand."
+    },
+    {
+      "region": "r_nfk",
+      "held_by": "aus",
+      "name": "Norfolk Island"
+    },
+    {
+      "region": "r_hmd",
+      "held_by": "aus",
+      "name": "Heard Island and McDonald Islands"
+    },
+    {
+      "region": "r_atc",
+      "held_by": "aus",
+      "name": "Ashmore and Cartier Islands",
+      "because": "Australian in spite of a code that looks Antarctic."
+    }
+  ],
+  "cores": [
+    {
+      "region": "r_ukr_crimea",
+      "home": "ukr",
+      "because": "**occupied ground is not the occupier's homeland.** Were the home Russian, `nuclear.deterrence` would extend a Russian nuclear guarantee over ground Ukraine is trying to retake -- the inverse of the rule, and the same defect the 1972 dependencies had before schema 24ef42d."
+    },
+    {
+      "region": "r_ukr_donets_k",
+      "home": "ukr"
+    },
+    {
+      "region": "r_ukr_luhans_k",
+      "home": "ukr"
+    },
+    {
+      "region": "r_sah",
+      "home": "m_sah",
+      "because": "occupied ground is not the occupier's homeland: were the home Moroccan, a Sahrawi rising could not reclaim it and the region would read as Moroccan core."
+    },
+    {
+      "region": "r_cyn",
+      "home": "m_cyn"
+    },
+    {
+      "region": "r_psx",
+      "home": "m_psx",
+      "because": "**the specific defect `_disown_dependencies` was written for.** Israel holds a nuclear arsenal; were the West Bank's home Israeli, `nuclear.deterrence` would extend an Israeli nuclear guarantee over occupied ground, which is the inverse of what the rule is for."
+    },
+    {
+      "region": "r_twn_taipei_city",
+      "home": "twn",
+      "because": "**a guard against a claim becoming a fact**, and it survives Taiwan being seated as a power unchanged in everything but the name. Taiwan is governed by Taiwan and claimed by China; that is a dispute about sovereignty, not an occupation. Were the home `chn`, a Chinese nuclear guarantee would extend over Taipei -- the Crimea defect pointing the other way. Giving a government its own briefing is not a ruling on whose the island is, and this line is what keeps those two questions apart."
+    },
+    {
+      "region": "r_twn_kinmen",
+      "home": "twn",
+      "because": "two miles off Xiamen and the likeliest place for the map to be quietly redrawn. Pinned for that reason."
+    },
+    {
+      "region": "r_kos",
+      "home": "m_kos",
+      "because": "declared 2008 and recognised by about half the UN membership; Serbia's constitution still claims it. Self-governing ground with a claimant, not occupied ground."
+    },
+    {
+      "region": "r_sol",
+      "home": "m_sol",
+      "because": "self-governing since 1991, recognised by nobody, claimed by Somalia. Same shape of fact as Kosovo and Taiwan."
+    }
+  ],
+  "occupied": [
+    {
+      "region": "r_ukr_crimea",
+      "owner": "ukr",
+      "controller": "rus",
+      "because": "Russian-held entire since 2014, and the only entry here that is not an approximation. Natural Earth files it under Russia and the generator used to take that mechanically, which turned an annexation into sovereignty."
+    },
+    {
+      "region": "r_ukr_luhans_k",
+      "owner": "ukr",
+      "controller": "rus",
+      "because": "effectively the whole oblast."
+    },
+    {
+      "region": "r_ukr_donets_k",
+      "owner": "ukr",
+      "controller": "rus",
+      "because": "roughly four fifths including the city. Rounded toward Russia; the Ukrainian-held northern corner around Kramatorsk and Sloviansk is smaller than one shape of this map."
+    },
+    {
+      "region": "r_sah",
+      "owner": "m_sah",
+      "controller": "m_mar",
+      "because": "Morocco has held the ground west of the sand berm since 1975 and administers roughly four fifths of the territory; Polisario holds the rest. No state recognises Moroccan sovereignty and the UN still lists it as a non-self-governing territory, so the owner is the territory and the controller is Morocco."
+    },
+    {
+      "region": "r_cyn",
+      "owner": "m_cyn",
+      "controller": "tur",
+      "because": "The Turkish army has been on the ground since August 1974 and roughly thirty thousand troops remain. Recorded as a Turkish-controlled TRNC rather than as Turkish-controlled Cypriot ground because Natural Earth draws the TRNC as its own entry; the alternative reading -- owner `m_cyp`, controller `tur` -- is the one to revisit if this map ever stops drawing it separately."
+    },
+    {
+      "region": "r_psx",
+      "owner": "m_psx",
+      "controller": "isr",
+      "because": "Military occupation of the West Bank since June 1967. **An approximation, and the sharpest one on this list**: the region is a single shape covering the West Bank and Gaza together, and this records the answer that fits the larger share of the ground. It is here at all because the alternative -- no controller -- reads as an unoccupied Palestine, which is further from the truth than this is."
+    }
+  ],
+  "ungoverned": [
+    {
+      "region": "r_ata",
+      "because": "the Antarctic Treaty has been in force since 1961 and suspends every claim. This era used to give the continent a government, an army and a treasury while 1972 refused to -- the auditor found the two disagreeing, and only one of them could be right."
+    }
+  ],
+  "not_yet": [],
+  "silent_on": {
+    "not_yet": "The era is the present. Nothing on the map postdates it, which is the one thing a contemporary scenario gets for free."
+  },
+  "doctrines": [
+    {
+      "nation": "usa",
+      "axis": "mobilisation",
+      "stance": "professional",
+      "because": "the all-volunteer force since 1973"
+    },
+    {
+      "nation": "usa",
+      "axis": "nuclear_posture",
+      "stance": "retaliation"
+    },
+    {
+      "nation": "usa",
+      "axis": "alignment",
+      "stance": "collective_security"
+    },
+    {
+      "nation": "rus",
+      "axis": "mobilisation",
+      "stance": "mass",
+      "because": "conscription, and the partial mobilisation of 2022"
+    },
+    {
+      "nation": "rus",
+      "axis": "nuclear_posture",
+      "stance": "retaliation"
+    },
+    {
+      "nation": "rus",
+      "axis": "alignment",
+      "stance": "collective_security",
+      "because": "the CSTO"
+    },
+    {
+      "nation": "chn",
+      "axis": "mobilisation",
+      "stance": "mass",
+      "because": "~2m active, the largest standing army in the world"
+    },
+    {
+      "nation": "chn",
+      "axis": "nuclear_posture",
+      "stance": "minimum",
+      "because": "a declared no-first-use policy, whatever the build-up"
+    },
+    {
+      "nation": "ukr",
+      "axis": "mobilisation",
+      "stance": "mass",
+      "because": "general mobilisation"
+    },
+    {
+      "nation": "gbr",
+      "axis": "mobilisation",
+      "stance": "professional"
+    },
+    {
+      "nation": "gbr",
+      "axis": "nuclear_posture",
+      "stance": "minimum",
+      "because": "Trident, continuous at-sea deterrence, one system only"
+    },
+    {
+      "nation": "gbr",
+      "axis": "alignment",
+      "stance": "collective_security"
+    },
+    {
+      "nation": "fra",
+      "axis": "mobilisation",
+      "stance": "professional",
+      "because": "conscription ended in 1996"
+    },
+    {
+      "nation": "fra",
+      "axis": "nuclear_posture",
+      "stance": "minimum"
+    },
+    {
+      "nation": "fra",
+      "axis": "alignment",
+      "stance": "collective_security",
+      "because": "back in the NATO integrated command since 2009"
+    },
+    {
+      "nation": "deu",
+      "axis": "mobilisation",
+      "stance": "professional",
+      "because": "conscription suspended in 2011"
+    },
+    {
+      "nation": "deu",
+      "axis": "alignment",
+      "stance": "collective_security"
+    },
+    {
+      "nation": "jpn",
+      "axis": "mobilisation",
+      "stance": "professional"
+    },
+    {
+      "nation": "kor",
+      "axis": "mobilisation",
+      "stance": "mass",
+      "because": "conscription"
+    },
+    {
+      "nation": "kor",
+      "axis": "alignment",
+      "stance": "collective_security"
+    },
+    {
+      "nation": "prk",
+      "axis": "mobilisation",
+      "stance": "mass"
+    },
+    {
+      "nation": "prk",
+      "axis": "nuclear_posture",
+      "stance": "minimum"
+    },
+    {
+      "nation": "irn",
+      "axis": "mobilisation",
+      "stance": "mass"
+    },
+    {
+      "nation": "isr",
+      "axis": "mobilisation",
+      "stance": "mass"
+    },
+    {
+      "nation": "isr",
+      "axis": "nuclear_posture",
+      "stance": "minimum"
+    },
+    {
+      "nation": "ind",
+      "axis": "nuclear_posture",
+      "stance": "minimum",
+      "because": "credible minimum deterrence, declared"
+    },
+    {
+      "nation": "ind",
+      "axis": "alignment",
+      "stance": "neutrality",
+      "because": "strategic autonomy, the Non-Aligned Movement's successor doctrine"
+    },
+    {
+      "nation": "tur",
+      "axis": "alignment",
+      "stance": "collective_security"
+    },
+    {
+      "nation": "pol",
+      "axis": "mobilisation",
+      "stance": "professional",
+      "because": "a professional army since conscription ended in 2009, and the one being grown fastest in Europe."
+    },
+    {
+      "nation": "pol",
+      "axis": "alignment",
+      "stance": "collective_security",
+      "because": "the clearest case on the map: the whole of its defence policy is the alliance."
+    },
+    {
+      "nation": "aus",
+      "axis": "mobilisation",
+      "stance": "professional",
+      "because": "no conscription since 1972."
+    },
+    {
+      "nation": "aus",
+      "axis": "alignment",
+      "stance": "collective_security",
+      "because": "ANZUS and AUKUS both."
+    },
+    {
+      "nation": "idn",
+      "axis": "alignment",
+      "stance": "neutrality",
+      "because": "the `bebas aktif` doctrine, and a founder of the Non-Aligned Movement in 1961."
+    },
+    {
+      "nation": "bra",
+      "axis": "alignment",
+      "stance": "neutrality",
+      "because": "talks to every bloc and joins none; no foreign base on South American soil is a standing objective."
+    },
+    {
+      "nation": "ita",
+      "axis": "mobilisation",
+      "stance": "professional",
+      "because": "conscription suspended in 2005."
+    },
+    {
+      "nation": "ita",
+      "axis": "alignment",
+      "stance": "collective_security",
+      "because": "a founding NATO member."
+    },
+    {
+      "nation": "egy",
+      "axis": "mobilisation",
+      "stance": "mass",
+      "because": "conscription, and the largest army in the Arab world."
+    },
+    {
+      "nation": "egy",
+      "axis": "alignment",
+      "stance": "neutrality",
+      "because": "takes American and Gulf money and is formally aligned with neither bloc."
+    },
+    {
+      "nation": "vnm",
+      "axis": "mobilisation",
+      "stance": "mass",
+      "because": "universal male conscription."
+    },
+    {
+      "nation": "vnm",
+      "axis": "alignment",
+      "stance": "neutrality",
+      "because": "the `four no's` of the 2019 defence white paper: no alliances, no foreign bases, no siding with one country against another, no force."
+    },
+    {
+      "nation": "twn",
+      "axis": "mobilisation",
+      "stance": "mass",
+      "because": "conscription was restored to a full year from January 2024 and the defence concept is reserve depth. **There is deliberately no alignment stance**: Taiwan is not non-aligned, it is unaligned by other states' choice, which is a different thing this axis cannot express."
+    }
+  ]
+}

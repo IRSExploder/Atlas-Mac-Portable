@@ -1,0 +1,499 @@
+{
+  "$comment": "What 1 January 1936 was, written against the period and not against the scenario module. Where this and atlas/scenarios/gathering_storm.py disagree, one of them is wrong and somebody has to decide which.",
+  "era": "gathering-storm",
+  "start_date": "1936-01-01",
+  "sources": "The interwar treaty network as it stood at the start of 1936: the Franco-Soviet pact of May 1935 and its Czechoslovak twin, the older French alliances with Poland and Czechoslovakia, the Little Entente, the Anglo-German Naval Agreement of June 1935, and Locarno -- three months before the Rhineland reoccupation tore it up. Sovereignty as of 1 January 1936: the Colonial Office and Quai d'Orsay territorial lists, the League mandates (A, B and C), and the Statute of Westminster's Dominions.",
+  "alliances": [
+    {
+      "name": "Franco-Soviet Treaty of Mutual Assistance",
+      "kind": "defensive_pact",
+      "status": "active",
+      "members": [
+        "fra",
+        "sov"
+      ],
+      "because": "signed May 1935 and ratified in February 1936 -- the ratification Hitler cited as the pretext for the Rhineland. Modelled active because the era begins with it in the world."
+    },
+    {
+      "name": "Soviet-Czechoslovak Treaty",
+      "kind": "defensive_pact",
+      "status": "active",
+      "members": [
+        "sov",
+        "cze"
+      ],
+      "because": "1935, and conditional on France acting first -- which is why the two treaties have to be separate commitments rather than one bloc."
+    },
+    {
+      "name": "Franco-Czechoslovak Alliance",
+      "kind": "defensive_pact",
+      "status": "active",
+      "members": [
+        "fra",
+        "cze"
+      ]
+    },
+    {
+      "name": "Franco-Polish Alliance",
+      "kind": "defensive_pact",
+      "status": "active",
+      "members": [
+        "fra",
+        "pol"
+      ]
+    },
+    {
+      "name": "Little Entente",
+      "kind": "defensive_pact",
+      "status": "active",
+      "members": [
+        "cze",
+        "rou",
+        "yug"
+      ],
+      "because": "three parties against Hungarian revision, and pointed at nobody else -- which is the reason it does not help against Germany."
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "Italian Eritrea",
+      "region": "r_m_eri_maekel",
+      "held_by": "ita",
+      "because": "an Italian colony since 1890 and the base the Ethiopian invasion was launched from."
+    },
+    {
+      "name": "Italian Somaliland",
+      "region": "r_m_som_banaadir",
+      "held_by": "ita",
+      "because": "the southern pincer of the same campaign."
+    },
+    {
+      "name": "British India",
+      "region": "r_ind",
+      "held_by": "gbr",
+      "because": "one raj covering what became India, Pakistan and Bangladesh, plus Burma until April 1937. It was the largest single fact about British power and it was not a state."
+    },
+    {
+      "name": "Mandatory Palestine",
+      "region": "r_psx",
+      "held_by": "gbr",
+      "because": "a League mandate administered by Britain."
+    },
+    {
+      "name": "Mandatory Palestine (the other half of the shape)",
+      "region": "r_isr",
+      "held_by": "gbr",
+      "because": "the modern pack draws the mandate as two countries. Both are British, and this is the entry the auditor most needed: there was no Israel in 1936."
+    },
+    {
+      "name": "Netherlands East Indies",
+      "region": "r_idn",
+      "held_by": "m_nld",
+      "because": "Dutch since the seventeenth century, the sixth-largest oil producer in the world, and most of why Japan looked south."
+    },
+    {
+      "name": "Algeria",
+      "region": "r_dza",
+      "held_by": "fra",
+      "because": "three departements of metropolitan France, not a colony -- which is what made 1954 to 1962 what it was."
+    },
+    {
+      "name": "Belgian Congo",
+      "region": "r_cod",
+      "held_by": "m_bel",
+      "because": "Belgian since 1908, and eighty times the size of Belgium."
+    },
+    {
+      "name": "Italian Libya",
+      "region": "r_lby",
+      "held_by": "ita",
+      "because": "taken from the Ottomans in 1912 and declared an integral part of Italy in 1939."
+    },
+    {
+      "name": "the Philippines",
+      "region": "r_phl",
+      "held_by": "usa",
+      "because": "a Commonwealth since November 1935 with independence promised for 1946 -- American sovereignty with a date on it."
+    },
+    {
+      "name": "Taiwan",
+      "region": "r_twn",
+      "held_by": "jpn",
+      "because": "Japanese since 1895."
+    },
+    {
+      "name": "Korea",
+      "region": "r_prk",
+      "held_by": "jpn",
+      "because": "annexed in 1910. The modern pack draws two Koreas and both are Japanese."
+    },
+    {
+      "name": "Portuguese Angola",
+      "region": "r_ago",
+      "held_by": "m_prt"
+    },
+    {
+      "name": "South West Africa",
+      "region": "r_nam",
+      "held_by": "m_zaf",
+      "because": "a C-class mandate administered by South Africa as if it were a province."
+    },
+    {
+      "name": "Southern Rhodesia",
+      "region": "r_zwe",
+      "held_by": "gbr",
+      "because": "a self-governing colony -- London held the reserved powers, and the alternative invents a nation."
+    },
+    {
+      "name": "the Gold Coast",
+      "region": "r_gha",
+      "held_by": "gbr"
+    }
+  ],
+  "cores": [
+    {
+      "region": "r_ger_berlin",
+      "home": "ger"
+    },
+    {
+      "region": "r_m_eri_maekel",
+      "home": null,
+      "because": "a colony is held, not owned in the sense a core means. The test that once asserted Eritrea was an Italian core was codifying the bug: if a colony is a core, a peace settlement has no way to say it is being given up."
+    },
+    {
+      "region": "r_m_som_banaadir",
+      "home": null
+    },
+    {
+      "region": "r_irl",
+      "home": "m_irl",
+      "because": "**the other 1936 finding.** Ireland was owned as British home soil, core and all. The Free State was a self-governing Dominion with its own army, its own constitution and a Statute of Westminster five years old -- not a British county."
+    },
+    {
+      "region": "r_ind",
+      "home": null,
+      "because": "the same rule the Italian colonies follow: a dependency is held, not owned in the sense a core means. If British India were a British core, a peace settlement would have no way to say it was being given up -- which is precisely the thing that happened in 1947."
+    },
+    {
+      "region": "r_isr",
+      "home": null
+    }
+  ],
+  "leaders": [
+    {
+      "nation": "ger",
+      "name": "Adolf Hitler",
+      "title": "Führer und Reichskanzler"
+    },
+    {
+      "nation": "sov",
+      "name": "Joseph Stalin",
+      "title": "General Secretary"
+    },
+    {
+      "nation": "usa",
+      "name": "Franklin D. Roosevelt",
+      "title": "President"
+    },
+    {
+      "nation": "gbr",
+      "name": "Stanley Baldwin",
+      "title": "Prime Minister",
+      "because": "Baldwin returned in June 1935; Chamberlain does not follow until May 1937."
+    },
+    {
+      "nation": "fra",
+      "name": "Léon Blum",
+      "title": "Président du Conseil",
+      "because": "a judgment call the scenario made and this manifest records rather than hides: Blum takes office in June 1936, and Sarraut holds it in January. He is seated because the Popular Front is the French position the era is about."
+    },
+    {
+      "nation": "ita",
+      "name": "Benito Mussolini",
+      "title": "Duce del Fascismo"
+    },
+    {
+      "nation": "jpn",
+      "name": "Kōki Hirota",
+      "title": "Prime Minister"
+    },
+    {
+      "nation": "chn",
+      "name": "Chiang Kai-shek",
+      "title": "Generalissimo"
+    },
+    {
+      "nation": "pol",
+      "name": "Edward Rydz-Śmigły",
+      "title": "Marshal of Poland",
+      "because": "Pilsudski died in May 1935 and the colonels' regime runs through Rydz-Smigly."
+    },
+    {
+      "nation": "tur",
+      "name": "Mustafa Kemal Atatürk",
+      "title": "President"
+    }
+  ],
+  "treaties": [
+    {
+      "name": "German-Polish Non-Aggression Pact",
+      "match": "German-Polish Non-Aggression",
+      "kind": "non_aggression_pact",
+      "status": "active",
+      "parties": [
+        "ger",
+        "pol"
+      ],
+      "because": "1934, ten years, and repudiated by Germany in April 1939 -- so it must be a commitment the engine can report broken."
+    },
+    {
+      "name": "Anglo-German Naval Agreement",
+      "match": "Anglo-German Naval Agreement",
+      "kind": "trade_agreement",
+      "status": "active",
+      "parties": [
+        "gbr",
+        "ger"
+      ],
+      "because": "June 1935, bilateral, and concluded without France -- a limit agreed rather than a defence promised, which is why it is not a pact."
+    },
+    {
+      "name": "Locarno",
+      "match": "Locarno",
+      "kind": "military_access",
+      "status": "pending",
+      "parties": [
+        "ger",
+        "fra",
+        "gbr",
+        "ita"
+      ],
+      "because": "in force on paper and untested in practice; the Rhineland is still demilitarised in January and will not be in March."
+    }
+  ],
+  "packs": [
+    "admin1-10m",
+    "admin0-50m",
+    "marine-10m"
+  ],
+  "organisations": [],
+  "occupied": [],
+  "ungoverned": [
+    {
+      "region": "r_ata",
+      "because": "five overlapping claims, no permanent inhabitants and no government. The Antarctic Treaty is twenty-five years away, but 'claimed by several and governed by none' is much better modelled as ownerless ground than as a nation with a treasury and a border guard on the ice. All three eras now agree."
+    }
+  ],
+  "not_yet": [
+    {
+      "name": "Israel",
+      "because": "Mandatory Palestine; the state is twelve years away"
+    },
+    {
+      "name": "Pakistan",
+      "because": "British India until 1947"
+    },
+    {
+      "name": "Bangladesh",
+      "because": "British India, then East Pakistan, until 1971"
+    },
+    {
+      "name": "India",
+      "because": "the Raj is a British possession, not a member state"
+    },
+    {
+      "name": "Myanmar",
+      "because": "Burma, and part of British India until April 1937"
+    },
+    {
+      "name": "Sri Lanka",
+      "because": "Ceylon, a British crown colony"
+    },
+    {
+      "name": "Indonesia",
+      "because": "the Netherlands East Indies"
+    },
+    {
+      "name": "Malaysia",
+      "because": "British Malaya and the Straits Settlements"
+    },
+    {
+      "name": "Singapore",
+      "because": "a Straits Settlement and the naval base the Far East strategy rested on"
+    },
+    {
+      "name": "Vietnam",
+      "because": "French Indochina"
+    },
+    {
+      "name": "Algeria",
+      "because": "French, and administratively part of France itself"
+    },
+    {
+      "name": "Libya",
+      "because": "Italian since 1912"
+    },
+    {
+      "name": "Ghana",
+      "because": "the Gold Coast"
+    },
+    {
+      "name": "Nigeria",
+      "because": "a British colony and protectorate"
+    },
+    {
+      "name": "Kenya",
+      "because": "a British colony"
+    },
+    {
+      "name": "Zimbabwe",
+      "because": "Southern Rhodesia"
+    },
+    {
+      "name": "Namibia",
+      "because": "South West Africa, a South African mandate"
+    },
+    {
+      "name": "Democratic Republic of the Congo",
+      "because": "the Belgian Congo"
+    },
+    {
+      "name": "Angola",
+      "because": "Portuguese"
+    },
+    {
+      "name": "Mozambique",
+      "because": "Portuguese"
+    },
+    {
+      "name": "Timor",
+      "because": "Portuguese"
+    },
+    {
+      "name": "Syria",
+      "because": "a French mandate"
+    },
+    {
+      "name": "Lebanon",
+      "because": "a French mandate"
+    },
+    {
+      "name": "Jordan",
+      "because": "the Emirate of Transjordan, a British mandate"
+    },
+    {
+      "name": "Cyprus",
+      "because": "a British crown colony"
+    },
+    {
+      "name": "Malta",
+      "because": "a British crown colony and fleet base"
+    },
+    {
+      "name": "Philippines",
+      "because": "an American Commonwealth, sovereign in 1946"
+    },
+    {
+      "name": "Korea",
+      "because": "annexed by Japan in 1910"
+    },
+    {
+      "name": "Taiwan",
+      "because": "Japanese since 1895"
+    },
+    {
+      "name": "Sudan",
+      "because": "the Anglo-Egyptian Sudan, British in practice"
+    }
+  ],
+  "arsenals": [],
+  "delivery": {},
+  "silent_on": {
+    "organisations": "The League of Nations is not modelled. It existed and mattered -- the Abyssinia crisis is a League crisis -- but Japan and Germany had left, Italy was leaving, and the body had no enforcement the `organisation` layer's veto arithmetic represents. A known gap rather than a claim that there was no body.",
+    "occupied": "Nothing begins under occupation. The Rhineland is demilitarised German ground, not held by anyone else, and that is the point of what happens in March.",
+    "arsenals": "No nation had a nuclear weapon in 1936, and the empty `arsenal` table is the correct world rather than an unwritten section.",
+    "delivery": "Nothing to deliver, so there is no boundary to walk."
+  },
+  "doctrines": [
+    {
+      "nation": "fra",
+      "axis": "mobilisation",
+      "stance": "mass",
+      "because": "conscription and a reserve army of ~5m on mobilisation"
+    },
+    {
+      "nation": "fra",
+      "axis": "alignment",
+      "stance": "collective_security",
+      "because": "Locarno, the Little Entente, the Franco-Soviet pact of 1935"
+    },
+    {
+      "nation": "ger",
+      "axis": "mobilisation",
+      "stance": "mass",
+      "because": "conscription restored March 1935"
+    },
+    {
+      "nation": "gbr",
+      "axis": "mobilisation",
+      "stance": "professional",
+      "because": "a regular army of ~200k long-service volunteers; no conscription until 1939"
+    },
+    {
+      "nation": "gbr",
+      "axis": "alignment",
+      "stance": "collective_security",
+      "because": "the League of Nations, however badly it was going"
+    },
+    {
+      "nation": "ita",
+      "axis": "mobilisation",
+      "stance": "mass"
+    },
+    {
+      "nation": "jpn",
+      "axis": "mobilisation",
+      "stance": "mass"
+    },
+    {
+      "nation": "sov",
+      "axis": "mobilisation",
+      "stance": "mass"
+    },
+    {
+      "nation": "sov",
+      "axis": "alignment",
+      "stance": "collective_security",
+      "because": "joined the League in 1934; the Franco-Soviet pact in 1935"
+    },
+    {
+      "nation": "usa",
+      "axis": "mobilisation",
+      "stance": "professional",
+      "because": "a regular army of ~180k"
+    },
+    {
+      "nation": "usa",
+      "axis": "alignment",
+      "stance": "neutrality",
+      "because": "the Neutrality Acts of 1935 and 1936"
+    },
+    {
+      "nation": "pol",
+      "axis": "mobilisation",
+      "stance": "mass"
+    },
+    {
+      "nation": "pol",
+      "axis": "alignment",
+      "stance": "collective_security",
+      "because": "the Franco-Polish alliance"
+    },
+    {
+      "nation": "tur",
+      "axis": "alignment",
+      "stance": "neutrality",
+      "because": "Montreux, and a policy of staying out that held until 1945"
+    }
+  ]
+}

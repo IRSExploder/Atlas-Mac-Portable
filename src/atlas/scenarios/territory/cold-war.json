@@ -1,0 +1,485 @@
+{
+ "scenario": "cold-war",
+ "source": "admin1-10m",
+ "note": "Generated from Natural Earth admin-1 by scripts/gen_territory.py, then corrected by the OVERRIDES table for the two borders that run inside what is now one country -- the inner German border and the 17th parallel -- and for the Sinai. Regenerating overwrites hand edits made here.",
+ "countries": [
+  "CUB",
+  "CZE",
+  "DEU",
+  "EGY",
+  "ISR",
+  "KOR",
+  "POL",
+  "PRK",
+  "SVK",
+  "VNM"
+ ],
+ "nations": {
+  "cub": {
+   "capital": "Ciudad de la Habana",
+   "regions": {
+    "Ciego de Avila": [
+     "admin1-10m:CUB-1363",
+     "admin1-10m:CUB-1364"
+    ],
+    "Ciudad de la Habana": [
+     "admin1-10m:CUB-1428"
+    ],
+    "Granma": [
+     "admin1-10m:CUB-1366",
+     "admin1-10m:CUB-1368"
+    ],
+    "Guantanamo": [
+     "admin1-10m:CUB-1365"
+    ],
+    "Holguin": [
+     "admin1-10m:CUB-1367",
+     "admin1-10m:CUB-1369"
+    ],
+    "Matanzas": [
+     "admin1-10m:CUB-1319",
+     "admin1-10m:CUB-1430"
+    ],
+    "Mayabeque": [
+     "admin1-10m:CUB-1320",
+     "admin1-10m:CUB-5489"
+    ],
+    "Pinar del Rio": [
+     "admin1-10m:CUB-1321",
+     "admin1-10m:CUB-1429"
+    ],
+    "Villa Clara": [
+     "admin1-10m:CUB-1322",
+     "admin1-10m:CUB-1431"
+    ]
+   }
+  },
+  "cze": {
+   "capital": "CZE Prague",
+   "regions": {
+    "CZE Karlovarsky": [
+     "admin1-10m:CZE-10369",
+     "admin1-10m:CZE-1590"
+    ],
+    "CZE Liberecky": [
+     "admin1-10m:CZE-1597",
+     "admin1-10m:CZE-1598"
+    ],
+    "CZE Moravskoslezsky": [
+     "admin1-10m:CZE-10371",
+     "admin1-10m:CZE-1612"
+    ],
+    "CZE Pardubicky": [
+     "admin1-10m:CZE-10372",
+     "admin1-10m:CZE-10373"
+    ],
+    "CZE Prague": [
+     "admin1-10m:CZE-1595"
+    ],
+    "CZE Ustecky": [
+     "admin1-10m:CZE-10368",
+     "admin1-10m:CZE-1596"
+    ],
+    "CZE Vysocina": [
+     "admin1-10m:CZE-1593",
+     "admin1-10m:CZE-1594"
+    ],
+    "SVK Bratislavsky": [
+     "admin1-10m:CZE-10370",
+     "admin1-10m:SVK-1051"
+    ],
+    "SVK Kosicky": [
+     "admin1-10m:SVK-1057"
+    ],
+    "SVK Nitriansky": [
+     "admin1-10m:SVK-1052",
+     "admin1-10m:SVK-1054"
+    ],
+    "SVK Trenciansky": [
+     "admin1-10m:SVK-1055",
+     "admin1-10m:SVK-1056"
+    ],
+    "SVK Zilinsky": [
+     "admin1-10m:SVK-1053",
+     "admin1-10m:SVK-1058"
+    ]
+   }
+  },
+  "dvn": {
+   "capital": "Ha Noi",
+   "regions": {
+    "Bac Ninh": [
+     "admin1-10m:VNM-452",
+     "admin1-10m:VNM-463",
+     "admin1-10m:VNM-470"
+    ],
+    "Ha Noi": [
+     "admin1-10m:VNM-462"
+    ],
+    "Ha Tinh": [
+     "admin1-10m:VNM-468",
+     "admin1-10m:VNM-474",
+     "admin1-10m:VNM-476"
+    ],
+    "Hai Phong": [
+     "admin1-10m:VNM-4600"
+    ],
+    "Hoa Binh": [
+     "admin1-10m:VNM-459",
+     "admin1-10m:VNM-461",
+     "admin1-10m:VNM-464"
+    ],
+    "Lai Chau": [
+     "admin1-10m:VNM-450",
+     "admin1-10m:VNM-453",
+     "admin1-10m:VNM-5483"
+    ],
+    "Lang Son": [
+     "admin1-10m:VNM-429",
+     "admin1-10m:VNM-454",
+     "admin1-10m:VNM-511"
+    ],
+    "Thai Binh": [
+     "admin1-10m:VNM-460",
+     "admin1-10m:VNM-467",
+     "admin1-10m:VNM-471"
+    ],
+    "Thanh Hoa": [
+     "admin1-10m:VNM-456",
+     "admin1-10m:VNM-466",
+     "admin1-10m:VNM-475"
+    ],
+    "Tuyen Quang": [
+     "admin1-10m:VNM-451",
+     "admin1-10m:VNM-457",
+     "admin1-10m:VNM-512"
+    ],
+    "Yen Bai": [
+     "admin1-10m:VNM-455",
+     "admin1-10m:VNM-458",
+     "admin1-10m:VNM-469"
+    ]
+   }
+  },
+  "eger": {
+   "capital": "Berlin and Brandenburg",
+   "regions": {
+    "Berlin and Brandenburg": [
+     "admin1-10m:DEU-3487"
+    ],
+    "Mecklenburg": [
+     "admin1-10m:DEU-3488"
+    ],
+    "Sachsen": [
+     "admin1-10m:DEU-1601"
+    ],
+    "Sachsen-Anhalt": [
+     "admin1-10m:DEU-1600"
+    ],
+    "Thueringen": [
+     "admin1-10m:DEU-1577"
+    ]
+   }
+  },
+  "egy": {
+   "capital": "Al Qahirah",
+   "regions": {
+    "Ad Daqahliyah": [
+     "admin1-10m:EGY-1537",
+     "admin1-10m:EGY-1539",
+     "admin1-10m:EGY-1547"
+    ],
+    "Al Bahr al Ahmar": [
+     "admin1-10m:EGY-1548",
+     "admin1-10m:EGY-1556",
+     "admin1-10m:EGY-5494"
+    ],
+    "Al Jizah": [
+     "admin1-10m:EGY-1540",
+     "admin1-10m:EGY-1543",
+     "admin1-10m:EGY-1544"
+    ],
+    "Al Minufiyah": [
+     "admin1-10m:EGY-1530",
+     "admin1-10m:EGY-1532",
+     "admin1-10m:EGY-1541"
+    ],
+    "Al Qahirah": [
+     "admin1-10m:EGY-1533"
+    ],
+    "As Suways": [
+     "admin1-10m:EGY-1536",
+     "admin1-10m:EGY-1538",
+     "admin1-10m:EGY-1551"
+    ],
+    "Ash Sharqiyah": [
+     "admin1-10m:EGY-1531",
+     "admin1-10m:EGY-1534",
+     "admin1-10m:EGY-1535"
+    ],
+    "Asyut": [
+     "admin1-10m:EGY-1549",
+     "admin1-10m:EGY-1550",
+     "admin1-10m:EGY-1552"
+    ],
+    "Bani Suwayf": [
+     "admin1-10m:EGY-1542",
+     "admin1-10m:EGY-1545",
+     "admin1-10m:EGY-1546"
+    ]
+   }
+  },
+  "isr": {
+   "capital": "Jerusalem",
+   "regions": {
+    "HaDarom": [
+     "admin1-10m:ISR-3053"
+    ],
+    "HaMerkaz": [
+     "admin1-10m:ISR-3055"
+    ],
+    "HaZafon": [
+     "admin1-10m:ISR-3056"
+    ],
+    "Haifa": [
+     "admin1-10m:ISR-3054"
+    ],
+    "Jerusalem": [
+     "admin1-10m:ISR-3058"
+    ],
+    "Northern Sinai": [
+     "admin1-10m:EGY-1558"
+    ],
+    "Southern Sinai": [
+     "admin1-10m:EGY-1557"
+    ],
+    "Tel Aviv": [
+     "admin1-10m:ISR-3057"
+    ]
+   }
+  },
+  "kor": {
+   "capital": "Seoul",
+   "regions": {
+    "Busan": [
+     "admin1-10m:KOR-2507",
+     "admin1-10m:KOR-2508"
+    ],
+    "Daegu": [
+     "admin1-10m:KOR-2504",
+     "admin1-10m:KOR-2505"
+    ],
+    "Gangwon": [
+     "admin1-10m:KOR-2496",
+     "admin1-10m:KOR-2509"
+    ],
+    "Incheon": [
+     "admin1-10m:KOR-2495",
+     "admin1-10m:KOR-2498"
+    ],
+    "Jeju": [
+     "admin1-10m:KOR-2506",
+     "admin1-10m:KOR-2510"
+    ],
+    "North Chungcheong": [
+     "admin1-10m:KOR-2494",
+     "admin1-10m:KOR-2503"
+    ],
+    "North Jeolla": [
+     "admin1-10m:KOR-2499",
+     "admin1-10m:KOR-2500"
+    ],
+    "Sejong": [
+     "admin1-10m:KOR-2502",
+     "admin1-10m:KOR-5129"
+    ],
+    "Seoul": [
+     "admin1-10m:KOR-2497"
+    ]
+   }
+  },
+  "m_wbe": {
+   "capital": "West Berlin",
+   "regions": {
+    "West Berlin": [
+     "admin1-10m:DEU-1599"
+    ]
+   }
+  },
+  "pol": {
+   "capital": "Masovian",
+   "regions": {
+    "Greater Poland": [
+     "admin1-10m:POL-3144",
+     "admin1-10m:POL-3145"
+    ],
+    "Lublin": [
+     "admin1-10m:POL-3151",
+     "admin1-10m:POL-3152"
+    ],
+    "Lubusz": [
+     "admin1-10m:POL-3142",
+     "admin1-10m:POL-3143"
+    ],
+    "Masovian": [
+     "admin1-10m:POL-3148"
+    ],
+    "Opole": [
+     "admin1-10m:POL-3141",
+     "admin1-10m:POL-3167"
+    ],
+    "Podlachian": [
+     "admin1-10m:POL-3150"
+    ],
+    "Pomeranian": [
+     "admin1-10m:POL-3139",
+     "admin1-10m:POL-3140"
+    ],
+    "Silesian": [
+     "admin1-10m:POL-3146",
+     "admin1-10m:POL-3170"
+    ],
+    "Swietokrzyskie": [
+     "admin1-10m:POL-3147",
+     "admin1-10m:POL-3149"
+    ]
+   }
+  },
+  "prk": {
+   "capital": "P'yongyang",
+   "regions": {
+    "Chagang-do": [
+     "admin1-10m:PRK-3310"
+    ],
+    "Hamgyong-bukto": [
+     "admin1-10m:PRK-3307"
+    ],
+    "Hamgyong-namdo": [
+     "admin1-10m:PRK-3311"
+    ],
+    "Hwanghae-bukto": [
+     "admin1-10m:PRK-3303"
+    ],
+    "Hwanghae-namdo": [
+     "admin1-10m:PRK-3304"
+    ],
+    "Kangwon-do": [
+     "admin1-10m:PRK-3308"
+    ],
+    "P'yongan-bukto": [
+     "admin1-10m:PRK-3312"
+    ],
+    "P'yongan-namdo": [
+     "admin1-10m:PRK-3313"
+    ],
+    "P'yongyang": [
+     "admin1-10m:PRK-3305"
+    ],
+    "Rason": [
+     "admin1-10m:PRK-5495"
+    ],
+    "Ryanggang": [
+     "admin1-10m:PRK-3314"
+    ]
+   }
+  },
+  "rvn": {
+   "capital": "Saigon",
+   "regions": {
+    "Bien Hoa": [
+     "admin1-10m:VNM-495",
+     "admin1-10m:VNM-497"
+    ],
+    "Binh Dinh": [
+     "admin1-10m:VNM-482",
+     "admin1-10m:VNM-485"
+    ],
+    "Central Highlands": [
+     "admin1-10m:VNM-477",
+     "admin1-10m:VNM-478",
+     "admin1-10m:VNM-480",
+     "admin1-10m:VNM-4835",
+     "admin1-10m:VNM-486"
+    ],
+    "Da Nang": [
+     "admin1-10m:VNM-487",
+     "admin1-10m:VNM-491"
+    ],
+    "Hue": [
+     "admin1-10m:VNM-490"
+    ],
+    "Mekong Delta North": [
+     "admin1-10m:VNM-4834",
+     "admin1-10m:VNM-498",
+     "admin1-10m:VNM-500",
+     "admin1-10m:VNM-503",
+     "admin1-10m:VNM-504"
+    ],
+    "Mekong Delta South": [
+     "admin1-10m:VNM-499",
+     "admin1-10m:VNM-502",
+     "admin1-10m:VNM-505",
+     "admin1-10m:VNM-506",
+     "admin1-10m:VNM-507",
+     "admin1-10m:VNM-508",
+     "admin1-10m:VNM-509",
+     "admin1-10m:VNM-510"
+    ],
+    "Nha Trang": [
+     "admin1-10m:VNM-479",
+     "admin1-10m:VNM-481",
+     "admin1-10m:VNM-496"
+    ],
+    "Quang Ngai": [
+     "admin1-10m:VNM-488"
+    ],
+    "Quang Tri": [
+     "admin1-10m:VNM-489"
+    ],
+    "Saigon": [
+     "admin1-10m:VNM-501"
+    ],
+    "Tay Ninh": [
+     "admin1-10m:VNM-444",
+     "admin1-10m:VNM-483",
+     "admin1-10m:VNM-484"
+    ]
+   }
+  },
+  "wger": {
+   "capital": "Nordrhein-Westfalen",
+   "regions": {
+    "Baden-Wurttemberg": [
+     "admin1-10m:DEU-1573"
+    ],
+    "Bayern": [
+     "admin1-10m:DEU-1591"
+    ],
+    "Bremen": [
+     "admin1-10m:DEU-1575"
+    ],
+    "Hamburg": [
+     "admin1-10m:DEU-1578"
+    ],
+    "Hessen": [
+     "admin1-10m:DEU-1574"
+    ],
+    "Niedersachsen": [
+     "admin1-10m:DEU-1576"
+    ],
+    "Nordrhein-Westfalen": [
+     "admin1-10m:DEU-1572"
+    ],
+    "Rheinland-Pfalz": [
+     "admin1-10m:DEU-1580"
+    ],
+    "Saarland": [
+     "admin1-10m:DEU-1581"
+    ],
+    "Schleswig-Holstein": [
+     "admin1-10m:DEU-1579"
+    ]
+   }
+  }
+ }
+}

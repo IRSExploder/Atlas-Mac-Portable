@@ -1,0 +1,463 @@
+{
+  "scenario": "modern-day",
+  "source": "admin1-10m",
+  "note": "Generated from Natural Earth admin-1 by scripts/gen_territory.py, then corrected by the OVERRIDES table: Natural Earth files Crimea under Russia, and the four oblasts the front runs through are given regions of their own so a line of control can be drawn. Regenerating overwrites hand edits.",
+  "countries": [
+    "CHN",
+    "IND",
+    "KOR",
+    "PAK",
+    "PRK",
+    "RUS",
+    "TWN",
+    "UKR"
+  ],
+  "nations": {
+    "chn": {
+      "capital": "Beijing",
+      "regions": {
+        "Beijing": [
+          "admin1-10m:CHN-1155"
+        ],
+        "Chongqing": [
+          "admin1-10m:CHN-1154",
+          "admin1-10m:CHN-1808",
+          "admin1-10m:CHN-1809"
+        ],
+        "Fujian": [
+          "admin1-10m:CHN-1178",
+          "admin1-10m:CHN-1817",
+          "admin1-10m:CHN-1820"
+        ],
+        "Guizhou": [
+          "admin1-10m:CHN-1152",
+          "admin1-10m:CHN-1153",
+          "admin1-10m:CHN-1810"
+        ],
+        "Hainan": [
+          "admin1-10m:CHN-1180",
+          "admin1-10m:CHN-1775",
+          "admin1-10m:PFA+00?"
+        ],
+        "Heilongjiang": [
+          "admin1-10m:CHN-1839"
+        ],
+        "Henan": [
+          "admin1-10m:CHN-1179",
+          "admin1-10m:CHN-1807",
+          "admin1-10m:CHN-1812"
+        ],
+        "Liaoning": [
+          "admin1-10m:CHN-1813",
+          "admin1-10m:CHN-1819",
+          "admin1-10m:CHN-1828"
+        ],
+        "Ningxia": [
+          "admin1-10m:CHN-1150",
+          "admin1-10m:CHN-1803",
+          "admin1-10m:CHN-1804"
+        ],
+        "Shandong": [
+          "admin1-10m:CHN-1814",
+          "admin1-10m:CHN-1816",
+          "admin1-10m:CHN-1818"
+        ],
+        "Shanxi": [
+          "admin1-10m:CHN-1805",
+          "admin1-10m:CHN-1811",
+          "admin1-10m:CHN-1838"
+        ],
+        "Xizang": [
+          "admin1-10m:CHN-1151",
+          "admin1-10m:CHN-1662",
+          "admin1-10m:CHN-1756"
+        ]
+      }
+    },
+    "ind": {
+      "capital": "Delhi",
+      "regions": {
+        "Andhra Pradesh": [
+          "admin1-10m:IND-20011",
+          "admin1-10m:IND-2441",
+          "admin1-10m:IND-2444",
+          "admin1-10m:IND-3262"
+        ],
+        "Chhattisgarh": [
+          "admin1-10m:IND-3253",
+          "admin1-10m:IND-3256",
+          "admin1-10m:IND-3260",
+          "admin1-10m:IND-3261"
+        ],
+        "Dadra and Nagar Haveli and Daman and Diu": [
+          "admin1-10m:IND-2445",
+          "admin1-10m:IND-2447",
+          "admin1-10m:IND-3264",
+          "admin1-10m:IND-3265"
+        ],
+        "Delhi": [
+          "admin1-10m:IND-2428"
+        ],
+        "Haryana": [
+          "admin1-10m:IND-2427",
+          "admin1-10m:IND-2430",
+          "admin1-10m:IND-3249",
+          "admin1-10m:IND-3250"
+        ],
+        "Himachal Pradesh": [
+          "admin1-10m:IND-20012",
+          "admin1-10m:IND-2429",
+          "admin1-10m:IND-2431",
+          "admin1-10m:IND-3254"
+        ],
+        "Kerala": [
+          "admin1-10m:IND-2442",
+          "admin1-10m:IND-2443",
+          "admin1-10m:IND-2446",
+          "admin1-10m:IND-3263"
+        ],
+        "Manipur": [
+          "admin1-10m:IND-2477",
+          "admin1-10m:IND-2478",
+          "admin1-10m:IND-3300",
+          "admin1-10m:IND-3301"
+        ],
+        "Nagaland": [
+          "admin1-10m:IND-2474",
+          "admin1-10m:IND-2479",
+          "admin1-10m:IND-3299"
+        ],
+        "Sikkim": [
+          "admin1-10m:IND-2489",
+          "admin1-10m:IND-3257",
+          "admin1-10m:IND-3258",
+          "admin1-10m:IND-3259"
+        ]
+      }
+    },
+    "kor": {
+      "capital": "Seoul",
+      "regions": {
+        "Busan": [
+          "admin1-10m:KOR-2507",
+          "admin1-10m:KOR-2508"
+        ],
+        "Daegu": [
+          "admin1-10m:KOR-2504",
+          "admin1-10m:KOR-2505"
+        ],
+        "Gangwon": [
+          "admin1-10m:KOR-2496",
+          "admin1-10m:KOR-2509"
+        ],
+        "Incheon": [
+          "admin1-10m:KOR-2495",
+          "admin1-10m:KOR-2498"
+        ],
+        "Jeju": [
+          "admin1-10m:KOR-2506",
+          "admin1-10m:KOR-2510"
+        ],
+        "North Chungcheong": [
+          "admin1-10m:KOR-2494",
+          "admin1-10m:KOR-2503"
+        ],
+        "North Jeolla": [
+          "admin1-10m:KOR-2499",
+          "admin1-10m:KOR-2500"
+        ],
+        "Sejong": [
+          "admin1-10m:KOR-2502",
+          "admin1-10m:KOR-5129"
+        ],
+        "Seoul": [
+          "admin1-10m:KOR-2497"
+        ]
+      }
+    },
+    "twn": {
+      "capital": "Taipei City",
+      "regions": {
+        "Chiayi": [
+          "admin1-10m:TWN-1160",
+          "admin1-10m:TWN-1170"
+        ],
+        "Chiayi City": [
+          "admin1-10m:TWN-1171",
+          "admin1-10m:TWN-1176"
+        ],
+        "Hsinchu City": [
+          "admin1-10m:TWN-1161",
+          "admin1-10m:TWN-1165"
+        ],
+        "Kaohsiung City": [
+          "admin1-10m:TWN-1156",
+          "admin1-10m:TWN-1158"
+        ],
+        "Keelung City": [
+          "admin1-10m:TWN-1164",
+          "admin1-10m:TWN-1167"
+        ],
+        "Kinmen": [
+          "admin1-10m:TWN-3414",
+          "admin1-10m:TWN-3415"
+        ],
+        "Nantou": [
+          "admin1-10m:TWN-1172",
+          "admin1-10m:TWN-1173"
+        ],
+        "Taichung City": [
+          "admin1-10m:TWN-1169",
+          "admin1-10m:TWN-1174"
+        ],
+        "Taipei City": [
+          "admin1-10m:TWN-1166"
+        ],
+        "Taitung": [
+          "admin1-10m:TWN-1163",
+          "admin1-10m:TWN-1177"
+        ],
+        "Taoyuan": [
+          "admin1-10m:TWN-1162",
+          "admin1-10m:TWN-1168"
+        ]
+      }
+    },
+    "pak": {
+      "capital": "F.C.T.",
+      "regions": {
+        "Azad Kashmir": [
+          "admin1-10m:PAK-1109"
+        ],
+        "Baluchistan": [
+          "admin1-10m:PAK-1108"
+        ],
+        "F.A.T.A.": [
+          "admin1-10m:PAK-1112"
+        ],
+        "F.C.T.": [
+          "admin1-10m:PAK-1110"
+        ],
+        "K.P.": [
+          "admin1-10m:PAK-1123"
+        ],
+        "Northern Areas": [
+          "admin1-10m:PAK-1111"
+        ],
+        "Punjab": [
+          "admin1-10m:PAK-1113"
+        ],
+        "Sind": [
+          "admin1-10m:PAK-1114"
+        ]
+      }
+    },
+    "prk": {
+      "capital": "P'yongyang",
+      "regions": {
+        "Chagang-do": [
+          "admin1-10m:PRK-3310"
+        ],
+        "Hamgyong-bukto": [
+          "admin1-10m:PRK-3307"
+        ],
+        "Hamgyong-namdo": [
+          "admin1-10m:PRK-3311"
+        ],
+        "Hwanghae-bukto": [
+          "admin1-10m:PRK-3303"
+        ],
+        "Hwanghae-namdo": [
+          "admin1-10m:PRK-3304"
+        ],
+        "Kangwon-do": [
+          "admin1-10m:PRK-3308"
+        ],
+        "P'yongan-bukto": [
+          "admin1-10m:PRK-3312"
+        ],
+        "P'yongan-namdo": [
+          "admin1-10m:PRK-3313"
+        ],
+        "P'yongyang": [
+          "admin1-10m:PRK-3305"
+        ],
+        "Rason": [
+          "admin1-10m:PRK-5495"
+        ],
+        "Ryanggang": [
+          "admin1-10m:PRK-3314"
+        ]
+      }
+    },
+    "rus": {
+      "capital": "Moskva",
+      "regions": {
+        "Amur": [
+          "admin1-10m:RUS-2606",
+          "admin1-10m:RUS-2609",
+          "admin1-10m:RUS-2610",
+          "admin1-10m:RUS-2611",
+          "admin1-10m:RUS-2612",
+          "admin1-10m:RUS-2613",
+          "admin1-10m:RUS-2614"
+        ],
+        "Kabardin-Balkar": [
+          "admin1-10m:RUS-2279",
+          "admin1-10m:RUS-2280",
+          "admin1-10m:RUS-2303",
+          "admin1-10m:RUS-2304",
+          "admin1-10m:RUS-2305",
+          "admin1-10m:RUS-2306",
+          "admin1-10m:RUS-2371",
+          "admin1-10m:RUS-2416"
+        ],
+        "Kamchatka": [
+          "admin1-10m:RUS-2321",
+          "admin1-10m:RUS-2615",
+          "admin1-10m:RUS-2616",
+          "admin1-10m:RUS-3468"
+        ],
+        "Khakass": [
+          "admin1-10m:RUS-2167",
+          "admin1-10m:RUS-2399",
+          "admin1-10m:RUS-2400",
+          "admin1-10m:RUS-2401",
+          "admin1-10m:RUS-2402",
+          "admin1-10m:RUS-2602",
+          "admin1-10m:RUS-2603",
+          "admin1-10m:RUS-2605"
+        ],
+        "Khanty-Mansiy": [
+          "admin1-10m:RUS+99?",
+          "admin1-10m:RUS-2381",
+          "admin1-10m:RUS-2382",
+          "admin1-10m:RUS-2383",
+          "admin1-10m:RUS-2396",
+          "admin1-10m:RUS-2397",
+          "admin1-10m:RUS-2398",
+          "admin1-10m:RUS-2403"
+        ],
+        "Moskva": [
+          "admin1-10m:RUS-2365"
+        ],
+        "Orenburg": [
+          "admin1-10m:RUS-2379",
+          "admin1-10m:RUS-2380",
+          "admin1-10m:RUS-2386",
+          "admin1-10m:RUS-2388",
+          "admin1-10m:RUS-2390",
+          "admin1-10m:RUS-2391",
+          "admin1-10m:RUS-2417",
+          "admin1-10m:RUS-3200"
+        ],
+        "Penza": [
+          "admin1-10m:RUS-2367",
+          "admin1-10m:RUS-2369",
+          "admin1-10m:RUS-2372",
+          "admin1-10m:RUS-2373",
+          "admin1-10m:RUS-2375",
+          "admin1-10m:RUS-2377",
+          "admin1-10m:RUS-2393",
+          "admin1-10m:RUS-2395"
+        ],
+        "Pskov": [
+          "admin1-10m:RUS-2324",
+          "admin1-10m:RUS-2334",
+          "admin1-10m:RUS-2335",
+          "admin1-10m:RUS-2336",
+          "admin1-10m:RUS-2337",
+          "admin1-10m:RUS-2342",
+          "admin1-10m:RUS-2343",
+          "admin1-10m:RUS-2358"
+        ],
+        "Tatarstan": [
+          "admin1-10m:RUS-2357",
+          "admin1-10m:RUS-2378",
+          "admin1-10m:RUS-2384",
+          "admin1-10m:RUS-2385",
+          "admin1-10m:RUS-2387",
+          "admin1-10m:RUS-2389",
+          "admin1-10m:RUS-2392",
+          "admin1-10m:RUS-2394"
+        ],
+        "Tula": [
+          "admin1-10m:RUS-2361",
+          "admin1-10m:RUS-2362",
+          "admin1-10m:RUS-2363",
+          "admin1-10m:RUS-2364",
+          "admin1-10m:RUS-2366",
+          "admin1-10m:RUS-2368",
+          "admin1-10m:RUS-2370",
+          "admin1-10m:RUS-2374"
+        ],
+        "Vologda": [
+          "admin1-10m:RUS-2333",
+          "admin1-10m:RUS-2353",
+          "admin1-10m:RUS-2354",
+          "admin1-10m:RUS-2355",
+          "admin1-10m:RUS-2356",
+          "admin1-10m:RUS-2359",
+          "admin1-10m:RUS-2360",
+          "admin1-10m:RUS-2376"
+        ]
+      }
+    },
+    "ukr": {
+      "capital": "Kiev City",
+      "regions": {
+        "Crimea": [
+          "admin1-10m:RUS-283",
+          "admin1-10m:RUS-5482"
+        ],
+        "Dnipropetrovs'k": [
+          "admin1-10m:UKR-326"
+        ],
+        "Donets'k": [
+          "admin1-10m:UKR-327"
+        ],
+        "Ivano-Frankivs'k": [
+          "admin1-10m:UKR-288",
+          "admin1-10m:UKR-289",
+          "admin1-10m:UKR-291",
+          "admin1-10m:UKR-292",
+          "admin1-10m:UKR-293"
+        ],
+        "Kharkiv": [
+          "admin1-10m:UKR-328"
+        ],
+        "Kherson": [
+          "admin1-10m:UKR-4827"
+        ],
+        "Khmel'nyts'kyy": [
+          "admin1-10m:UKR-286",
+          "admin1-10m:UKR-290",
+          "admin1-10m:UKR-318",
+          "admin1-10m:UKR-323",
+          "admin1-10m:UKR-324"
+        ],
+        "Kiev City": [
+          "admin1-10m:UKR-4826"
+        ],
+        "Kirovohrad": [
+          "admin1-10m:UKR-284",
+          "admin1-10m:UKR-319",
+          "admin1-10m:UKR-320",
+          "admin1-10m:UKR-321",
+          "admin1-10m:UKR-322"
+        ],
+        "Luhans'k": [
+          "admin1-10m:UKR-329"
+        ],
+        "Sumy": [
+          "admin1-10m:UKR-285",
+          "admin1-10m:UKR-325",
+          "admin1-10m:UKR-330"
+        ],
+        "Zaporizhzhya": [
+          "admin1-10m:UKR-331"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+# Folders on the developer's machine that no model call may ever be pointed at, on top of
+# the home folder and the ATLAS source tree (which are always forbidden).
+#
+# Read from a source checkout only -- `config.paths._default_forbidden` -- and never shipped:
+# a player's machine has none of these folders, and an installed build should not carry the
+# developer's folder names. More can be added per machine with ATLAS_FORBIDDEN_ROOTS
+# (os.pathsep-separated). One path per line; `~` is the home folder.
+~/OneDrive/Desktop/Chess Engine competition/quartz-engine
+~/OneDrive/Desktop/Chess Engine competition/arena/quartz_reference
+~/OneDrive/Desktop/Multi-AI app/council
+~/OneDrive/Desktop/Atlas Game
