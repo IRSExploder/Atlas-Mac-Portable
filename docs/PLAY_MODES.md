@@ -125,6 +125,9 @@ Attention button. The ⌂ button on the map shows the whole world.
 **A calm map.** Your country keeps its colour and is outlined; every power at war with you is
 red and every ally teal, whatever their own colours; everybody else is muted to a quiet slate.
 Zoomed out, only your forces and your enemies' carry counters; zoom in to see everyone's.
+Countries are named on the map (yours always; small ones appear as you zoom in), and a unit
+counter shows one number, its strength, in the same colours as the ground: yours, allied
+teal, enemy red. Hover a counter for what is in it.
 
 **Stats in words.** The bar across the top reads *Capable*, *Weak*, *Empty*... rather than raw
 numbers (red for the bottom two levels), with the figure and this turn's ↑/↓ underneath.

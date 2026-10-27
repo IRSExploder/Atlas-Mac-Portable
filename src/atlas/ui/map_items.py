@@ -23,7 +23,7 @@ from array import array
 from collections.abc import Sequence
 
 from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QBrush, QColor, QPainter, QPainterPath, QPen, QPixmap
+from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPainterPath, QPen, QPixmap
 from PySide6.QtWidgets import QGraphicsPathItem, QGraphicsSimpleTextItem
 
 from ..map.projection import Projection
@@ -216,8 +216,20 @@ class MarkerItem(QGraphicsPathItem):
         """Whether this is a formation rather than a city or a focus pin."""
         return str(self.data(2) or "") == str(MarkerKind.UNIT)
 
+    @property
+    def is_name(self) -> bool:
+        """Whether this is a country's name written on the map."""
+        return str(self.data(2) or "") == str(MarkerKind.NAME)
+
     def apply(self, visual: MarkerVisual) -> None:
+        if visual.kind is MarkerKind.NAME:
+            self._apply_name(visual)
+            return
         half = visual.size / 2.0
+        label = self.childItems()[0] if self.childItems() else None
+        if isinstance(label, QGraphicsSimpleTextItem):
+            label.setFont(QFont())
+            label.setPen(QPen(Qt.PenStyle.NoPen))
         self.setPath(_marker_path(visual))
         self.setPos(QPointF(visual.x, visual.y))
         # Written on every apply like everything else here: an item is reused across
@@ -246,6 +258,34 @@ class MarkerItem(QGraphicsPathItem):
             label.setBrush(QBrush(QColor(visual.label_colour)))
             label.setPos(visual.offset_x + half + 3.0, visual.offset_y - half)
             label.setVisible(bool(text))
+        self.setVisible(True)
+
+    def _apply_name(self, visual: MarkerVisual) -> None:
+        """A country's name: spaced capitals, centred on the point, with a dark edge so it
+        reads on any fill."""
+        self.setPath(QPainterPath())
+        self.setPen(QPen(Qt.PenStyle.NoPen))
+        self.setBrush(QBrush(Qt.BrushStyle.NoBrush))
+        self.setPos(QPointF(visual.x, visual.y))
+        self.setData(1, visual.region_id)
+        self.setData(2, str(visual.kind))
+        self.setZValue(visual.z)
+        self.setToolTip("")
+        label = self.childItems()[0] if self.childItems() else None
+        if isinstance(label, QGraphicsSimpleTextItem):
+            font = QFont()
+            font.setPointSizeF(8.5)
+            font.setWeight(QFont.Weight.DemiBold)
+            font.setLetterSpacing(QFont.SpacingType.PercentageSpacing, 108)
+            label.setFont(font)
+            label.setText(visual.label.upper())
+            label.setBrush(QBrush(QColor(visual.label_colour)))
+            edge = QPen(QColor(visual.outline))
+            edge.setWidthF(0.6)
+            label.setPen(edge)
+            box = label.boundingRect()
+            label.setPos(-box.width() / 2.0, -box.height() / 2.0)
+            label.setVisible(True)
         self.setVisible(True)
 
 

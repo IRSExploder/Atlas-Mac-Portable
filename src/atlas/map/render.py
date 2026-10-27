@@ -322,6 +322,104 @@ def _calm_fill(view: MapViewState, nation_id: str, colour: str, palette: MapPale
     return _muted(colour, palette.unclaimed, 0.8)
 
 
+def _counter_fill(view: MapViewState, nation_id: str, colour: str,
+                  palette: MapPalette) -> str:
+    """A unit counter in the calm map's colours: yours, an ally's, an enemy's, or anyone's.
+
+    A counter in its owner's flag colour sat on a map that had stopped using flag colours,
+    so a Russian army read as *brown* on ground that read as *enemy*. The same rule as the
+    ground, so a counter and the country it belongs to say the same thing; a neutral power's
+    counter keeps a little more of its colour than its ground does, so it stays a counter.
+    """
+    if nation_id == view.observer_nation_id:
+        return colour
+    feeling = view.attitude.get(nation_id)
+    if feeling is not None and feeling[2]:
+        return ENEMY_FILL
+    if feeling is not None and feeling[1] in ("alliance", "defensive"):
+        return ALLY_FILL
+    return _muted(colour, palette.unclaimed, 0.55)
+
+
+#: Below this much ground (square degrees of bounding box) a country is named only if it
+#: matters to the player: Andorra, Malta and the Comoros are real, and at continent zoom
+#: their names are clutter on top of their neighbours'.
+SMALL_COUNTRY = 2.0
+
+
+def _country_names(view: MapViewState, place, palette: MapPalette, me: str | None,
+                   enemies: set[str],
+                   bounds: dict[str, tuple[float, float, float, float]]) -> list[MarkerVisual]:
+    """One name per country on screen, at its capital, most relevant first.
+
+    **Nothing on the map said which country was which.** Every region visual carried a
+    label and nothing drew it; at the zoom the game opens on, a player had to hover to tell
+    Syria from Iraq. The marker ids sort in priority order -- you, your enemies, your
+    allies, then the countries with the most ground -- because the view's declutter walks
+    them in id order and drops a name that would land on one already placed: the names a
+    player needs survive a crowded continent.
+    """
+    held: dict[str, list[str]] = {}
+    size: dict[str, float] = {}
+    for region in view.regions:
+        owner = region.owner_nation_id
+        if owner and region.kind != "ocean":
+            held.setdefault(owner, []).append(region.region_id)
+            for shape in region.shapes:
+                box = bounds.get(shape)
+                if box is not None:
+                    size[owner] = size.get(owner, 0.0) + abs(
+                        (box[2] - box[0]) * (box[3] - box[1]))
+    out: list[MarkerVisual] = []
+    for nation_id, regions in held.items():
+        nation = view.nations.get(nation_id)
+        if nation is None:
+            continue
+        anchor = (nation.capital_region_id if nation.capital_region_id in regions
+                  else sorted(regions)[0])
+        position = place(anchor)
+        if position is None:
+            continue
+        feeling = view.attitude.get(nation_id)
+        rank = (0 if nation_id == me else 1 if nation_id in enemies
+                else 2 if feeling is not None and feeling[1] in ("alliance", "defensive")
+                else 3)
+        ground = size.get(nation_id, 0.0)
+        if rank == 3 and bounds and ground < SMALL_COUNTRY:
+            continue
+        # Bigger countries first within a rank: they have the room, and they are the ones
+        # a reader orients by.
+        weight = 99999 - min(int(ground * 10), 99999)
+        # Your own name sits on your own colour, which may be a light one (Ukraine's
+        # yellow): dark ink with a light edge there, light ink with a dark edge elsewhere.
+        dark = rank == 0 and _luminance(nation.colour) > 0.5
+        out.append(MarkerVisual(
+            marker_id=f"name:{rank}:{weight:05d}:{nation_id}",
+            kind=MarkerKind.NAME,
+            x=position[0],
+            y=position[1],
+            colour="#00000000",
+            size=0.0,
+            z=50,
+            label=nation.name,
+            tooltip="",
+            label_colour="#10161F" if dark else palette.marker_text,
+            outline="#00000000" if dark else "#96000000",
+            region_id=anchor,
+        ))
+    return out
+
+
+def _luminance(colour: str) -> float:
+    """Perceived lightness of ``#RRGGBB``, 0 (black) to 1 (white)."""
+    try:
+        value = colour.lstrip("#")[-6:]
+        r, g, b = (int(value[i:i + 2], 16) / 255 for i in (0, 2, 4))
+    except (ValueError, IndexError):
+        return 0.0
+    return 0.299 * r + 0.587 * g + 0.114 * b
+
+
 def _ramp(cold: str, hot: str, share: float) -> str:
     """A colour ``share`` of the way from cold to hot, clamped.
 
@@ -819,7 +917,9 @@ def build_scene(
                 kind=MarkerKind.UNIT,
                 x=position[0],
                 y=position[1],
-                colour=nation.colour if nation else "#CCCCCC",
+                colour=(_counter_fill(view, dominant_id, nation.colour if nation else "#CCCCCC",
+                                      palette) if calm
+                        else nation.colour if nation else "#CCCCCC"),
                 # A bounded square-root cue makes large forces visibly heavier without
                 # allowing one strategic stack to cover a small country.
                 size=11.0 + min(7.0, sqrt(max(0.0, strength)) * 1.2),
@@ -829,7 +929,10 @@ def build_scene(
                 # them across a theatre is the map covered in decimals. The exact
                 # strength is in the tooltip below, where somebody who wants it is
                 # already pointing.
-                label=f"{count} / {say_strength(strength)}",
+                # Calm: the one number that decides a battle. "4 / 28" asked a player to
+                # know that the first figure counts formations and the second is strength.
+                label=(say_strength(strength) if calm
+                       else f"{count} / {say_strength(strength)}"),
                 tooltip=(
                     f"{names[domain]}: {count} unit{'s' if count != 1 else ''}, "
                     f"strength {strength:g}\n{composition}\n{breakdown}"
@@ -846,6 +949,9 @@ def build_scene(
                 selected=chosen,
             )
         )
+
+    if calm:
+        markers.extend(_country_names(view, place, palette, me, enemies, bounds or {}))
 
     # Sorting makes the output independent of the order rows arrived in, which is what
     # lets the scene digest be a meaningful equality check.

@@ -155,23 +155,35 @@ class SceneApplier:
         """
         placed: list[tuple[float, float, float, float]] = []
         hidden = 0
-        for _marker_id, item in sorted(self._markers.items()):
-            if not item.isVisible() or not item.is_counter:
-                continue
-            label = item.strength_label
-            if label is None or not label.text():
-                continue
-            origin = to_screen(item.pos())
-            box = label.boundingRect()
-            left = origin.x() + label.pos().x()
-            top = origin.y() + label.pos().y()
-            rect = (left, top, left + box.width(), top + box.height())
-            if any(_overlapping(rect, taken) for taken in placed):
-                label.setVisible(False)
-                hidden += 1
-            else:
-                label.setVisible(True)
-                placed.append(rect)
+        # Three passes: the player's own country's name (it must always be on the map),
+        # then the formations' figures, then every other name -- so a name gives way to a
+        # counter's number rather than the other way round. Within each, the sorted ids
+        # decide, and the renderer sorts names by how much they matter.
+        for wanted in ("own name", "counter", "name"):
+            for marker_id, item in sorted(self._markers.items()):
+                if not item.isVisible():
+                    continue
+                own = marker_id.startswith("name:0:")
+                if wanted == "own name" and not (item.is_name and own):
+                    continue
+                if wanted == "counter" and not item.is_counter:
+                    continue
+                if wanted == "name" and not (item.is_name and not own):
+                    continue
+                label = item.strength_label
+                if label is None or not label.text():
+                    continue
+                origin = to_screen(item.pos())
+                box = label.boundingRect()
+                left = origin.x() + label.pos().x()
+                top = origin.y() + label.pos().y()
+                rect = (left, top, left + box.width(), top + box.height())
+                if any(_overlapping(rect, taken) for taken in placed):
+                    label.setVisible(False)
+                    hidden += 1
+                else:
+                    label.setVisible(True)
+                    placed.append(rect)
         return hidden
 
     def region_item(self, region_id: str) -> RegionItem | None:

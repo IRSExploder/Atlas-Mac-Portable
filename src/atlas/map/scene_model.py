@@ -169,6 +169,8 @@ class MarkerKind(StrEnum):
     #: A nation under Focus Mode, marked so the player can see why some powers feel
     #: more alive than others.
     TRACKED = "tracked"
+    #: A country's name, written on the map at its capital. Text only: no shape.
+    NAME = "name"
 
 
 class UnitDomain(StrEnum):
