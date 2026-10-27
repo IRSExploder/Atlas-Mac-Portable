@@ -735,6 +735,9 @@ class SummaryOverlay(Overlay):
         self._status.set_text("sealed" if report.status is TurnStatus.SEALED
                               else str(report.status.value))
         self._status.set_selected(report.status is TurnStatus.SEALED)
+        # "sealed" is the engine's word for a turn that went normally: only worth a badge
+        # to a player when it did not.
+        self._status.setVisible(technical() or report.status is not TurnStatus.SEALED)
 
         detail = technical()
         self._affected.setVisible(False)

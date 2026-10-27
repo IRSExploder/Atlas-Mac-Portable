@@ -129,6 +129,7 @@ Zoomed out, only your forces and your enemies' carry counters; zoom in to see ev
 **Stats in words.** The bar across the top reads *Capable*, *Weak*, *Empty*... rather than raw
 numbers (red for the bottom two levels), with the figure and this turn's ↑/↓ underneath.
 Hover a stat for the exact value; click it to ask why it is where it is.
+Buttons are soft shapes in sentence case; brass marks the selected or main one.
 
 By default the interface hides the engine's working: odds and before -> after numbers in
 headlines, other powers' routine administration in the feed, debug map layers and the save

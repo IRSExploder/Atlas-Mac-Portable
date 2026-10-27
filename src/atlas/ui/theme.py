@@ -305,6 +305,8 @@ TYPE = {
     "brand_large": TypeStyle(FONT.sans, 20, 600, tracking=0.42),
     "action": TypeStyle(FONT.sans, 13, 600, tracking=0.22, upper=True),
     "button": TypeStyle(FONT.sans, 10, 500, tracking=0.12, upper=True),
+    #: The same control in the plain interface: sentence case, a size you can read.
+    "button_plain": TypeStyle(FONT.sans, 11.5, 500),
     "tab": TypeStyle(FONT.sans, 10, 500, tracking=0.10, upper=True),
     "section": TypeStyle(FONT.sans, 9, 500, tracking=0.18, upper=True),
     "label": TypeStyle(FONT.sans, 9, 500, tracking=0.14, upper=True),

@@ -661,6 +661,7 @@ class Chip(PressFeedback, QFrame):
         # panel it sits in. Those wrap; the ordinary one-word chips do not, because a
         # wrapping label reports no useful minimum and a row of them collapses.
         self._label = TextLabel(text, style=style, theme=theme, wrap=wrap)
+        self._base_style = style
         layout.addWidget(self._label)
 
         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -684,6 +685,12 @@ class Chip(PressFeedback, QFrame):
         ink = "brass" if (self._selected and live) else "ink_dim"
         if not live:
             ink = "ink_faint"
+        from .plain import technical
+
+        if not technical():
+            self._apply_plain(theme, live)
+            return
+        self._label.set_style(self._base_style, theme)
         if self._selected and live:
             # Named, not `QFrame`: QLabel is a QFrame, so an unqualified selector
             # puts this border around the chip's own text as well.
@@ -701,6 +708,29 @@ class Chip(PressFeedback, QFrame):
         self.setCursor(Qt.CursorShape.PointingHandCursor if live
                        else Qt.CursorShape.ArrowCursor)
         self._label.set_colour(ink, theme)
+
+    def _apply_plain(self, theme: Theme, live: bool) -> None:
+        """The plain interface's one button: a soft filled shape, sentence case, no box.
+
+        **Sixty-nine boxed, tracked, all-capitals controls shouted at the same volume**, so
+        nothing on the screen led the eye. Here an ordinary control is a quiet tinted shape
+        with its words in sentence case, and the selected or primary one is the only thing
+        in brass. Same widget, same states; only the drawing differs.
+        """
+        if self._base_style == "button":
+            self._label.set_style("button_plain", theme)
+        chosen = self._selected and live
+        background = theme.brass_wash if chosen else (theme.inset if live else "transparent")
+        border = theme.brass_line if chosen else "transparent"
+        self.setStyleSheet(
+            f"Chip {{ border: 1px solid {border}; background: {background};"
+            f" border-radius: 5px; }}"
+            f"Chip:hover {{ border-color: {theme.edge_hover}; }}"
+            + focus_qss("Chip", theme) + pressed_qss("Chip", theme))
+        self.setCursor(Qt.CursorShape.PointingHandCursor if live
+                       else Qt.CursorShape.ArrowCursor)
+        self._label.set_colour(
+            "brass" if chosen else ("ink_body" if live else "ink_faint"), theme)
 
     def _fire(self) -> None:
         self.clicked.emit()

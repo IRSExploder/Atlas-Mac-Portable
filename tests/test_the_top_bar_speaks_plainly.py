@@ -46,3 +46,16 @@ def test_technical_details_keep_the_numbers(qapp, monkeypatch):
     meter = _meter(monkeypatch, technical=True, value=14, delta=-0.5)
     assert meter._value.text() == "14"
     assert meter._delta.text() == "-0.5"
+
+
+def test_buttons_are_quiet_and_in_sentence_case_unless_technical(qapp, monkeypatch):
+    from atlas.ui.widgets import Chip
+
+    monkeypatch.setattr(preferences, "_CURRENT", preferences.Preferences(technical=False))
+    chip = Chip("Consult your council", theme=DARK)
+    assert chip._label._style_key == "button_plain"
+    assert "border-radius" in chip.styleSheet()
+
+    monkeypatch.setattr(preferences, "_CURRENT", preferences.Preferences(technical=True))
+    chip.apply_theme(DARK)
+    assert chip._label._style_key == "button"  # the tracked capitals come back
