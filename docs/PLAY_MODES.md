@@ -117,6 +117,9 @@ anything you typed. Things you cannot do yet are listed underneath with the reas
 
 ## Reading the screen
 
+**Your first game** opens with three short cards over the map: who you are, how to give
+orders, and what Advance does. Skip them or read them; either way they do not come back.
+
 **Map first.** The game opens on your own country with the map taking most of the window.
 The record (events, the province panel and its **Orders here**) slides out from the left when
 you click a province, and folds away with its edge tab; **What is waiting** opens from the

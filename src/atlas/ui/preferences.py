@@ -96,6 +96,8 @@ class Preferences:
     #: decisions, the map's projection and the seed. Off for players; on for whoever is
     #: working on the engine. See :mod:`atlas.ui.plain`.
     technical: bool = False
+    #: Whether the first-turn guide has been seen (or dismissed). Shown once, ever.
+    guide_seen: bool = False
 
     def key_for(self, action: str) -> str:
         """What ``action`` is bound to now: the person's binding, or the default."""
@@ -160,6 +162,7 @@ def _from_dict(stored: object) -> Preferences | None:
         colour_safe=bool(stored.get("colour_safe", False)),
         reduced_motion=bool(stored.get("reduced_motion", False)),
         technical=bool(stored.get("technical", False)),
+        guide_seen=bool(stored.get("guide_seen", False)),
         # Only actions that exist. A binding for an action that has been removed would sit
         # in the workspace for ever and shadow nothing.
         shortcuts={str(action): str(key) for action, key in shortcuts.items()

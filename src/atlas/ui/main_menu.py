@@ -85,6 +85,7 @@ class MainMenu(QWidget):
         self._scroll.setWidgetResizable(True)
         self._scroll.setFrameShape(QFrame.Shape.NoFrame)
         holder = QWidget()
+        self._holder = holder
         rows = QVBoxLayout(holder)
         rows.setContentsMargins(0, 0, 0, 0)
         rows.setSpacing(6)
@@ -119,4 +120,8 @@ class MainMenu(QWidget):
         self.setStyleSheet(f"MainMenu {{ background: {theme.canvas}; }}")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self._scroll.setStyleSheet(scroll_qss(theme))
+        # A scroll area's viewport and a bare holder take Qt's own palette -- a pale grey
+        # slab on the dark theme -- unless told otherwise.
+        for surface in (self._scroll.viewport(), self._holder):
+            surface.setStyleSheet("background: transparent;")
         restyle(self, theme)

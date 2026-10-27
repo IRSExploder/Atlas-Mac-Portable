@@ -51,6 +51,7 @@ from .correspondence import CorrespondenceOverlay
 from .council import CouncilOverlay, advice_only
 from .dependency import DependencyOverlay, anchors_from
 from .directives import DirectivesOverlay
+from .guide import FirstTurnGuide
 from .homefront import HomeFrontOverlay
 from .inspector import InspectorOverlay
 from .map_chrome import MapChrome
@@ -67,6 +68,7 @@ from .overlays import (
 )
 from .preferences import (
     colour_safe,
+    load_app_preferences,
     load_preferences,
     save_app_preferences,
     save_preferences,
@@ -350,6 +352,7 @@ class AtlasWindow(QMainWindow):
         if self._offered_matters or self._player is None or self._current_turn() != 0:
             return
         self._offered_matters = True
+        self._offer_guide()
         self._load_matters()
         # Opened only if it found something. An uninvited drawer saying nothing was found
         # is worse than no drawer; the bar still shows the empty state to somebody who
@@ -360,6 +363,21 @@ class AtlasWindow(QMainWindow):
         # on the Attention button says it is there, and one press opens it.
         if self._matters.waiting and self._preferences.technical:
             self._matters.open()
+
+    def _offer_guide(self) -> None:
+        """Three cards for somebody who has never played: once, ever, and only plainly."""
+        if self._preferences.technical or load_app_preferences().guide_seen:
+            return
+        row = self._conn.execute("SELECT name FROM nation WHERE world_id = ? AND id = ?",
+                                 (self._world_id, self._player)).fetchone()
+        self._guide.start(str(row["name"]) if row else "your country")
+        self._guide.move(24, 24)
+
+    def _guide_seen(self) -> None:
+        """Read or skipped: either way, not shown again."""
+        import dataclasses
+
+        save_app_preferences(dataclasses.replace(load_app_preferences(), guide_seen=True))
 
     def _detect_player(self) -> str | None:
         row = self._conn.execute(
@@ -406,6 +424,9 @@ class AtlasWindow(QMainWindow):
         self._map.viewport_moved.connect(lambda: self._redraw(reload=False))
 
         self._chrome = MapChrome(self._map, self._theme)
+        # The first-turn guide sits over the map's empty top-left corner. See `ui.guide`.
+        self._guide = FirstTurnGuide(self._theme, self._chrome)
+        self._guide.finished.connect(self._guide_seen)
         self._chrome.layer_changed.connect(self._on_layer_changed)
         self._chrome.unit_domains_changed.connect(self._on_unit_domains_changed)
         self._chrome.zoom_in_requested.connect(lambda: self._zoom(1.35))
@@ -641,7 +662,7 @@ class AtlasWindow(QMainWindow):
             central.setStyleSheet(f"background: {theme.canvas};")
         for widget in (
             self._top, self._left, self._matters, self._chrome, self._right, self._status,
-            self._region_menu,
+            self._region_menu, self._guide,
         ):
             widget.apply_theme(theme)
         # **Every overlay, found rather than listed.** This was a hand-kept list, and a
@@ -1195,7 +1216,7 @@ class AtlasWindow(QMainWindow):
         if session is None:
             return
         self._right.append_turn("You", message, is_player=True)
-        self._right.append_note("waiting for a reply…")
+        self._right.append_note("waiting for a reply…", transient=True)
         self._status.set_state("Waiting on a reply…", busy=True)
 
         handle = self._runtime.submit(_tagged(session, session.say(message)),
@@ -1222,7 +1243,7 @@ class AtlasWindow(QMainWindow):
         session = self._session
         if session is None:
             return
-        self._right.append_note("recording what was agreed…")
+        self._right.append_note("recording what was agreed…", transient=True)
         self._status.set_state("Recording agreements…", busy=True)
 
         handle = self._runtime.submit(_tagged(session, session.close()),

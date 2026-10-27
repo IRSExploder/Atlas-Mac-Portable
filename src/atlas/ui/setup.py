@@ -284,7 +284,7 @@ class SetupScreen(QWidget):
 
     def _build_scenarios(self) -> QWidget:
         holder = QWidget()
-        holder.setFixedWidth(400)
+        holder.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(holder)
         layout.setContentsMargins(52, 30, 34, 30)
         layout.setSpacing(14)
@@ -294,7 +294,18 @@ class SetupScreen(QWidget):
         self._scenario_box.setSpacing(10)
         layout.addLayout(self._scenario_box)
         layout.addStretch(1)
-        return holder
+        # **Scrolls rather than squeezes.** Four scenario cards are taller than this column
+        # on a laptop screen, and a column that does not scroll shrinks every card until
+        # its last line is cut in half -- which is what every card here was doing.
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setFixedWidth(400)
+        scroll.setWidget(holder)
+        scroll.setStyleSheet(scroll_qss(self._theme))
+        scroll.viewport().setStyleSheet("background: transparent;")
+        return scroll
 
     def _build_detail(self) -> QWidget:
         """Steps two and three, with the power list the only part that scrolls.

@@ -137,8 +137,8 @@ class RightRail(Rail):
     def append_turn(self, speaker: str, text: str, *, is_player: bool) -> None:
         self._diplomacy.append_turn(speaker, text, is_player=is_player, theme=self._theme)
 
-    def append_note(self, text: str) -> None:
-        self._diplomacy.append_note(text, self._theme)
+    def append_note(self, text: str, *, transient: bool = False) -> None:
+        self._diplomacy.append_note(text, self._theme, transient=transient)
 
     def show_commitments(self, entries: list[str]) -> None:
         self._diplomacy.show_commitments(entries, self._theme)
@@ -250,8 +250,8 @@ class _DiplomacyBlock(QWidget):
     def append_turn(self, speaker: str, text: str, *, is_player: bool, theme: Theme) -> None:
         self._chat_page.append_turn(speaker, text, is_player=is_player, theme=theme)
 
-    def append_note(self, text: str, theme: Theme) -> None:
-        self._chat_page.append_note(text, theme)
+    def append_note(self, text: str, theme: Theme, *, transient: bool = False) -> None:
+        self._chat_page.append_note(text, theme, transient=transient)
 
     def show_commitments(self, entries: list[str], theme: Theme) -> None:
         self._list_page.show_commitments(entries, theme)
@@ -550,6 +550,13 @@ class _ChatPage(QWidget):
         self._body.addStretch(1)
         self._area.setWidget(body)
         layout.addWidget(self._area, 1)
+        # Scrolled to the newest line once the layout has made room for it: scrolling at
+        # the moment of insertion went to the *old* bottom, so every reply landed half
+        # under the box you type into.
+        self._area.verticalScrollBar().rangeChanged.connect(
+            lambda _low, high: self._area.verticalScrollBar().setValue(high))
+        #: A note that stands only until the next reply ("waiting for a reply...").
+        self._waiting: QWidget | None = None
 
         self._input = _InputBox(
             "Say something. Enter sends.", height=74, theme=theme
@@ -559,6 +566,7 @@ class _ChatPage(QWidget):
 
     def start(self, nation_name: str, theme: Theme, *, advisory: bool = False) -> None:
         self._title.setText(nation_name)
+        self._waiting = None
         _empty(self._body)
         self._body.addStretch(1)
         # There is nothing to conclude with your own ministers: the council writes no
@@ -577,12 +585,25 @@ class _ChatPage(QWidget):
             )
 
     def append_turn(self, speaker: str, text: str, *, is_player: bool, theme: Theme) -> None:
+        if not is_player:
+            self._clear_waiting()
         self._insert(_Bubble(speaker, text, is_player=is_player, theme=theme))
 
-    def append_note(self, text: str, theme: Theme) -> None:
+    def append_note(self, text: str, theme: Theme, *, transient: bool = False) -> None:
+        """A line between the bubbles. ``transient`` lines go when the next reply lands."""
+        self._clear_waiting()
         note = TextLabel(text, style="prose_italic", colour="ink_faint", theme=theme, wrap=True)
         note.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self._insert(note)
+        if transient:
+            self._waiting = note
+
+    def _clear_waiting(self) -> None:
+        note, self._waiting = self._waiting, None
+        if note is not None:
+            self._body.removeWidget(note)
+            note.setParent(None)
+            note.deleteLater()
 
     def _insert(self, widget: QWidget) -> None:
         self._body.insertWidget(self._body.count() - 1, widget)
