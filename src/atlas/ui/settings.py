@@ -228,11 +228,17 @@ class SettingsScreen(QDialog):
         if not key:
             self._key_status.setText("Paste a key into the box first.")
             return
+        from ..engine import bots
+
         where = store_key(key)
         self._key_box.clear()
         warning = "" if key.startswith("sk-ant-") else (
             " It does not look like an Anthropic key (they start sk-ant-); press Test.")
-        self._key_status.setText(f"Saved in {where}.{warning}")
+        # Bots in the world simulator's seat means this session is bots-only; the mode is
+        # chosen at launch, so Claude takes over from the next one.
+        restart = (" Quit and reopen ATLAS to play with Claude."
+                   if bots.controls_role("world_sim") else "")
+        self._key_status.setText(f"Saved in {where}.{warning}{restart}")
 
     def _test_key(self) -> None:
         from ..providers.api_provider import api_key

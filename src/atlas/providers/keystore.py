@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import contextlib
 import os
+import sys
 from pathlib import Path
 
 __all__ = ["forget_key", "store_key", "stored_key"]
@@ -37,7 +38,13 @@ def _keyring():
         return None
     try:
         if isinstance(keyring.get_keyring(), NoBackend):
-            return None
+            if sys.platform != "darwin":
+                return None
+            # A frozen app often cannot discover backends (they are found through package
+            # metadata), so on a Mac the Keychain backend is named outright.
+            from keyring.backends import macOS
+
+            keyring.set_keyring(macOS.Keyring())
     except Exception:  # noqa: BLE001 - a broken backend is the same as none
         return None
     return keyring

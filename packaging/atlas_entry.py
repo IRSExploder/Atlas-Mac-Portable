@@ -20,7 +20,21 @@ def _start() -> int:
     install()
     from atlas.cli import main
 
-    return main(sys.argv[1:] or ["start"])
+    return main(sys.argv[1:] or _double_click())
+
+
+def _double_click() -> list[str]:
+    """What opening the app with no arguments means.
+
+    On a Mac the app is the Claude API build: Claude when a key is saved (Settings > AI
+    providers), rule-based bots until then. Elsewhere it is the subscription-CLI game it
+    always was.
+    """
+    if sys.platform != "darwin":
+        return ["start"]
+    from atlas.providers.api_provider import api_key
+
+    return ["start", "--api" if api_key() else "--no-ai"]
 
 
 if __name__ == "__main__":

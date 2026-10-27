@@ -69,7 +69,13 @@ def _local_app_data() -> Path:
     raw = os.environ.get("LOCALAPPDATA")
     if raw:
         return Path(raw)
-    return Path.home() / "AppData" / "Local"
+    legacy = Path.home() / "AppData" / "Local"
+    # **A Mac keeps an app's data in Application Support.** The Windows layout is kept only
+    # where a Mac already has it -- the first Mac builds wrote there -- so nobody's saves
+    # move out from under them.
+    if sys.platform == "darwin" and not (legacy / "Atlas").exists():
+        return Path.home() / "Library" / "Application Support"
+    return legacy
 
 
 def app_data_root() -> Path:
@@ -133,7 +139,13 @@ def bundled_packs_root() -> Path | None:
     if raw:
         return Path(raw)
     if is_frozen():
-        return Path(sys.executable).resolve().parent / "packs"
+        here = Path(sys.executable).resolve().parent
+        # In a macOS app bundle the executable is in Contents/MacOS and data belongs in
+        # Contents/Resources: code signing seals the two differently.
+        resources = here.parent / "Resources" / "packs"
+        if sys.platform == "darwin" and resources.is_dir():
+            return resources
+        return here / "packs"
     return None
 
 
