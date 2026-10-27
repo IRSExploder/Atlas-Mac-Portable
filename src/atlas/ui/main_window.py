@@ -621,6 +621,9 @@ class AtlasWindow(QMainWindow):
         self._status.set_technical(preferences.technical)
         self._left.refresh()
         self._fit_rails(self.width())
+        # The meters read in words or in numbers according to the same switch.
+        self._top.set_snapshot(
+            load_player_snapshot(self._conn, self._world_id, nation_id=self._player))
 
     def open_settings(self) -> None:
         """The settings sheet over the game; Save applies at once and is remembered."""

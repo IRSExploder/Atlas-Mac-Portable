@@ -31,7 +31,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..engine.snapshot import PlayerSnapshot
-from ..humanize import band, exact, movement
+from ..humanize import BANDS, band, exact, figure, movement
 from .theme import SPACE, TYPE, Theme
 from .widgets import (
     Divider,
@@ -380,9 +380,42 @@ class _AskableMeter(PressFeedback, Meter):
         self._say(None)
         self.make_focusable()
 
+    def set_value(self, value, pct, colour, *, delta=None, places: int = 0) -> None:
+        # The plain reading tints the word; a number drawn after it must not inherit that.
+        self._value.set_colour("ink", self._theme)
+        self._value.set_style("num", self._theme)
+        super().set_value(value, pct, colour, delta=delta, places=places)
+
     def read(self, value: float, ceiling: float, delta: float) -> None:
         """Told what it is drawing, so the hover can say what the glass cannot."""
         self._say((value, ceiling, delta))
+        from .plain import technical
+
+        if not technical():
+            self._plainly(value, ceiling, delta)
+
+    def _plainly(self, value: float, ceiling: float, delta: float) -> None:
+        """The reading in words: *Modest*, and underneath *42 ↓*.
+
+        ``economy 29 / +0.4`` asked a player to know the scale, and where on it trouble
+        starts. The word is the band the hover has always named (`humanize.BANDS`), in the
+        danger ink when it is one of the bottom two; the figure stays, smaller, beside the
+        way it moved this turn. Exact numbers are still on the hover.
+        """
+        word = band(self._key, value, ceiling=ceiling)
+        if not word:
+            return
+        table = [name for _edge, name in BANDS.get(self._key, ())]
+        low = word in table[:2]
+        # A word in the text face: the figures' monospace set "Stretched" too wide to fit.
+        self._value.set_style("body_small", self._theme)
+        self._value.setText(word[:1].upper() + word[1:])
+        self._value.set_colour("danger" if low else "ink", self._theme)
+        moved = movement(delta)
+        arrow = "" if moved == "steady" else (" \u2191" if delta > 0 else " \u2193")
+        self._delta.setText(f"{figure(value)}{arrow}")
+        self._delta.set_colour(
+            "ink_ghost" if not arrow else ("good" if delta > 0 else "danger"), self._theme)
 
     def _say(self, reading: tuple[float, float, float] | None) -> None:
         question = f"Why is {self._label_text.lower()} where it is?"

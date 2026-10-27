@@ -280,6 +280,11 @@ class TextLabel(QLabel):
         self._colour_key = colour
         self.apply_theme(theme)
 
+    def set_style(self, style: str, theme: Theme) -> None:
+        if style != self._style_key:
+            self._style_key = style
+            self.apply_theme(theme)
+
 
 class SectionLabel(TextLabel):
     """The wide-tracked small-caps heading that opens every block in the design."""
