@@ -93,3 +93,24 @@ baking on the Mac if you want the lock to match your machine.
 From the Windows machine, `git bundle create atlas-full.bundle --all` (or `git push` to this
 repository) would bring the missing tests, `conftest.py`, the scratchpad tapes and the
 `track-a-shell` tip in one go.
+
+## Update: `atlas_missing_fixes.zip` applied, plus one macOS fix
+
+All 14 files were hash-identical to the git index. All 252 files in `src/atlas/` now match the
+`track-a-shell` tip, and `tests/conftest.py` and the active `pt79-cold-war` tape are back.
+
+**macOS fix in `providers/resolver.py`.** `claude` and `codex` found on `PATH` were refused
+unless they had a file extension, which is a Windows-only rule (a bare file there is npm's shell
+script beside the `.cmd`). On a Mac every real executable is bare, so a normal install of either
+CLI was invisible and real-model play could never start. `agy` already used
+`bare_ok=os.name != "nt"`; claude and codex now do too. Homebrew's Apple Silicon npm root
+(`/opt/homebrew/lib/node_modules`) was also added to the search list. Verified with stand-in
+executables: before the fix claude/codex were NOT FOUND; after it, `atlas probe` runs a claude
+call through the per-call sandbox and the model attestation reads `MATCH`.
+
+**Functionality still affected by missing or older files:**
+- `pyproject.toml` (older) leaves `ui/fonts/*` out of package-data. That is harmless for the
+  editable install `setup_mac.sh` does, but a plain `pip install .` would lose the bundled fonts.
+- `packs.lock.json` (older) is only read by `atlas map check`, `map pin` and the release audit.
+- Everything else missing is tests or developer scratchpad. `src/` only touches `scratchpad/`
+  from the release audit and the lab tooling, never from gameplay.

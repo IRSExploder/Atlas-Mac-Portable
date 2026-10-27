@@ -61,7 +61,9 @@ def _npm_roots() -> list[Path]:
     if prefix:
         roots.append(Path(prefix) / "node_modules")
     roots.append(Path.home() / "AppData" / "Roaming" / "npm" / "node_modules")
-    # Unix-style global installs, for portability.
+    # Unix-style global installs, for portability. Homebrew on Apple Silicon keeps npm's
+    # global root under /opt/homebrew rather than /usr/local.
+    roots.append(Path("/opt/homebrew/lib/node_modules"))
     roots.append(Path("/usr/local/lib/node_modules"))
     roots.append(Path("/usr/lib/node_modules"))
     return roots
@@ -152,8 +154,9 @@ def _resolve_claude() -> ResolvedCli:
     if found is not None:
         return ResolvedCli("claude", found.executable, found.via)
 
-    # A PATH hit is only usable if it is a real executable rather than a shim.
-    which = _on_path("claude", bare_ok=False)
+    # A PATH hit is only usable if it is a real executable rather than a shim. Off Windows
+    # a real executable is extensionless, as for agy below.
+    which = _on_path("claude", bare_ok=os.name != "nt")
     if which is not None:
         return ResolvedCli("claude", which, "PATH")
     return ResolvedCli(
@@ -182,7 +185,7 @@ def _resolve_codex() -> ResolvedCli:
     if found is not None:
         return ResolvedCli("codex", found.executable, found.via)
 
-    which = _on_path("codex", bare_ok=False)
+    which = _on_path("codex", bare_ok=os.name != "nt")
     if which is not None:
         return ResolvedCli("codex", which, "PATH")
     return ResolvedCli(
