@@ -26,8 +26,12 @@ the dev scratchpad are missing.
 
 ## Test suite
 
-Most of the suite passes. Everything that does not pass is explained by files missing from
-the bundle or by the version mix. None of it points at the game being broken:
+Full run with all three packs baked (`pytest --continue-on-collection-errors`, 12.5 min):
+
+**1,243 passed, 5 failed, 54 skipped, 1 xfailed, 412 errors.**
+
+Everything that does not pass is explained by files missing from the bundle or by the
+version mix. None of it points at the game being broken:
 
 - **`tests/conftest.py` is missing** (5,772 B in the index) and is not in either zip. ~380
   tests error with `fixture 'conn' not found`, and 4 test modules (`test_apply`,
@@ -36,8 +40,9 @@ the bundle or by the version mix. None of it points at the game being broken:
   `--continue-on-collection-errors` until conftest is back.
 - **`tests/test_the_older_tables_rewind_whatever_you_do_to_them.py` is missing**, and 26
   tests import helpers from it.
-- **`scratchpad/cassettes/pt34d-modern-day.jsonl` is missing**, so the PT34d regression
-  cannot replay its recorded answer.
+- **`scratchpad/cassettes/` is missing** (102 files), so the PT34d regression cannot replay
+  its recorded answer, and two `test_release_audit` gates fail on the absent
+  `cassettes/INDEX.json` (3 failures).
 - **Version mix (2 failures).** A few tests are newer than the source:
   `test_every_duration_is_on_a_clock_somebody_named` expects the later `CAMPAIGN_TURNS`
   clock change, and `test_the_window_reviews_the_orders_a_jump_would_carry` expects the
