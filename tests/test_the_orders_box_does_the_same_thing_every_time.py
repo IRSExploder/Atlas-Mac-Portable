@@ -87,3 +87,30 @@ def test_advance_goes_straight_on_when_the_box_was_already_checked():
     assert read_first(fake, object()) is False and read == []
     fake, read, read_first = _window("")
     assert read_first(fake, object()) is False and read == []
+
+
+def _rails(technical: bool):
+    from atlas.ui.main_window import AtlasWindow
+    from atlas.ui.widgets import Rail
+
+    left = Rail("The record", width=348, opens_right=False, theme=DARK)
+    right = Rail("Your turn", width=404, opens_right=True, theme=DARK)
+    fake = SimpleNamespace(
+        _left=left, _right=right, _rail_choice={},
+        _preferences=SimpleNamespace(technical=technical),
+        _matters=SimpleNamespace(isVisible=lambda: False, width=lambda: 0))
+    return fake, AtlasWindow
+
+
+def test_the_map_comes_first_the_record_starts_put_away(qapp):
+    """Without technical details the record is folded away even on a wide screen, and a
+    province click brings it out; with them it stays out where there is room."""
+    fake, window = _rails(technical=False)
+    window._fit_rails(fake, 2400)
+    assert fake._left.collapsed and not fake._right.collapsed
+    window._show_record(fake)
+    assert not fake._left.collapsed
+
+    fake, window = _rails(technical=True)
+    window._fit_rails(fake, 2400)
+    assert not fake._left.collapsed and not fake._right.collapsed

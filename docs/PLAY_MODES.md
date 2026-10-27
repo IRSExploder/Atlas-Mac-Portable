@@ -117,6 +117,11 @@ anything you typed. Things you cannot do yet are listed underneath with the reas
 
 ## Reading the screen
 
+**Map first.** The game opens on your own country with the map taking most of the window.
+The record (events, the province panel and its **Orders here**) slides out from the left when
+you click a province, and folds away with its edge tab; **What is waiting** opens from the
+Attention button. The ⌂ button on the map shows the whole world.
+
 By default the interface hides the engine's working: odds and before -> after numbers in
 headlines, other powers' routine administration in the feed, debug map layers and the save
 path. The turn summary leads with what happened to you, then your orders and whether each

@@ -62,6 +62,9 @@ class MapView(QGraphicsView):
     #: Emitted when zoom crosses a level-of-detail boundary, so the owner can rebuild
     #: the description at the new detail level.
     lod_changed = Signal(int)
+    #: The map has been fitted to a real viewport for the first time: the moment a window
+    #: can frame something more useful than the whole world.
+    first_fitted = Signal()
 
     #: Emitted when the map has been panned, so the owner can re-derive a scene culled to
     #: what is now on screen. Cheap to answer: a description is a fraction of a
@@ -225,6 +228,7 @@ class MapView(QGraphicsView):
         if not self._fitted and self.viewport().width() > 50:
             self._fitted = True
             self.fit_world()
+            self.first_fitted.emit()
 
     def resizeEvent(self, event) -> None:
         """Refit only if the map has never been fitted to a real viewport.
@@ -236,6 +240,7 @@ class MapView(QGraphicsView):
         if not self._fitted and self.viewport().width() > 50:
             self._fitted = True
             self.fit_world()
+            self.first_fitted.emit()
 
     def show_scene(self, description: SceneDescription) -> None:
         # A new description can change what the hover bar should say about the region the

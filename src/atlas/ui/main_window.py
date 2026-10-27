@@ -354,7 +354,11 @@ class AtlasWindow(QMainWindow):
         # Opened only if it found something. An uninvited drawer saying nothing was found
         # is worse than no drawer; the bar still shows the empty state to somebody who
         # asks, and the count on it says there is nothing to ask about.
-        if self._matters.waiting:
+        #
+        # **And only with technical details on.** Opened uninvited it was a third reading
+        # column that left the world map a 280-pixel sliver on a laptop screen; the count
+        # on the Attention button says it is there, and one press opens it.
+        if self._matters.waiting and self._preferences.technical:
             self._matters.open()
 
     def _detect_player(self) -> str | None:
@@ -398,6 +402,7 @@ class AtlasWindow(QMainWindow):
         self._map.region_context.connect(self._on_region_context)
         self._map.region_hovered.connect(self._on_region_hovered)
         self._map.lod_changed.connect(self._on_lod_changed)
+        self._map.first_fitted.connect(self._frame_home)
         self._map.viewport_moved.connect(lambda: self._redraw(reload=False))
 
         self._chrome = MapChrome(self._map, self._theme)
@@ -555,13 +560,17 @@ class AtlasWindow(QMainWindow):
             width = max(0, width - self._matters.width())
 
         handle = RAIL_HANDLE_WIDTH
+        # **Map first.** Without technical details the record (events, the province panel)
+        # starts put away at every width, so the world map is the screen; it slides out when
+        # a province is clicked, because that is where the province's orders are.
+        plain = not self._preferences.technical
         for key, rail, threshold in (
             ("record", self._left,
              self._left.full_width + self._right.full_width + scaled(MIN_MAP_FOR_RECORD)),
             ("turn", self._right,
              handle + self._right.full_width + scaled(MIN_MAP_FOR_TURN)),
         ):
-            tight = width < threshold
+            tight = width < threshold or (plain and key == "record")
             if rail._collapsible != tight:  # noqa: SLF001
                 self._rail_choice.pop(key, None)
                 rail.set_collapsible(tight)
@@ -611,6 +620,7 @@ class AtlasWindow(QMainWindow):
         self._chrome.set_technical(preferences.technical)
         self._status.set_technical(preferences.technical)
         self._left.refresh()
+        self._fit_rails(self.width())
 
     def open_settings(self) -> None:
         """The settings sheet over the game; Save applies at once and is remembered."""
@@ -879,6 +889,12 @@ class AtlasWindow(QMainWindow):
         self._selected_region = region_id
         self._redraw(reload=False)
         self._left.set_selected_region(region_id)
+        self._show_record()
+
+    def _show_record(self) -> None:
+        """Slide the record out if it is put away: a province was chosen to look at."""
+        if self._left.collapsed:
+            self._left.set_collapsed(False)
 
     def _on_counter_clicked(self, marker_id: str, region_id: str) -> None:
         """A counter is a formation standing somewhere, so a click on it means both.
@@ -896,6 +912,7 @@ class AtlasWindow(QMainWindow):
         self._selected_region = region_id
         self._redraw(reload=False)
         self._left.set_selected_region(region_id)
+        self._show_record()
 
     def _on_region_context(self, region_id: str, where) -> None:
         """Ask the engine what can be done here, and offer exactly that."""
@@ -1966,6 +1983,25 @@ class AtlasWindow(QMainWindow):
         recent one if the player has a province in mind."""
         self._inspector.load(self._conn, self._world_id)
         self._inspector.open()
+
+    #: How far in the map opens: about a continent across, so a player's own country and its
+    #: neighbours are big enough to read and click rather than a clump in a picture of the
+    #: whole planet. The home control still shows the world.
+    HOME_ZOOM = 3.0
+
+    def _frame_home(self) -> None:
+        """Open the map on the player's own country, the way a strategy game opens."""
+        if not self._player:
+            return
+        row = self._conn.execute(
+            "SELECT r.geo_key FROM nation n JOIN region r"
+            " ON r.id = n.capital_region_id AND r.world_id = n.world_id"
+            " WHERE n.world_id = ? AND n.id = ?", (self._world_id, self._player)).fetchone()
+        point = self._labels.get(row["geo_key"]) if row else None
+        if point is None:
+            return
+        self._map.zoom_by(self.HOME_ZOOM)
+        self._map.centerOn(*self._projection.project(*point))
 
     def _reveal_region(self, region_id: str) -> None:
         """Select a province and put it in the middle of the map.
