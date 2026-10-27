@@ -1,0 +1,859 @@
+"""Rule-based stand-ins for the conversational and interpretive roles, with no model call.
+
+:mod:`atlas.engine.bots` already plays the scenery: tracked neutrals, the covert channel and
+the Security Council. That makes a mock world *move*, but everything the player talks to
+was still a blank: free-text orders came back "nothing actionable", every power answered
+"we will consider your proposal", the council said one canned line and the world-sim wrote
+no narrative. This module fills those seats so the game is playable end to end offline.
+
+**The same forms, the same gates.** Every answer here has the shape a model's answer has --
+the parser's action list, a diplomacy reply plus the commitments a negotiation produced, a
+freeform outcome, a world-sim batch -- and goes through the same validation a model's does.
+Nothing here writes around a rule. The diplomacy bot reads the same regard thresholds rule
+DIP-001 enforces, so it never agrees to something the gates would then refuse.
+
+**Deterministic.** No ambient entropy (the engine bans it): where a reply varies, the variant
+is picked by hashing the words it is answering, so the same message gets the same answer.
+
+**Reads only what the player's side may read**, where a model would have been given a
+player's view: the council judges rivals' armies through the player's own intelligence
+estimate (`bots._believed_strength`), never the true row.
+
+Scopes, alongside the scenery scopes in :mod:`atlas.engine.bots`:
+
+* ``parser`` -- free-text orders, and the history digest;
+* ``diplomacy`` -- replies in talks, and what the talks agreed;
+* ``advisor`` -- the player's council;
+* ``world_sim`` -- the world-simulation narrative, and treaty proposals and notes sent as
+  orders, which have no engine handler of their own;
+* ``freeform`` -- orders no mechanic covers.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import re
+import sqlite3
+from typing import Any
+
+from . import reference
+from .bots import STAFF_SCOPES
+from .naming import normalise
+
+__all__ = [
+    "STAFF_SCOPES",
+    "advise",
+    "diplomacy_reply",
+    "freeform_answer",
+    "parse_orders",
+    "treaty_decision",
+    "world_sim_batch",
+]
+
+#: The regard rule DIP-001 requires, in both directions, before these treaties can stand.
+#: Read here so the bot says yes only to what the gates will let through.
+ALLIANCE_REGARD = 55.0
+DEFENSIVE_REGARD = 35.0
+#: Below these, a power declines the lesser agreements. Not rules -- judgement -- so they sit
+#: well inside what the engine would allow.
+NON_AGGRESSION_REGARD = -10.0
+TRADE_REGARD = -25.0
+ACCESS_REGARD = 40.0
+
+
+def _pick(options: tuple[str, ...], *keys: object) -> str:
+    """One of ``options``, chosen by the words being answered rather than by chance."""
+    digest = hashlib.sha1("|".join(str(k) for k in keys).encode()).digest()
+    return options[digest[0] % len(options)]
+
+
+def _name(conn: sqlite3.Connection, world_id: str, nation_id: str) -> str:
+    row = conn.execute("SELECT name FROM nation WHERE world_id = ? AND id = ?",
+                       (world_id, nation_id)).fetchone()
+    return str(row["name"]) if row else nation_id
+
+
+def _relation(conn: sqlite3.Connection, world_id: str, a: str, b: str) -> sqlite3.Row | None:
+    """How ``a`` stands towards ``b``: regard, treaty, war."""
+    return conn.execute(
+        "SELECT score, treaty_status, at_war FROM relation"
+        " WHERE world_id = ? AND nation_a = ? AND nation_b = ?", (world_id, a, b)).fetchone()
+
+
+def _regard(conn: sqlite3.Connection, world_id: str, a: str, b: str) -> float:
+    row = _relation(conn, world_id, a, b)
+    return float(row["score"]) if row is not None else 0.0
+
+
+def _at_war(conn: sqlite3.Connection, world_id: str, a: str, b: str) -> bool:
+    row = _relation(conn, world_id, a, b)
+    return bool(row is not None and row["at_war"])
+
+
+def _enemies(conn: sqlite3.Connection, world_id: str, nation_id: str) -> list[str]:
+    return [str(r[0]) for r in conn.execute(
+        "SELECT nation_b FROM relation WHERE world_id = ? AND nation_a = ? AND at_war = 1"
+        " ORDER BY nation_b", (world_id, nation_id))]
+
+
+def _mood(score: float) -> str:
+    if score >= 55:
+        return "warm"
+    if score >= 20:
+        return "cordial"
+    if score > -20:
+        return "guarded"
+    if score > -55:
+        return "cool"
+    return "hostile"
+
+
+# ------------------------------------------------------------------------------- parser
+
+#: Verbs a player reaches for that the capability catalogue does not list. Added to its own
+#: aliases, never replacing them, so the catalogue stays the authority on what exists.
+_EXTRA_ALIASES: dict[str, tuple[str, ...]] = {
+    "diplomatic_message": ("sound out", "ask", "contact", "reassure", "threaten",
+                           "negotiate with", "talk to", "approach", "send word", "inform",
+                           "congratulate", "thank", "send a note", "note to",
+                           "send a message"),
+    "propose_treaty": ("ally with", "defensive pact", "trade agreement", "trade deal",
+                       "sign", "military access", "offer"),
+    "declare_war": ("go to war",),
+    "sue_for_peace": ("seek terms", "terms", "end the war"),
+    "move_units": ("send troops", "send the army", "deploy", "occupy", "retreat",
+                   "pull back"),
+    "raise_units": ("train", "draft"),
+    "economic_investment": ("boost the economy", "industrialise", "industrialize"),
+    "espionage": ("spy on", "investigate", "scout"),
+    "fortify": ("defend", "hold the line"),
+    "build_project": ("construct",),
+    "freeform": ("announce", "proclaim", "decree", "celebrate", "hold a", "declare a",
+                 "honour", "honor", "mourn", "organise", "organize"),
+}
+
+#: A weak verb ("ask", "tell") yields to a stronger act named in the same clause: "ask
+#: Poland for an alliance" is a treaty proposal, not a letter.
+_WEAK = frozenset({"diplomatic_message"})
+_STRONGER = ("sue_for_peace", "propose_treaty")
+
+#: Verbs several capabilities share. The noun decides: a programme, a formation or a stance.
+_OVERLOADED = frozenset({"build", "begin", "develop", "research", "construct", "adopt",
+                         "programme", "program", "lay down", "mobilise", "mobilize",
+                         "raise", "recruit"})
+
+_NUMBERS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+            "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10, "a couple of": 2,
+            "several": 3}
+
+#: Plain words for formations, mapped to the kinds a world's templates usually carry.
+_UNIT_WORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("armour", ("tank", "tanks", "armor", "armoured", "armored", "panzer", "panzers")),
+    ("infantry", ("division", "divisions", "troops", "soldiers", "men", "army", "armies",
+                  "infantry", "regiment", "regiments", "brigade", "brigades")),
+    ("battleship", ("battleship", "battleships", "dreadnought", "dreadnoughts")),
+    ("carrier", ("carrier", "carriers")),
+    ("transport", ("transport", "transports", "troopship", "troopships")),
+)
+
+_DOCTRINE_WORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("mass", ("mass", "conscription", "mass army")),
+    ("professional", ("professional",)),
+    ("retaliation", ("retaliation", "retaliatory")),
+    ("minimum", ("minimum", "minimal deterrent")),
+    ("collective_security", ("collective security", "collective_security")),
+    ("neutrality", ("neutrality", "neutral", "armed neutrality")),
+)
+
+_GAMBIT_WORDS: tuple[tuple[str, str], ...] = (
+    ("air strike", "air_strike"), ("bomb", "air_strike"), ("sabotage", "sabotage"),
+    ("summit", "summit"), ("envoy", "envoy"), ("bribe", "bribe"), ("sting", "sting"),
+    ("incite", "incite"), ("expose", "expose"),
+)
+
+_HINT = ("start with a verb such as move, raise, reinforce, fortify, build, research, "
+         "invest, declare war on, seek terms with, propose a pact to, warn, spy on, or "
+         "announce")
+
+_CLAUSES = re.compile(r"[.;!?\n]+|,\s*(?:and\s+)?then\s+|\s+and then\s+")
+
+
+def _words(pattern_text: str) -> re.Pattern[str]:
+    return re.compile(rf"(?<!\w){re.escape(pattern_text)}(?!\w)")
+
+
+def _first_at(hay: str, phrases: tuple[str, ...]) -> tuple[int, int, str] | None:
+    """Earliest whole-word occurrence of any phrase: (position, -length, phrase)."""
+    best: tuple[int, int, str] | None = None
+    for phrase in phrases:
+        found = _words(phrase).search(hay)
+        if found and (best is None or (found.start(), -len(phrase)) < best[:2]):
+            best = (found.start(), -len(phrase), phrase)
+    return best
+
+
+def _aliases() -> dict[str, tuple[str, ...]]:
+    from .capabilities import CAPABILITIES
+
+    out: dict[str, tuple[str, ...]] = {}
+    for capability in CAPABILITIES:
+        if capability.action_type == "other":
+            continue
+        extra = _EXTRA_ALIASES.get(capability.action_type, ())
+        out[capability.action_type] = tuple(
+            dict.fromkeys(a.lower() for a in (*capability.aliases, *extra)))
+    return out
+
+
+def _mentions(conn: sqlite3.Connection, world_id: str, kind: str,
+              clause: str) -> list[tuple[int, str]]:
+    """Every entry of ``kind`` named in ``clause``, with where it was named."""
+    hay = normalise(clause)
+    found: dict[str, int] = {}
+    for entry_id, name in reference.vocabulary(conn, world_id, kind):
+        for needle in {normalise(entry_id.replace("_", " ")), normalise(name)}:
+            if len(needle) < 3:
+                continue
+            hit = _words(needle).search(hay)
+            if hit:
+                found[entry_id] = min(found.get(entry_id, hit.start()), hit.start())
+    return sorted((pos, entry_id) for entry_id, pos in found.items())
+
+
+def _nations_in(conn: sqlite3.Connection, world_id: str, clause: str, *,
+                exclude: str) -> list[str]:
+    """Nations named in a clause; failing a full name, a capitalised word that is the start
+    of exactly one (\"the Soviet railways\" -> Soviet Union)."""
+    found = [n for _, n in _mentions(conn, world_id, "nation", clause) if n != exclude]
+    if found:
+        return found
+    names = [(entry_id, normalise(name))
+             for entry_id, name in reference.vocabulary(conn, world_id, "nation")
+             if entry_id != exclude]
+    for word in re.findall(r"(?<=\s)[A-Z][\w'-]{3,}", clause):
+        said = normalise(word)
+        # "Soviet" opens "Soviet Union"; "Cubans" extends "Cuba". Only a single match
+        # counts: anything looser, or shared, is a guess.
+        hits = {entry_id for entry_id, name in names
+                if name.startswith(said + " ") or name == said
+                or (len(name) >= 4 and said.startswith(name) and len(said) - len(name) <= 3)}
+        if len(hits) == 1:
+            return [hits.pop()]
+    return []
+
+
+def _unit_kind(conn: sqlite3.Connection, world_id: str, clause: str) -> str | None:
+    kinds = [k for k, _ in reference.vocabulary(conn, world_id, "unit_kind")]
+    hay = clause.lower()
+    for kind in kinds:
+        spoken = kind.replace("_", " ")
+        if _words(spoken).search(hay) or _words(spoken + "s").search(hay):
+            return kind
+    for kind, words in _UNIT_WORDS:
+        if kind in kinds and _first_at(hay, words):
+            return kind
+    return None
+
+
+def _quantity(clause: str) -> int | None:
+    hay = clause.lower()
+    digits = re.search(r"\b(\d{1,3})\b", hay)
+    if digits:
+        return int(digits.group(1))
+    hit = _first_at(hay, tuple(k for k in _NUMBERS if k not in ("a", "an")))
+    return _NUMBERS[hit[2]] if hit else None
+
+
+def _tone(clause: str) -> str:
+    hay = clause.lower()
+    if _first_at(hay, ("threaten", "or else", "ultimatum", "or face", "consequences")):
+        return "threatening"
+    if _first_at(hay, ("warn", "demand", "protest", "insist", "condemn")):
+        return "firm"
+    if _first_at(hay, ("reassure", "thank", "congratulate", "friendship", "sound out",
+                       "offer", "propose", "invite", "welcome")):
+        return "friendly"
+    return "neutral"
+
+
+def _blank_action(action_type: str, summary: str) -> dict[str, Any]:
+    return {"type": action_type, "summary": summary, "target_nation": None,
+            "unit_kind": None, "project": None, "gambit_kind": None, "ceasefire": None,
+            "terms": [], "doctrine": None, "from_region": None, "to_region": None,
+            "quantity": None, "tone": "neutral"}
+
+
+def _choose_type(conn: sqlite3.Connection, world_id: str, clause: str,
+                 aliases: dict[str, tuple[str, ...]]) -> tuple[str | None, str]:
+    """Which act a clause orders, and the verb that said so."""
+    hay = clause.lower()
+    hits: dict[str, tuple[int, int, str]] = {}
+    for action_type, phrases in aliases.items():
+        hit = _first_at(hay, phrases)
+        if hit:
+            hits[action_type] = hit
+    if not hits:
+        return None, ""
+
+    chosen = min(hits, key=lambda t: hits[t][:2])
+    verb = hits[chosen][2]
+    if chosen in _WEAK:
+        for stronger in _STRONGER:
+            if stronger in hits:
+                chosen, verb = stronger, hits[stronger][2]
+                break
+
+    if verb in _OVERLOADED:
+        if (_mentions(conn, world_id, "project", clause)
+                or _mentions(conn, world_id, "technology", clause)):
+            return "build_project", verb
+        if _first_at(hay, tuple(w for _, words in _DOCTRINE_WORDS for w in words)):
+            return "adopt_doctrine", verb
+        if _unit_kind(conn, world_id, clause) or verb in ("raise", "recruit", "lay down"):
+            return "raise_units", verb
+    return chosen, verb
+
+
+def _units_by_region(conn: sqlite3.Connection, world_id: str, nation_id: str) -> list[str]:
+    """Where this nation's land forces stand, strongest first. Fleets do not march."""
+    return [str(r[0]) for r in conn.execute(
+        "SELECT u.region_id FROM unit u"
+        "  JOIN unit_template t ON t.world_id = u.world_id AND t.kind = u.kind"
+        " WHERE u.world_id = ? AND u.nation_id = ? AND t.domain = 'land'"
+        " GROUP BY u.region_id ORDER BY SUM(u.strength) DESC", (world_id, nation_id))]
+
+
+def _adjacent(conn: sqlite3.Connection, world_id: str, region: str) -> set[str]:
+    out: set[str] = set()
+    for a, b in conn.execute(
+            "SELECT region_a, region_b FROM region_adjacency WHERE world_id = ?"
+            " AND (region_a = ? OR region_b = ?)", (world_id, region, region)):
+        out.add(str(b) if str(a) == region else str(a))
+    return out
+
+
+def _holder(conn: sqlite3.Connection, world_id: str, region: str) -> str:
+    row = conn.execute(
+        "SELECT COALESCE(controller_nation_id, owner_nation_id) FROM region"
+        " WHERE world_id = ? AND id = ?", (world_id, region)).fetchone()
+    return str(row[0] or "") if row else ""
+
+
+def _front_region(conn: sqlite3.Connection, world_id: str, nation_id: str,
+                  enemy: str) -> tuple[str, str] | None:
+    """A region ``enemy`` holds next to ground where ``nation_id`` has troops."""
+    for source in _units_by_region(conn, world_id, nation_id):
+        for target in sorted(_adjacent(conn, world_id, source)):
+            if _holder(conn, world_id, target) == enemy:
+                return source, target
+    return None
+
+
+def _fill_move(conn: sqlite3.Connection, world_id: str, nation_id: str, action: dict,
+               clause: str, regions: list[tuple[int, str]],
+               nations: list[str]) -> str | None:
+    """Work out where from and where to. Returns a refusal, or ``None`` if it is filled."""
+    hay = normalise(clause)
+    to_region = from_region = None
+    for pos, region in regions:
+        before = hay[max(0, pos - 6):pos]
+        if re.search(r"\bfrom\s*$", before):
+            from_region = region
+        else:
+            to_region = region
+    if to_region is None and nations:
+        enemy = nations[0]
+        if not _at_war(conn, world_id, nation_id, enemy):
+            return (f"you are not at war with {_name(conn, world_id, enemy)}; declare war "
+                    "first, or name the province to move into")
+        front = _front_region(conn, world_id, nation_id, enemy)
+        if front is None:
+            return (f"none of your forces stand next to ground "
+                    f"{_name(conn, world_id, enemy)} holds")
+        from_region, to_region = from_region or front[0], front[1]
+    if to_region is None:
+        return "name the province your forces should move into"
+    if from_region is None:
+        stationed = _units_by_region(conn, world_id, nation_id)
+        if not stationed:
+            return "you have no forces to move"
+        near = [r for r in stationed if r == to_region or to_region in _adjacent(
+            conn, world_id, r)]
+        from_region = (near or stationed)[0]
+        if from_region == to_region:
+            return "your forces are already there"
+    action["from_region"], action["to_region"] = from_region, to_region
+    return None
+
+
+def _parse_clause(conn: sqlite3.Connection, world_id: str, nation_id: str, clause: str,
+                  aliases: dict[str, tuple[str, ...]]) -> tuple[dict | None, str | None]:
+    """One clause -> (action, None) or (None, reason it cannot be carried out)."""
+    from .capabilities import available_to, by_type
+
+    action_type, _verb = _choose_type(conn, world_id, clause, aliases)
+    if action_type is None:
+        return None, f"no order recognised; {_HINT}"
+
+    action = _blank_action(action_type, clause)
+    hay = clause.lower()
+    nations = _nations_in(conn, world_id, clause, exclude=nation_id)
+    regions = _mentions(conn, world_id, "region", clause)
+    action["tone"] = _tone(clause)
+    if nations:
+        action["target_nation"] = nations[0]
+    capability = by_type(action_type)
+    needs = capability.required if capability else ()
+
+    if action_type == "sue_for_peace":
+        if not nations:
+            at_war = _enemies(conn, world_id, nation_id)
+            if len(at_war) == 1:
+                action["target_nation"] = at_war[0]
+        action["ceasefire"] = bool(_first_at(hay, ("ceasefire", "truce", "armistice")))
+    elif action_type == "declare_war" and nations and _at_war(
+            conn, world_id, nation_id, nations[0]):
+        return None, f"you are already at war with {_name(conn, world_id, nations[0])}"
+    elif action_type == "move_units":
+        refusal = _fill_move(conn, world_id, nation_id, action, clause, regions, nations)
+        if refusal:
+            return None, refusal
+    elif action_type in ("raise_units", "reinforce", "disband_units"):
+        action["unit_kind"] = _unit_kind(conn, world_id, clause) or (
+            "infantry" if action_type == "raise_units" else None)
+        action["quantity"] = _quantity(clause)
+        if regions:
+            action["to_region"] = action["from_region"] = regions[-1][1]
+        if action_type == "raise_units" and action["unit_kind"] not in {
+                k for k, _ in reference.vocabulary(conn, world_id, "unit_kind")}:
+            kinds = ", ".join(k for k, _ in reference.vocabulary(conn, world_id, "unit_kind"))
+            return None, f"name a kind of formation this world builds: {kinds}"
+    elif action_type == "fortify" and regions:
+        action["to_region"] = action["from_region"] = regions[-1][1]
+    elif action_type == "build_project":
+        found = (_mentions(conn, world_id, "project", clause)
+                 or _mentions(conn, world_id, "technology", clause))
+        if not found:
+            works = ", ".join(p for p, _ in reference.vocabulary(conn, world_id, "project"))
+            research = ", ".join(
+                n for _, n in reference.vocabulary(conn, world_id, "technology")) or "none"
+            return None, (f"name the programme to begin -- public works: {works}; "
+                          f"research open to this era: {research}")
+        action["project"] = found[0][1]
+        if regions:
+            action["to_region"] = regions[-1][1]
+    elif action_type == "adopt_doctrine":
+        for doctrine, words in _DOCTRINE_WORDS:
+            if _first_at(hay, words):
+                action["doctrine"] = doctrine
+                break
+        else:
+            return None, ("name the stance to adopt: mass, professional, retaliation, "
+                          "minimum, collective security or neutrality")
+    elif action_type == "gambit":
+        for word, kind in _GAMBIT_WORDS:
+            if _first_at(hay, (word,)):
+                action["gambit_kind"] = kind
+                break
+        if regions:
+            action["to_region"] = regions[-1][1]
+    elif action_type == "economic_investment":
+        action["quantity"] = _quantity(clause)
+
+    if "target_nation" in needs and not action["target_nation"]:
+        return None, "name the country this is addressed to"
+    if action["target_nation"]:
+        allowed = {c.action_type for c in available_to(
+            conn, world_id, nation_id, action["target_nation"])}
+    else:
+        allowed = {c.action_type for c in available_to(conn, world_id, nation_id)}
+    if action_type not in allowed:
+        what = capability.explain if capability else action_type
+        target = (f" {_name(conn, world_id, action['target_nation'])}"
+                  if action["target_nation"] else "")
+        return None, f"you cannot {what}{target} right now"
+    return action, None
+
+
+def parse_orders(conn: sqlite3.Connection, world_id: str, *, nation_id: str,
+                 raw_text: str) -> dict[str, list[dict]]:
+    """The parser's answer -- ``{"actions": [...], "rejected": [...]}`` -- by rule."""
+    aliases = _aliases()
+    actions: list[dict] = []
+    rejected: list[dict] = []
+    for clause in (c.strip(" ,") for c in _CLAUSES.split(raw_text)):
+        if len(clause) < 3:
+            continue
+        action, refusal = _parse_clause(conn, world_id, nation_id, clause, aliases)
+        if action is not None:
+            actions.append(action)
+        else:
+            rejected.append({"order": clause, "reason": refusal or "not understood"})
+    return {"actions": actions, "rejected": rejected}
+
+
+# ---------------------------------------------------------------------------- diplomacy
+
+#: What a message is asking for, most specific first.
+_TREATY_WORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("defensive_pact", ("defensive pact", "defensive alliance", "mutual defence",
+                        "mutual defense", "defend each other")),
+    ("alliance", ("alliance", "ally", "allies", "allied")),
+    ("non_aggression_pact", ("non-aggression", "non aggression", "nonaggression",
+                             "neutrality pact", "not attack", "pact")),
+    ("trade_agreement", ("trade", "commerce", "commercial")),
+    ("military_access", ("military access", "passage", "transit", "right of way")),
+    ("ceasefire", ("ceasefire", "cease-fire", "truce", "armistice")),
+    ("peace_treaty", ("peace",)),
+)
+
+_TREATY_LABEL = {
+    "defensive_pact": "a defensive pact", "alliance": "an alliance",
+    "non_aggression_pact": "a non-aggression pact", "trade_agreement": "a trade agreement",
+    "military_access": "military access", "ceasefire": "a ceasefire",
+    "peace_treaty": "a peace treaty",
+}
+
+#: What ``relation.treaty_status`` reads once each kind is in force, weakest first.
+_STANDING = {"trade_agreement": "trade", "non_aggression_pact": "non_aggression",
+             "defensive_pact": "defensive", "alliance": "alliance"}
+_STANDING_ORDER = ("none", "trade", "non_aggression", "defensive", "alliance", "vassal")
+
+
+def requested_treaty(text: str) -> str | None:
+    hay = text.lower()
+    for kind, words in _TREATY_WORDS:
+        if _first_at(hay, words):
+            return kind
+    return None
+
+
+def treaty_decision(conn: sqlite3.Connection, world_id: str, *, asked: str,
+                    proposer: str, kind: str) -> tuple[bool, str]:
+    """Whether ``asked`` agrees to ``kind`` with ``proposer``, and why, in its own words."""
+    theirs = _regard(conn, world_id, asked, proposer)
+    ours = _regard(conn, world_id, proposer, asked)
+    label = _TREATY_LABEL.get(kind, kind)
+    who = _name(conn, world_id, proposer)
+    relation = _relation(conn, world_id, asked, proposer)
+    standing = str(relation["treaty_status"]) if relation is not None else "none"
+    at_war = _at_war(conn, world_id, asked, proposer)
+
+    if kind in ("ceasefire", "peace_treaty"):
+        if not at_war:
+            return False, f"We are not at war with {who}; there is nothing to settle."
+        return False, ("If you want the guns to stop, put it in writing: order a "
+                       f"{'ceasefire' if kind == 'ceasefire' else 'peace offer'} and our "
+                       "government will answer it on how the war stands.")
+    if at_war:
+        return False, f"We do not sign {label} with a power whose armies we are fighting."
+    if kind in _STANDING and _STANDING_ORDER.index(standing) >= _STANDING_ORDER.index(
+            _STANDING[kind]):
+        return False, f"We already stand in {label} or closer with {who}."
+
+    need = {"alliance": ALLIANCE_REGARD, "defensive_pact": DEFENSIVE_REGARD,
+            "non_aggression_pact": NON_AGGRESSION_REGARD, "trade_agreement": TRADE_REGARD,
+            "military_access": ACCESS_REGARD}.get(kind)
+    if need is None:
+        return False, f"We are not in a position to agree to {label}."
+    # DIP-001 checks both directions for the binding pacts, so the bot does too.
+    lowest = min(theirs, ours) if kind in ("alliance", "defensive_pact") else theirs
+    if lowest >= need:
+        return True, f"Agreed. {_name(conn, world_id, asked)} will enter into {label} with {who}."
+    if kind in ("alliance", "defensive_pact") and theirs >= need > ours:
+        return False, (f"We would welcome {label}, but {who}'s own regard for us does not "
+                       "yet bear it. Show us in deeds first.")
+    return False, _pick((
+        f"{label.capitalize()} is more than our relations can carry at present.",
+        f"Our government is not ready to consider {label} with {who}.",
+        f"We decline. Trust between us is too thin for {label}.",
+    ), asked, proposer, kind)
+
+
+def diplomacy_reply(conn: sqlite3.Connection, world_id: str, *, speaker: str,
+                    listener: str, message: str, ultimatum: bool = False,
+                    treaty: bool = False) -> tuple[str, list[dict]]:
+    """``speaker``'s reply to ``listener``, and any agreement it amounts to.
+
+    The agreement is returned in the commitment form the extraction call produces, so the
+    session records it through the same diffs and the same gates.
+    """
+    hay = message.lower()
+    regard = _regard(conn, world_id, speaker, listener)
+    mood = _mood(regard)
+    who = _name(conn, world_id, listener)
+    me = _name(conn, world_id, speaker)
+
+    kind = requested_treaty(message)
+    asking = _first_at(hay, ("propose", "offer", "sign", "agree", "would you", "will you",
+                             "shall we", "let us", "join", "form", "conclude", "seek",
+                             "want", "ask")) or hay.rstrip().endswith("?")
+    if kind is not None and (asking or treaty):
+        agreed, said = treaty_decision(conn, world_id, asked=speaker, proposer=listener,
+                                       kind=kind)
+        commitments = []
+        if agreed:
+            commitments.append({
+                "kind": kind, "status": "active",
+                "condition": f"{me} and {who} agree to {_TREATY_LABEL[kind]}.",
+                "parties": [listener, speaker], "region": "", "ceded_by": "",
+                "intel_sharing": False, "intel_about": "",
+            })
+        return said, commitments
+
+    if _at_war(conn, world_id, speaker, listener):
+        return _pick((
+            f"We are at war, {who}. Say what you have to say through a peace offer.",
+            "While your armies stand against ours there is little to discuss.",
+            "Words are cheap at a time like this. Make an offer, or do not trouble us.",
+        ), speaker, listener, message), []
+
+    threat = ultimatum or _first_at(hay, ("or else", "ultimatum", "withdraw", "surrender",
+                                          "cede", "consequences", "threat", "warn"))
+    if threat:
+        theirs = _strength(conn, world_id, speaker)
+        yours = _strength(conn, world_id, listener)
+        if yours >= 2 * max(theirs, 1.0):
+            return _pick((
+                "We have heard you. We will consider our position carefully.",
+                "Your message is noted. There is no need for this to come to blows.",
+            ), speaker, message), []
+        return _pick((
+            f"{me} does not answer to threats.",
+            "We will not be spoken to in that tone.",
+            "If that is a threat, we are not moved by it.",
+        ), speaker, message), []
+
+    third = [n for _, n in _mentions(conn, world_id, "nation", message)
+             if n not in (speaker, listener)]
+    if third:
+        other = third[0]
+        view = _mood(_regard(conn, world_id, speaker, other))
+        return (f"Our view of {_name(conn, world_id, other)}? Relations are {view}"
+                + (", and we are at war with them." if _at_war(conn, world_id, speaker, other)
+                   else ".")), []
+
+    return _pick({
+        "warm": (f"Always good to hear from {who}. Our friendship stands.",
+                 f"{who} has no truer friend than {me}. What can we do for you?"),
+        "cordial": ("We value good relations with you. Let us keep talking.",
+                    f"{me} is glad of the contact. We are listening."),
+        "guarded": ("We have heard you. Our government will weigh it.",
+                    "Noted. We prefer to see deeds before words."),
+        "cool": ("We have little to say to you at present.",
+                 f"Relations between {me} and {who} do not invite warmth."),
+        "hostile": ("You will forgive us if we do not take you at your word.",
+                    f"{me} has nothing to discuss with {who}."),
+    }[mood], speaker, listener, message), []
+
+
+def _strength(conn: sqlite3.Connection, world_id: str, nation_id: str) -> float:
+    row = conn.execute("SELECT military_strength FROM nation WHERE world_id = ? AND id = ?",
+                       (world_id, nation_id)).fetchone()
+    return float(row[0] or 0.0) if row is not None else 0.0
+
+
+# ------------------------------------------------------------------------------ council
+
+def advise(conn: sqlite3.Connection, world_id: str, *, nation_id: str, question: str) -> str:
+    """The council's answer: the position in a few sentences, and orders worth giving.
+
+    Recommendations are written as orders the rule-based parser understands, so a player
+    can copy one into the orders box as it stands.
+    """
+    from .bots import _believed_strength
+
+    row = conn.execute(
+        "SELECT name, treasury, stability, legitimacy, economy, military_strength,"
+        "       capital_region_id FROM nation WHERE world_id = ? AND id = ?",
+        (world_id, nation_id)).fetchone()
+    if row is None:
+        return "Your council cannot find your government in the record."
+    turn = int(conn.execute("SELECT turn_number FROM world WHERE id = ?",
+                            (world_id,)).fetchone()[0])
+    treasury, stability = float(row["treasury"] or 0), float(row["stability"] or 0)
+    legitimacy, strength = float(row["legitimacy"] or 0), float(row["military_strength"] or 0)
+    capital = str(row["capital_region_id"] or "")
+
+    others = [r for r in conn.execute(
+        "SELECT r.nation_b AS id, r.score AS ours, r.at_war,"
+        "       COALESCE(back.score, 0) AS theirs, r.treaty_status"
+        "  FROM relation r JOIN nation n ON n.id = r.nation_b AND n.world_id = r.world_id"
+        "  LEFT JOIN relation back ON back.world_id = r.world_id"
+        "       AND back.nation_a = r.nation_b AND back.nation_b = r.nation_a"
+        " WHERE r.world_id = ? AND r.nation_a = ? AND n.is_alive = 1",
+        (world_id, nation_id))]
+    enemies = [r for r in others if r["at_war"]]
+    lines: list[str] = []
+    advice: list[str] = []
+
+    named = [n for _, n in _mentions(conn, world_id, "nation", question) if n != nation_id]
+    if named:
+        other = named[0]
+        believed = _believed_strength(conn, world_id, nation_id, other, turn=turn)
+        ratio = strength / believed if believed > 0 else float("inf")
+        balance = ("we are clearly the stronger" if ratio >= 1.5 else
+                   "we are roughly matched" if ratio >= 0.67 else
+                   "they are clearly the stronger")
+        lines.append(
+            f"On {_name(conn, world_id, other)}: they regard us as "
+            f"{_mood(_regard(conn, world_id, other, nation_id))}, we regard them as "
+            f"{_mood(_regard(conn, world_id, nation_id, other))}, and by our service's "
+            f"estimate {balance}"
+            + (" -- and we are at war." if _at_war(conn, world_id, nation_id, other) else "."))
+
+    if enemies:
+        names = ", ".join(_name(conn, world_id, str(r["id"])) for r in enemies)
+        lines.append(f"We are at war with {names}.")
+        for enemy in enemies:
+            believed = _believed_strength(conn, world_id, nation_id, str(enemy["id"]),
+                                          turn=turn)
+            ename = _name(conn, world_id, str(enemy["id"]))
+            if believed > 0 and strength < 0.6 * believed:
+                advice.append(f"Seek a ceasefire with {ename}")
+            else:
+                advice.append(f"Attack {ename}")
+        advice.append("Reinforce our divisions")
+    else:
+        lines.append("We are at peace.")
+
+    lines.append(f"The treasury stands at {treasury:,.0f}; stability {stability:.0f}, "
+                 f"legitimacy {legitimacy:.0f}.")
+    if stability < 40:
+        lines.append("The country is restless, and that is the first thing to mend.")
+        advice.append("Begin the health programme")
+    if legitimacy < 40:
+        advice.append("Begin the schools programme")
+
+    hostile = sorted((r for r in others if not r["at_war"] and r["theirs"] <= -40),
+                     key=lambda r: r["theirs"])
+    if hostile:
+        lines.append(f"{_name(conn, world_id, str(hostile[0]['id']))} is openly hostile "
+                     "to us.")
+        place = conn.execute("SELECT name FROM region WHERE world_id = ? AND id = ?",
+                             (world_id, capital)).fetchone()
+        if place is not None:
+            advice.append(f"Fortify {place['name']}")
+
+    def _standing(r) -> int:
+        status = str(r["treaty_status"] or "none")
+        return _STANDING_ORDER.index(status) if status in _STANDING_ORDER else 0
+
+    friends = sorted((r for r in others if not r["at_war"]),
+                     key=lambda r: -min(r["ours"], r["theirs"]))
+    for friend in friends[:6]:
+        low = min(friend["ours"], friend["theirs"])
+        fname = _name(conn, world_id, str(friend["id"]))
+        if low >= ALLIANCE_REGARD and _standing(friend) < _STANDING_ORDER.index("alliance"):
+            advice.append(f"Propose an alliance to {fname}")
+            break
+        if low >= DEFENSIVE_REGARD and _standing(friend) < _STANDING_ORDER.index("defensive"):
+            advice.append(f"Propose a defensive pact to {fname}")
+            break
+
+    if treasury > 0 and stability >= 40 and not enemies:
+        advice.append("Invest in the economy")
+    if not enemies and strength < 30:
+        advice.append("Raise 2 infantry divisions")
+
+    answer = " ".join(lines)
+    if advice:
+        shown = list(dict.fromkeys(advice))[:4]
+        answer += "\n\nWe would order: " + "; ".join(shown) + "."
+    return answer + "\n\n(Your council is a rules-based stand-in; no model was consulted.)"
+
+
+# --------------------------------------------------------------------------- world sim
+
+def world_sim_batch(conn: sqlite3.Connection, world_id: str, *, player: str | None,
+                    actions: list[dict], order_events: list[int], days: float,
+                    turn: int) -> dict[str, Any]:
+    """The world simulator's answer, by rule: narrative and events, no diffs.
+
+    Everything that moves the world mechanically already runs on the engine -- untracked
+    economies, the scenery bots, resolution. What the simulator was still needed for is the
+    player's notes and treaty proposals sent as orders, which no engine handler carries out.
+    Those are answered here with the same decision talks use, and an accepted treaty is
+    written through the same commitment path.
+    """
+    from .diplomacy import write_commitments
+
+    events: list[dict[str, Any]] = []
+    for action, event_id in zip(actions, order_events, strict=False):
+        kind = str(action.get("type") or "")
+        if not player or kind not in ("propose_treaty", "diplomatic_message"):
+            continue
+        target = reference.resolve(conn, world_id, "nation", action.get("target_nation")).value
+        if not target or target == player:
+            continue
+        text = str(action.get("summary") or "")
+        tname, pname = _name(conn, world_id, target), _name(conn, world_id, player)
+        if kind == "propose_treaty":
+            treaty = requested_treaty(text) or "non_aggression_pact"
+            agreed, said = treaty_decision(conn, world_id, asked=target, proposer=player,
+                                           kind=treaty)
+            if agreed:
+                write_commitments(
+                    conn, world_id,
+                    entries=[{"kind": treaty, "status": "active",
+                              "condition": f"{pname} and {tname} agree to "
+                                           f"{_TREATY_LABEL[treaty]}.",
+                              "parties": [player, target]}],
+                    parties=(player, target), source_event_id=event_id)
+                events.append({"kind": "treaty_signed", "actor_nation_id": target,
+                               "text": f"{tname} accepted {pname}'s proposal of "
+                                       f"{_TREATY_LABEL[treaty]}.",
+                               "visibility": "public", "visible_to": [], "causes": [event_id]})
+            else:
+                events.append({"kind": "diplomatic_message", "actor_nation_id": target,
+                               "text": f"{tname} answered {pname}'s proposal of "
+                                       f"{_TREATY_LABEL[treaty]}: “{said}”",
+                               "visibility": "bilateral", "visible_to": [player, target],
+                               "causes": [event_id]})
+        else:
+            said, _ = diplomacy_reply(conn, world_id, speaker=target, listener=player,
+                                      message=text,
+                                      ultimatum=action.get("tone") == "threatening")
+            events.append({"kind": "diplomatic_message", "actor_nation_id": target,
+                           "text": f"{tname} replied to {pname}'s note: “{said}”",
+                           "visibility": "bilateral", "visible_to": [player, target],
+                           "causes": [event_id]})
+
+    wars = {tuple(sorted((str(a), str(b)))) for a, b in conn.execute(
+        "SELECT nation_a, nation_b FROM relation WHERE world_id = ? AND at_war = 1",
+        (world_id,))}
+    span = (f"{round(days / 365)} year(s)" if days >= 360 else
+            f"{round(days / 30)} month(s)" if days >= 28 else f"{round(days)} day(s)")
+    if wars:
+        shown = "; ".join(f"{_name(conn, world_id, a)} against {_name(conn, world_id, b)}"
+                          for a, b in sorted(wars)[:4])
+        more = f", and {len(wars) - 4} more" if len(wars) > 4 else ""
+        narrative = (f"{span.capitalize()} pass. {len(wars)} war(s) go on: {shown}{more}.")
+    else:
+        narrative = f"{span.capitalize()} pass under an uneasy peace."
+    return {"narrative": narrative, "diffs": [], "events": events,
+            "contests": [], "declarations": []}
+
+
+# ---------------------------------------------------------------------------- freeform
+
+def freeform_answer(conn: sqlite3.Connection, world_id: str, *, nation_id: str,
+                    order_text: str) -> dict[str, Any]:
+    """An order no mechanic covers: recorded and narrated, changing nothing measurable.
+
+    A rule cannot judge what an arbitrary sentence would do to a country's mood, and the
+    schema itself says most such orders are colour. So the bot never nudges.
+    """
+    name = _name(conn, world_id, nation_id)
+    said = order_text.strip().rstrip(".")
+    return {
+        "narrative": _pick((
+            f"The order went out and was carried out: {said}. It drew notice in the "
+            "capital and little beyond it.",
+            f"{name}'s ministries saw to it: {said}. The country took it in its stride.",
+            f"It was done: {said}. Opinion was divided, and nothing measurable changed.",
+        ), nation_id, order_text),
+        "event_text": f"{name}: {said}.",
+        "nudges": [],
+        "refused": None,
+    }

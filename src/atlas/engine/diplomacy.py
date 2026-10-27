@@ -47,6 +47,7 @@ __all__ = [
     "choose_next_speaker",
     "accept_commitment",
     "extract_commitments",
+    "write_commitments",
     "implied_treaty_status",
     "next_commitment_id",
 ]
@@ -173,6 +174,10 @@ class DiplomacySession:
     transcript: list[ChatTurn] = field(default_factory=list)
     #: Set when a commitment was recorded, so closing twice is harmless.
     closed: bool = False
+    #: What a rule-based counterpart agreed to, in the extraction's commitment form. Only
+    #: filled when :mod:`atlas.engine.staff_bots` plays diplomacy; a model's agreements are
+    #: read back out of the transcript instead.
+    agreed: list[dict] = field(default_factory=list)
 
     def _counterpart_name(self) -> str:
         row = self.conn.execute(
@@ -183,6 +188,20 @@ class DiplomacySession:
     async def say(self, message: str, *, ultimatum: bool = False, treaty: bool = False) -> ChatTurn:
         """Send a message and get the counterpart's reply."""
         self.transcript.append(ChatTurn(self.player_nation, message, is_player=True))
+
+        from . import bots
+
+        if bots.controls_role("diplomacy"):
+            from .staff_bots import diplomacy_reply
+
+            text, commitments = diplomacy_reply(
+                self.conn, self.world_id, speaker=self.counterpart,
+                listener=self.player_nation, message=message, ultimatum=ultimatum,
+                treaty=treaty)
+            self.agreed.extend(commitments)
+            reply = ChatTurn(self.counterpart, text)
+            self.transcript.append(reply)
+            return reply
 
         score, factors = diplomacy_stakes(
             self.conn,
@@ -280,15 +299,23 @@ class DiplomacySession:
             visible_to=(self.player_nation, self.counterpart),
         )
 
-        commitments = await extract_commitments(
-            self.conn,
-            self.world_id,
-            transcript=self.transcript,
-            parties=(self.player_nation, self.counterpart),
-            providers=self.providers,
-            router=self.router,
-            source_event_id=event_id,
-        )
+        from . import bots
+
+        if bots.controls_role("diplomacy"):
+            # The counterpart decided as it spoke; there is nothing to read back out.
+            commitments = write_commitments(
+                self.conn, self.world_id, entries=self.agreed,
+                parties=(self.player_nation, self.counterpart), source_event_id=event_id)
+        else:
+            commitments = await extract_commitments(
+                self.conn,
+                self.world_id,
+                transcript=self.transcript,
+                parties=(self.player_nation, self.counterpart),
+                providers=self.providers,
+                router=self.router,
+                source_event_id=event_id,
+            )
         self.conn.commit()
         return commitments
 
@@ -345,7 +372,25 @@ async def extract_commitments(
     )
     if result.failed or not isinstance(result.data, dict):
         return []
+    return write_commitments(
+        conn, world_id, entries=list(result.data.get("commitments") or ()),
+        parties=parties, source_event_id=source_event_id)
 
+
+def write_commitments(
+    conn: sqlite3.Connection,
+    world_id: str,
+    *,
+    entries: list[dict],
+    parties: tuple[str, str],
+    source_event_id: int,
+) -> list[int]:
+    """Record agreements in the commitment form, through the diff pipeline. Returns the ids.
+
+    Split from :func:`extract_commitments` so an agreement reached without a model -- the
+    rule-based diplomacy in :mod:`atlas.engine.staff_bots` -- is written by exactly the same
+    diffs and refused by exactly the same gates.
+    """
     clock = conn.execute(
         "SELECT turn_number, world_date FROM world WHERE id = ?", (world_id,)
     ).fetchone()
@@ -362,7 +407,7 @@ async def extract_commitments(
     scope = _visibility_of(conn, source_event_id)
 
     written: list[int] = []
-    for entry in result.data.get("commitments") or ():
+    for entry in entries:
         try:
             kind = CommitmentKind(entry["kind"])
         except (KeyError, ValueError):

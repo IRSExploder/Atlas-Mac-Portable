@@ -63,6 +63,16 @@ class AdvisorSession:
         """
         self.transcript.append(ChatTurn(self.player_nation, question, is_player=True))
 
+        from . import bots
+
+        if bots.controls_role("advisor"):
+            from .staff_bots import advise
+
+            reply = ChatTurn(self.speaker, advise(
+                self.conn, self.world_id, nation_id=self.player_nation, question=question))
+            self.transcript.append(reply)
+            return reply
+
         decision = self.router.route(Role.ADVISOR, 0.0)
         provider = self.providers.get(decision.provider_key)
         if provider is None or not provider.available():

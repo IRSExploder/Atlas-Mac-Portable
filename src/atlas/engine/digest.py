@@ -218,6 +218,11 @@ async def _summarise(
                        kind="recorded history"),
     ]
 
+    from . import bots
+
+    if bots.controls_role("parser"):
+        return mechanical_summary(events)
+
     decision = router.route(Role.PARSER, 0.0)
     provider = providers.get(decision.provider_key)
     if provider is None or not provider.available():

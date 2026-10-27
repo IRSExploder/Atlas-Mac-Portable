@@ -1508,52 +1508,64 @@ class TurnEngine:
         if self.progress is not None:
             self.progress.start("world_sim")
 
-        view = build_world_sim_view(
-            self.conn, self.world_id, parsed_actions=actions, days=days
-        )
-        provider = self.providers.get(decision.provider_key)
+        if bots.controls_role("world_sim"):
+            # Narrative, and answers to the notes and treaty proposals among the orders --
+            # the only part of the simulator's job the engine does not already do by rule.
+            from .staff_bots import world_sim_batch
 
-        if provider is None or not provider.available():
-            report.status = TurnStatus.ABORTED
-            report.failures.append(
-                f"{decision.provider_key} is unavailable; the world simulator cannot run. "
-                "ATLAS does not substitute another provider for a configured role."
+            result = _BotAnswer(world_sim_batch(
+                self.conn, self.world_id, player=self._player_nation(), actions=actions,
+                order_events=issued, days=days, turn=turn))
+            report.bot_decisions += 1
+            answered = True
+        else:
+            view = build_world_sim_view(
+                self.conn, self.world_id, parsed_actions=actions, days=days
             )
-            self._withdraw_orders(issued, report)
-            self._set_phase(TurnPhase.RESOLVE, TurnStatus.ABORTED, turn=turn)
-            return report
+            provider = self.providers.get(decision.provider_key)
 
-        request = ProviderRequest(
-            role=Role.WORLD_SIM,
-            prompt=view.text,
-            model=decision.model,
-            schema=diff_batch_schema(role=Role.WORLD_SIM),
-            timeout_s=float(900 if decision.band.value == "high" else 420),
-        )
+            if provider is None or not provider.available():
+                report.status = TurnStatus.ABORTED
+                report.failures.append(
+                    f"{decision.provider_key} is unavailable; the world simulator cannot run. "
+                    "ATLAS does not substitute another provider for a configured role."
+                )
+                self._withdraw_orders(issued, report)
+                self._set_phase(TurnPhase.RESOLVE, TurnStatus.ABORTED, turn=turn)
+                return report
 
-        # The one role whose band and complexity are not constant, so it hands the real
-        # decision over rather than letting `_record_call` reconstruct a `low` one.
-        try:
-            result: ProviderResult = await self._invoke(
-                provider, request, stage="world_sim", decision=decision, retries=1
+            request = ProviderRequest(
+                role=Role.WORLD_SIM,
+                prompt=view.text,
+                model=decision.model,
+                schema=diff_batch_schema(role=Role.WORLD_SIM),
+                timeout_s=float(900 if decision.band.value == "high" else 420),
             )
-        except BaseException:
-            # A crash or a cancellation in the call is the same non-event as a failed
-            # answer: nothing was simulated, so nothing the orders would cite was written.
-            self._withdraw_orders(issued, report)
-            raise
-        report.calls += 1
-        if self.world_sim_breaker.record(result.ok):
-            report.failures.append(
-                f"{decision.provider_key} has failed the world simulation "
-                f"{self.world_sim_breaker.threshold} times running; falling back to "
-                f"{WORLD_SIM_FALLBACK[0]} for the rest of this session"
-            )
+
+            # The one role whose band and complexity are not constant, so it hands the real
+            # decision over rather than letting `_record_call` reconstruct a `low` one.
+            try:
+                result: ProviderResult = await self._invoke(
+                    provider, request, stage="world_sim", decision=decision, retries=1
+                )
+            except BaseException:
+                # A crash or a cancellation in the call is the same non-event as a failed
+                # answer: nothing was simulated, so nothing the orders would cite was written.
+                self._withdraw_orders(issued, report)
+                raise
+            report.calls += 1
+            answered = result.ok
+            if self.world_sim_breaker.record(result.ok):
+                report.failures.append(
+                    f"{decision.provider_key} has failed the world simulation "
+                    f"{self.world_sim_breaker.threshold} times running; falling back to "
+                    f"{WORLD_SIM_FALLBACK[0]} for the rest of this session"
+                )
         if self.progress is not None:
             self.progress.finish(
                 "world_sim",
-                state=StageState.DONE if result.ok else StageState.FAILED,
-                detail="" if result.ok else (result.failure.kind.value if result.failure else "failed"),
+                state=StageState.DONE if answered else StageState.FAILED,
+                detail="" if answered else (result.failure.kind.value if result.failure else "failed"),
             )
 
 
@@ -2562,31 +2574,40 @@ class TurnEngine:
         if not orders:
             return
 
-        decision = self.router.route(Role.FREEFORM, 0.0)
-        provider = self.providers.get(decision.provider_key)
-        if provider is None or not provider.available():
-            report.failures.append(
-                f"a freeform order went unanswered: {decision.provider_key} is unavailable"
-            )
-            return
+        botted = bots.controls_role("freeform")
+        if not botted:
+            decision = self.router.route(Role.FREEFORM, 0.0)
+            provider = self.providers.get(decision.provider_key)
+            if provider is None or not provider.available():
+                report.failures.append(
+                    f"a freeform order went unanswered: {decision.provider_key} is unavailable"
+                )
+                return
 
         for action in orders:
             text = str(action.get("summary") or action.get("target_nation") or "").strip()
             if not text:
                 continue
-            result = await self._invoke(
-                provider,
-                ProviderRequest(
-                    role=Role.FREEFORM,
-                    prompt=build_freeform_view(
-                        self.conn, self.world_id, nation_id=nation_id, order_text=text
+            if botted:
+                from .staff_bots import freeform_answer
+
+                result = _BotAnswer(freeform_answer(
+                    self.conn, self.world_id, nation_id=nation_id, order_text=text))
+                report.bot_decisions += 1
+            else:
+                result = await self._invoke(
+                    provider,
+                    ProviderRequest(
+                        role=Role.FREEFORM,
+                        prompt=build_freeform_view(
+                            self.conn, self.world_id, nation_id=nation_id, order_text=text
+                        ),
+                        model=decision.model,
+                        schema=FREEFORM_SCHEMA,
+                        timeout_s=120.0,
                     ),
-                    model=decision.model,
-                    schema=FREEFORM_SCHEMA,
-                    timeout_s=120.0,
-                ),
-            )
-            report.calls += 1
+                )
+                report.calls += 1
             if result.failed:
                 report.failures.append(
                     "a freeform order went unanswered: "

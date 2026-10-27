@@ -208,6 +208,11 @@ def _add_offline_flags(parser: argparse.ArgumentParser) -> None:
         help="comma-separated bot scopes (tracked,gambit,organisation) or 'all'; "
              "deterministic controllers answer instead of a model",
     )
+    parser.add_argument(
+        "--no-ai", action="store_true",
+        help="rule-based bots play every AI seat -- other powers, your orders, talks, "
+             "the council, the world narrative -- and no model is ever called",
+    )
 
 
 def _offline_providers(args: argparse.Namespace) -> dict | None:
@@ -218,6 +223,14 @@ def _offline_providers(args: argparse.Namespace) -> dict | None:
     """
     from .engine import bots
     from .providers.mock import MockProvider
+
+    if getattr(args, "no_ai", False):
+        # Every seat a model would fill, played by rule; the mock is only the backstop for
+        # anything a later change routes to a provider without a bot in front of it.
+        bots.set_bots(roles=bots.SCOPES | bots.STAFF_SCOPES)
+        print("no AI: rule-based bots answer for every role; no model calls will be made")
+        shared = MockProvider()
+        return {key: shared for key in ("claude", "codex", "antigravity")}
 
     scopes = getattr(args, "bots", None)
     if scopes:
@@ -358,7 +371,9 @@ def _cmd_start(args: argparse.Namespace) -> int:
     from .ui.widgets import set_text_scale
 
     offline = _offline_providers(args)
-    if offline is not None:
+    if getattr(args, "no_ai", False):
+        status = "No AI: rule-based bots play every seat; no model is called."
+    elif offline is not None:
         status = "Offline: no AI model is being called (mock or recorded answers)."
     else:
         status = "AI providers: the installed command-line models (see `atlas doctor`)."

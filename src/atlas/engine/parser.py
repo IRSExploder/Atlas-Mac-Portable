@@ -194,42 +194,51 @@ async def parse_orders(
     if not raw_text.strip():
         return ParsedOrders()
 
-    decision = router.route(Role.PARSER, 0.0)
-    provider = providers.get(decision.provider_key)
-    if provider is None or not provider.available():
-        return ParsedOrders(
-            error=f"{decision.provider_key} is unavailable, so orders cannot be checked."
+    from . import bots
+
+    if bots.controls_role("parser"):
+        # The same answer shape, so the audit row and every gate downstream are unchanged.
+        from .staff_bots import parse_orders as bot_parse
+
+        data = bot_parse(conn, world_id, nation_id=nation_id, raw_text=raw_text)
+    else:
+        decision = router.route(Role.PARSER, 0.0)
+        provider = providers.get(decision.provider_key)
+        if provider is None or not provider.available():
+            return ParsedOrders(
+                error=f"{decision.provider_key} is unavailable, so orders cannot be checked."
+            )
+
+        view = build_parser_view(conn, world_id, nation_id=nation_id, raw_text=raw_text)
+        result = await provider.invoke(
+            ProviderRequest(
+                role=Role.PARSER,
+                prompt=view.text,
+                model=decision.model,
+                schema=ACTION_SCHEMA,
+                timeout_s=120.0,
+                # A bounded translation task. The default effort for this CLI is xhigh, which
+                # would cost more than the world simulation it feeds.
+                options={"reasoning_effort": "low"},
+            )
         )
 
-    view = build_parser_view(conn, world_id, nation_id=nation_id, raw_text=raw_text)
-    result = await provider.invoke(
-        ProviderRequest(
-            role=Role.PARSER,
-            prompt=view.text,
-            model=decision.model,
-            schema=ACTION_SCHEMA,
-            timeout_s=120.0,
-            # A bounded translation task. The default effort for this CLI is xhigh, which
-            # would cost more than the world simulation it feeds.
-            options={"reasoning_effort": "low"},
-        )
-    )
-
-    if result.failed:
-        return ParsedOrders(
-            error=result.failure.message if result.failure else "your staff could not be reached"
-        )
-    if not isinstance(result.data, dict):
-        return ParsedOrders(
-            error="your staff sent back something that was not a list of orders")
+        if result.failed:
+            return ParsedOrders(
+                error=result.failure.message if result.failure else "your staff could not be reached"
+            )
+        if not isinstance(result.data, dict):
+            return ParsedOrders(
+                error="your staff sent back something that was not a list of orders")
+        data = result.data
 
     # Persist the attempt so the audit trail shows what the player asked for and what the
     # parser made of it, separately from what the world then did.
     turn = conn.execute(
         "SELECT turn_number FROM world WHERE id = ?", (world_id,)
     ).fetchone()["turn_number"]
-    actions = tuple(result.data.get("actions") or ())
-    rejected = tuple(result.data.get("rejected") or ())
+    actions = tuple(data.get("actions") or ())
+    rejected = tuple(data.get("rejected") or ())
 
     import json
 

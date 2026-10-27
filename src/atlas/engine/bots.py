@@ -47,6 +47,7 @@ import sqlite3
 
 __all__ = [
     "BOT_MODEL",
+    "STAFF_SCOPES",
     "bot_nations",
     "bot_roles",
     "controls_nation",
@@ -63,6 +64,11 @@ BOT_MODEL = "bot:rules-v1"
 
 #: The scopes a harness may turn on.
 SCOPES = frozenset({"tracked", "gambit", "organisation"})
+
+#: The seats the player talks to, played by :mod:`atlas.engine.staff_bots`. Kept apart from
+#: `SCOPES` so `--bots all` still means the scenery and nothing else: the dev profile pairs it
+#: with a recorded tape whose narrative these would otherwise replace.
+STAFF_SCOPES = frozenset({"parser", "diplomacy", "advisor", "world_sim", "freeform"})
 
 #: Outmatched: an army under this share of its strongest enemy's. **On its own this no
 #: longer sues for peace** (review v1, point 2b): a minor holding its mountains against a
@@ -114,7 +120,7 @@ def _split(raw: str) -> frozenset[str]:
     return frozenset(p.strip().lower() for p in raw.split(",") if p.strip())
 
 
-_ROLES: frozenset[str] = _split(os.environ.get("ATLAS_BOTS", "")) & SCOPES
+_ROLES: frozenset[str] = _split(os.environ.get("ATLAS_BOTS", "")) & (SCOPES | STAFF_SCOPES)
 _NATIONS: frozenset[str] = _split(os.environ.get("ATLAS_BOT_NATIONS", ""))
 #: Nations a bot never plays, whatever the scopes say. **The study needs this**: in the
 #: kitchen-sink match the betrayal victims are neutrals, and a rule answering a betrayal
@@ -141,9 +147,10 @@ def set_bots(
 ) -> tuple[frozenset[str], frozenset[str], frozenset[str]]:
     """Move the switches, returning what they were so a caller can put them back."""
     global _ROLES, _NATIONS, _EXCLUDE
-    unknown = set(roles) - SCOPES
+    unknown = set(roles) - SCOPES - STAFF_SCOPES
     if unknown:
-        raise ValueError(f"unknown bot scope(s) {sorted(unknown)}; choose from {sorted(SCOPES)}")
+        raise ValueError(f"unknown bot scope(s) {sorted(unknown)}; "
+                         f"choose from {sorted(SCOPES | STAFF_SCOPES)}")
     was = (_ROLES, _NATIONS, _EXCLUDE)
     _ROLES, _NATIONS, _EXCLUDE = frozenset(roles), frozenset(nations), frozenset(exclude)
     return was
