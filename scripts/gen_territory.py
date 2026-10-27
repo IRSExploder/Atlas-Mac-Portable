@@ -182,6 +182,21 @@ _MODERN_COUNTRIES: dict[str, list[str]] = {
     "prk": ["PRK"],
     "ind": ["IND"],
     "pak": ["PAK"],
+    # The Middle East and Europe, where most of the wars a player starts are fought. At
+    # country granularity Turkey invading Iran was one contest that decided the whole
+    # country in two turns; drawn by province it is a campaign with a front.
+    "tur": ["TUR"],
+    "irn": ["IRN"],
+    "isr": ["ISR"],
+    "sau": ["SAU"],
+    "egy": ["EGY"],
+    "pol": ["POL"],
+    "deu": ["DEU"],
+    "fra": ["FRA"],
+    "ita": ["ITA"],
+    "gbr": ["GBR"],
+    "jpn": ["JPN"],
+    "vnm": ["VNM"],
 }
 
 #: Where the province map is not the political map, in 2026.
@@ -229,6 +244,18 @@ _MODERN_CAPITALS: dict[str, tuple[str, str]] = {
     "prk": ("PRK", "P'yongyang"),
     "ind": ("IND", "Delhi"),
     "pak": ("PAK", "F.C.T."),   # the Federal Capital Territory: Islamabad
+    "tur": ("TUR", "Ankara"),
+    "irn": ("IRN", "Tehran"),
+    "isr": ("ISR", "Jerusalem"),
+    "sau": ("SAU", "Ar Riyad"),
+    "egy": ("EGY", "Al Qahirah"),
+    "pol": ("POL", "Masovian"),
+    "deu": ("DEU", "Berlin"),
+    "fra": ("FRA", "Paris"),
+    "ita": ("ITA", "Roma"),
+    "gbr": ("GBR", "Westminster"),
+    "jpn": ("JPN", "Tokyo"),
+    "vnm": ("VNM", "Ha Noi"),
 }
 
 

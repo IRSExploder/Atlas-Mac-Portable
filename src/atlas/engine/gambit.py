@@ -199,7 +199,10 @@ KINDS: tuple[GambitKind, ...] = (
         blurb="Find the people who already wanted to, and pay for the printing.",
         base_odds=0.30,
         event_kind=EventKind.UNREST,
-        requires=("needs_target", "at_war"),
+        # Not gated on a war. Funding somebody else's dissidents is the oldest move in a
+        # cold war, and gating it made "back the Kurdish rebels" unorderable until the
+        # shooting started. It is covert, it is charged, and getting caught is public.
+        requires=("needs_target",),
         covert=True,
     ),
     GambitKind(

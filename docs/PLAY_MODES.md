@@ -101,6 +101,30 @@ game onto a more expensive model.
 A country that still holds ground is taken from at the peace table instead ("sue for peace
 with Iran, ceding ...").
 
+**Wars have fronts.** In Modern Day the countries most wars are fought across are drawn
+province by province: Russia, Ukraine, China, Taiwan, both Koreas, India, Pakistan, Turkey,
+Iran, Israel, Saudi Arabia, Egypt, Poland, Germany, France, Italy, the UK, Japan and
+Vietnam. Each province is its own campaign, so taking Iran is a march across
+eleven provinces, not one roll. A province only falls on a day the attacker *wins*: when
+the defenders hold, the attacker can still gain ground, but the province stays put
+("Iran prevailed narrowly, but gave ground").
+
+## Creative orders
+
+Write what you would actually do; the engine finds the mechanic and keeps the effect bounded.
+
+* **Schemes against another country** become an undertaking with odds and a cost, paid
+  win or lose: "fund Kurdish rebels inside Iran" (incitement), "leak their secrets to the
+  press" (exposé), "get their generals to defect" (bribe), "hack their power grid" or
+  "assassinate ..." (sabotage, wartime only), "hold a summit with Russia". When one works,
+  it shakes or discredits the target or warms them towards you. Your wording counts: "with
+  millions" or "rebels" improve the odds, "at once" lowers them, and "at any cost" raises
+  both the price and the payoff.
+* **Anything else** ("host the Olympics in Istanbul", "build a statue", "impose martial
+  law", "send aid to ...") is still carried out: it can lift or cost stability and
+  legitimacy, or change how another country regards you, by a small capped amount. A wall
+  on a border is a fortification.
+
 ## Giving orders
 
 Type what you want in **Your orders** in plain words ("Declare war on Iran and invade it").

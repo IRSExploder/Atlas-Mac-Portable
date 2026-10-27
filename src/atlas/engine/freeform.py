@@ -115,9 +115,10 @@ _FREEFORM_SCHEMA_RAW: dict[str, Any] = {
             "type": "array",
             "maxItems": MAX_NUDGES,
             "description": (
-                "How this changed the mood, if it did at all. Prefer an empty list: most "
-                "orders are colour and change nothing. You choose a direction and a size "
-                "in words; the engine decides what those are worth."
+                "How this changed the mood, if it did at all. Pure colour changes "
+                "nothing; an order that would plausibly move how people feel should say "
+                "so. You choose a direction and a size in words; the engine decides what "
+                "those are worth and caps it."
             ),
             "items": {
                 "type": "object",
@@ -243,8 +244,11 @@ def build_freeform_view(
         "Rules you cannot argue with:",
         "- You are not deciding an outcome. You cannot move a border, an army, a budget "
         "or an economy, and no wording will let you. Those have their own orders.",
-        "- Most orders change nothing measurable. An empty `nudges` list is the normal "
-        "answer and a good one.",
+        "- Pure colour changes nothing measurable, and an empty `nudges` list is right "
+        "for it. But an order that would plausibly move how people feel -- a crackdown, "
+        "a festival, a reform, aid sent abroad -- should move it: `slight` for a modest "
+        "act, `moderate` for a bold one. The engine caps it either way, so be honest "
+        "about the direction, including when it backfires.",
         "- When something does change, it is how people feel: your stability, your "
         "legitimacy, or what a neighbour thinks of you. Nothing else is available.",
         "- Refuse outright when the order is impossible in this period, or when it is "

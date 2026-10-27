@@ -93,7 +93,12 @@ _ACTION_SCHEMA_RAW: dict[str, Any] = {
                         "description": (
                             "For gambit: which undertaking. One of sabotage (wreck "
                             "something of theirs), air_strike (bomb a region), sting, "
-                            "bribe, incite, expose, summit, envoy. Null otherwise."
+                            "bribe, incite, expose, summit, envoy. Null otherwise. "
+                            "Read the player's own words generously: funding rebels, "
+                            "propaganda aimed at another people or backing a coup is "
+                            "incite; an assassination or a cyberattack is sabotage; "
+                            "getting officers to defect is bribe; leaking or smearing "
+                            "is expose."
                         ),
                     },
                     "ceasefire": {

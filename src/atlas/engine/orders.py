@@ -1193,6 +1193,62 @@ def _undertaking_kind(action: dict) -> str:
     return claimed[0] if len(claimed) == 1 else ""
 
 
+#: **What a player's undertaking does when it works, and what it costs when it does not.**
+#:
+#: The player's path handed `apply_gambit` an empty string for both, so a successful bribe
+#: or incitement charged its stake, rolled its odds, wrote its event -- and moved nothing.
+#: Imagination was narration only. These are the consequences a model would pick for the
+#: same kind, drawn from the same closed verb list, so the caps, the ledger and the roll
+#: bound them exactly as they bound everybody else's. An air strike carries none: its
+#: damage is :mod:`atlas.engine.air`'s to decide.
+PLAYER_CONSEQUENCES: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
+    #  kind         on success                    on failure
+    "summit": (("warm", "bolster"), ("cool",)),
+    "envoy": (("warm",), ()),
+    "bribe": (("warm", "discredit"), ("cool",)),
+    "expose": (("discredit", "shake"), ("cool",)),
+    "sting": (("bolster", "discredit"), ()),
+    "sabotage": (("drain", "shake"), ("cool",)),
+    "incite": (("shake", "discredit"), ("cool",)),
+    "air_strike": ((), ()),
+}
+
+#: Words in the order that raise the stake. A bolder order costs more and moves more --
+#: within the same per-turn ceiling, so wording buys size, never an exemption.
+_STAKE_WORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("grave", ("at any cost", "all-out", "all out", "everything we have", "whatever it takes",
+               "no expense spared")),
+    ("serious", ("major", "massive", "large-scale", "large scale", "serious", "heavily",
+                 "lavishly", "big ")),
+)
+
+#: Circumstances an order's own words claim. The engine still decides what each is worth
+#: (see `atlas.engine.gambit.EVIDENCE`); a player describing a careful, funded operation
+#: with friends on the ground gets the odds a model reporting the same would have got.
+_EVIDENCE_WORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("long_prepared", ("carefully", "patiently", "long-planned", "long planned",
+                       "over months", "methodically")),
+    ("well_funded", ("fund ", "funded", "funding", "finance", "millions", "billions",
+                     "lavishly", "money")),
+    ("local_sympathisers", ("rebels", "dissidents", "opposition", "minority", "minorities",
+                            "sympathisers", "sympathizers", "exiles", "kurd", "separatist")),
+    ("rushed", ("immediately", "at once", "right now", "tonight", "hastily", "quickly")),
+)
+
+
+def _order_stake(text: str) -> str:
+    hay = f" {text.lower()} "
+    for stake, words in _STAKE_WORDS:
+        if any(word in hay for word in words):
+            return stake
+    return "minor"
+
+
+def _order_evidence(text: str) -> list[str]:
+    hay = f" {text.lower()} "
+    return [flag for flag, words in _EVIDENCE_WORDS if any(word in hay for word in words)]
+
+
 def _gambit(conn, world_id, turn, date, action, nation_id, effects) -> None:
     """Route an order the player named an undertaking in, into the gambit channel.
 
@@ -1262,9 +1318,10 @@ def _gambit(conn, world_id, turn, date, action, nation_id, effects) -> None:
                 "target_region": region,
                 "aim": aim,
                 "intent": str(action.get("summary") or "")[:300],
-                "stakes": "minor",
-                "evidence": [],
-                "on_success": "", "on_failure": "",
+                "stakes": _order_stake(str(action.get("summary") or "")),
+                "evidence": _order_evidence(str(action.get("summary") or "")),
+                "on_success": list(PLAYER_CONSEQUENCES.get(named, ((), ()))[0]),
+                "on_failure": list(PLAYER_CONSEQUENCES.get(named, ((), ()))[1]),
             },
             "refused": None,
         },

@@ -32,6 +32,7 @@ Scopes, alongside the scenery scopes in :mod:`atlas.engine.bots`:
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import sqlite3
 from typing import Any
@@ -131,6 +132,18 @@ _EXTRA_ALIASES: dict[str, tuple[str, ...]] = {
     "build_project": ("construct",),
     "freeform": ("announce", "proclaim", "decree", "celebrate", "hold a", "declare a",
                  "honour", "honor", "mourn", "organise", "organize"),
+    # Undertakings asked for in a player's own words rather than by the catalogue's name.
+    # Each phrase is in `_GAMBIT_WORDS` too, which decides the kind.
+    "gambit": ("fund rebels", "fund the rebels", "arm rebels", "arm the rebels",
+               "back the rebels", "support the rebels", "support rebels", "foment",
+               "stir up", "destabilise", "destabilize", "propaganda", "disinformation",
+               "social media campaign", "regime change", "stage a coup", "organise a coup",
+               "organize a coup", "assassinate", "hack", "cyberattack", "cyber attack",
+               "cyber-attack", "blow up", "wreck", "derail", "buy off", "pay off",
+               "leak", "smear", "name and shame", "hold a summit", "hold talks",
+               "peace talks", "back channel", "backchannel", "secret talks", "honeypot",
+               "airstrike", "missile strike", "drone strike", "air raid", "rebels",
+               "insurgents", "uprising", "coup", "defect"),
 }
 
 #: A weak verb ("ask", "tell") yields to a stronger act named in the same clause: "ask
@@ -167,9 +180,24 @@ _DOCTRINE_WORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 
 _GAMBIT_WORDS: tuple[tuple[str, str], ...] = (
-    ("air strike", "air_strike"), ("bomb", "air_strike"), ("sabotage", "sabotage"),
-    ("summit", "summit"), ("envoy", "envoy"), ("bribe", "bribe"), ("sting", "sting"),
-    ("incite", "incite"), ("expose", "expose"),
+    ("air strike", "air_strike"), ("bomb", "air_strike"), ("airstrike", "air_strike"),
+    ("missile strike", "air_strike"), ("drone strike", "air_strike"),
+    ("air raid", "air_strike"),
+    ("sabotage", "sabotage"), ("assassinate", "sabotage"), ("hack", "sabotage"),
+    ("cyberattack", "sabotage"), ("cyber attack", "sabotage"), ("cyber-attack", "sabotage"),
+    ("blow up", "sabotage"), ("wreck", "sabotage"), ("derail", "sabotage"),
+    ("summit", "summit"), ("hold talks", "summit"), ("peace talks", "summit"),
+    ("envoy", "envoy"), ("back channel", "envoy"), ("backchannel", "envoy"),
+    ("secret talks", "envoy"),
+    ("bribe", "bribe"), ("buy off", "bribe"), ("pay off", "bribe"), ("defect", "bribe"),
+    ("sting", "sting"), ("honeypot", "sting"),
+    ("incite", "incite"), ("rebels", "incite"), ("foment", "incite"), ("stir up", "incite"),
+    ("destabilise", "incite"), ("destabilize", "incite"), ("propaganda", "incite"),
+    ("disinformation", "incite"), ("social media campaign", "incite"),
+    ("regime change", "incite"), ("coup", "incite"), ("insurgents", "incite"),
+    ("uprising", "incite"),
+    ("expose", "expose"), ("leak", "expose"), ("smear", "expose"),
+    ("name and shame", "expose"),
 )
 
 _HINT = ("start with a verb such as move, raise, reinforce, fortify, build, research, "
@@ -244,6 +272,20 @@ def _mentions(conn: sqlite3.Connection, world_id: str, kind: str,
     return sorted(out)
 
 
+def _demonym_of(said: str, name: str) -> bool:
+    """"Karthian" for Karthos, "Turkish" for Turkey, "Greek" for Greece: the name with its
+    last letter or two swapped for a people's ending. Single-word names only."""
+    if " " in name or len(name) < 4:
+        return False
+    common = len(os.path.commonprefix([said, name]))
+    return (common >= max(4, len(name) - 2) and said != name
+            and said[common:] in _DEMONYM_ENDINGS)
+
+
+_DEMONYM_ENDINGS = frozenset({"", "n", "ns", "an", "ans", "ian", "ians", "ish", "ese", "i",
+                              "is", "ic", "k", "ks"})
+
+
 def _nations_in(conn: sqlite3.Connection, world_id: str, clause: str, *,
                 exclude: str) -> list[str]:
     """Nations named in a clause; failing a full name, a capitalised word that is the start
@@ -256,11 +298,12 @@ def _nations_in(conn: sqlite3.Connection, world_id: str, clause: str, *,
              if entry_id != exclude]
     for word in re.findall(r"(?<=\s)[A-Z][\w'-]{3,}", clause):
         said = normalise(word)
-        # "Soviet" opens "Soviet Union"; "Cubans" extends "Cuba". Only a single match
-        # counts: anything looser, or shared, is a guess.
+        # "Soviet" opens "Soviet Union"; "Cubans" and "Iranians" extend "Cuba" and
+        # "Iran". Only a single match counts: anything looser, or shared, is a guess.
         hits = {entry_id for entry_id, name in names
                 if name.startswith(said + " ") or name == said
-                or (len(name) >= 4 and said.startswith(name) and len(said) - len(name) <= 3)}
+                or (len(name) >= 4 and said.startswith(name) and len(said) - len(name) <= 4)
+                or _demonym_of(said, name)}
         if len(hits) == 1:
             return [hits.pop()]
     return []
@@ -335,7 +378,20 @@ def _choose_type(conn: sqlite3.Connection, world_id: str, clause: str,
             return "adopt_doctrine", verb
         if _unit_kind(conn, world_id, clause) or verb in ("raise", "recruit", "lay down"):
             return "raise_units", verb
+        # Something built that the catalogue has no entry for: a wall is a fortification,
+        # anything else -- a monument, a canal, a stadium -- is freeform's to answer. It
+        # used to fall through to raising infantry.
+        if _first_at(hay, _FORTIFICATION_WORDS):
+            return "fortify", verb
+        if verb in ("build", "construct", "begin", "develop", "research", "programme",
+                    "program"):
+            return "freeform", verb
     return chosen, verb
+
+
+_FORTIFICATION_WORDS = ("wall", "walls", "fortification", "fortifications", "bunker",
+                        "bunkers", "barrier", "fence", "defences", "defenses", "trenches",
+                        "defensive line")
 
 
 def _units_by_region(conn: sqlite3.Connection, world_id: str, nation_id: str) -> list[str]:
@@ -361,6 +417,19 @@ def _holder(conn: sqlite3.Connection, world_id: str, region: str) -> str:
         "SELECT COALESCE(controller_nation_id, owner_nation_id) FROM region"
         " WHERE world_id = ? AND id = ?", (world_id, region)).fetchone()
     return str(row[0] or "") if row else ""
+
+
+def _border_region(conn: sqlite3.Connection, world_id: str, nation_id: str,
+                   other: str) -> str | None:
+    """Ground ``nation_id`` holds next to ground ``other`` holds, if there is any."""
+    for (region,) in conn.execute(
+            "SELECT id FROM region WHERE world_id = ? AND kind <> 'ocean'"
+            " AND COALESCE(controller_nation_id, owner_nation_id) = ? ORDER BY id",
+            (world_id, nation_id)):
+        if any(_holder(conn, world_id, r) == other
+               for r in _adjacent(conn, world_id, str(region))):
+            return str(region)
+    return None
 
 
 def _front_region(conn: sqlite3.Connection, world_id: str, nation_id: str,
@@ -435,7 +504,13 @@ def _parse_clause(conn: sqlite3.Connection, world_id: str, nation_id: str, claus
 
     action_type, verb = _choose_type(conn, world_id, clause, aliases)
     if action_type is None:
-        return None, f"no order recognised; {_HINT}"
+        # **Anything else at all is still an order.** Refusing what no verb matched sent
+        # "host the Olympics in Istanbul" back with a list of verbs to use instead; the
+        # freeform channel exists to take it seriously, and it is bounded however it is
+        # worded. A word or two is too little to be an order of any kind.
+        if len(re.findall(r"[A-Za-z]{2,}", clause)) < 3:
+            return None, f"no order recognised; {_HINT}"
+        return _blank_action("freeform", clause), None
 
     action = _blank_action(action_type, clause)
     hay = clause.lower()
@@ -505,6 +580,13 @@ def _parse_clause(conn: sqlite3.Connection, world_id: str, nation_id: str, claus
             return None, f"name a kind of formation this world builds: {kinds}"
     elif action_type == "fortify" and regions:
         action["to_region"] = action["from_region"] = regions[-1][1]
+    elif action_type == "fortify" and nations:
+        # "A wall on the Syrian border": your ground that touches theirs.
+        border = _border_region(conn, world_id, nation_id, nations[0])
+        if border:
+            action["to_region"] = action["from_region"] = border
+        # Digging in is done on your own ground and addressed to nobody.
+        action["target_nation"] = None
     elif action_type == "build_project":
         found = (_mentions(conn, world_id, "project", clause)
                  or _mentions(conn, world_id, "technology", clause))
@@ -526,10 +608,11 @@ def _parse_clause(conn: sqlite3.Connection, world_id: str, nation_id: str, claus
             return None, ("name the stance to adopt: mass, professional, retaliation, "
                           "minimum, collective security or neutrality")
     elif action_type == "gambit":
-        for word, kind in _GAMBIT_WORDS:
-            if _first_at(hay, (word,)):
-                action["gambit_kind"] = kind
-                break
+        # The kind named earliest in the order, the longer phrase at a tie: "leak the
+        # coup plans" is an exposure, not a coup.
+        hit = _first_at(hay, tuple(word for word, _ in _GAMBIT_WORDS))
+        if hit:
+            action["gambit_kind"] = dict(_GAMBIT_WORDS)[hit[2]]
         if regions:
             action["to_region"] = regions[-1][1]
             if not action["target_nation"]:
@@ -540,6 +623,10 @@ def _parse_clause(conn: sqlite3.Connection, world_id: str, nation_id: str, claus
     elif action_type == "economic_investment":
         action["quantity"] = _quantity(clause)
 
+    if action_type == "gambit" and not action["target_nation"]:
+        # "A propaganda campaign" with nobody to aim it at is a domestic act, which is
+        # freeform's to answer, not an undertaking against nobody.
+        return _blank_action("freeform", clause), None
     if "target_nation" in needs and not action["target_nation"]:
         return None, "name the country this is addressed to"
     if action["target_nation"]:
@@ -936,23 +1023,84 @@ def world_sim_batch(conn: sqlite3.Connection, world_id: str, *, player: str | No
 
 # ---------------------------------------------------------------------------- freeform
 
+#: What kinds of order move how people feel, and which way. Read in order; the first
+#: family whose words appear decides. Every nudge is `slight` -- the bot reads words, not
+#: intent, and freeform's own caps bound whatever it picks.
+_MOOD_FAMILIES: tuple[tuple[tuple[str, ...], tuple[tuple[str, str], ...], str], ...] = (
+    (("crack down", "crackdown", "arrest", "martial law", "censor", "ban ", "purge",
+      "curfew", "suppress"),
+     (("stability", "up"), ("legitimacy", "down")),
+     "Order was kept, and people noticed what it cost."),
+    (("reform", "corruption", "election", "referendum", "transparency", "free press",
+      "amnesty", "constitution"),
+     (("legitimacy", "up"),),
+     "It read as a government that meant to be held to account."),
+    (("olympics", "world cup", "festival", "celebrat", "holiday", "parade", "national day",
+      "monument", "statue", "tourism", "stadium", "concert", "mourn", "memorial", "honour",
+      "honor", "speech", "address the nation"),
+     (("stability", "up"),),
+     "It gave the country something to gather around."),
+    (("propaganda", "patriotic", "national pride", "rally", "unity"),
+     (("stability", "up"),),
+     "The message landed with the people it was meant for."),
+)
+
+#: Words that say the order is a kindness or an insult to another country.
+_REGARD_WORDS: tuple[tuple[tuple[str, ...], str], ...] = (
+    (("aid", "gift", "help", "donate", "apolog", "praise", "honour", "honor", "invite",
+      "congratulat", "humanitarian"), "up"),
+    (("insult", "mock", "denounce", "condemn", "ridicule", "humiliat", "boycott", "expel"),
+     "down"),
+)
+
+
+def _mood_nudges(conn: sqlite3.Connection, world_id: str, nation_id: str,
+                 order_text: str) -> tuple[list[dict], str]:
+    """Slight, bounded mood changes an order's own words point at, and a line saying why."""
+    hay = f" {order_text.lower()} "
+    nudges: list[dict] = []
+    why = ""
+    for words, moves, said in _MOOD_FAMILIES:
+        if any(word in hay for word in words):
+            nudges += [{"subject": nation_id, "field": field, "direction": way,
+                        "magnitude": "slight", "why": said} for field, way in moves]
+            why = said
+            break
+    others = _nations_in(conn, world_id, order_text, exclude=nation_id)
+    if others:
+        for words, way in _REGARD_WORDS:
+            if any(word in hay for word in words):
+                nudges.append({"subject": f"{nation_id}|{others[0]}", "field": "relation",
+                               "direction": way, "magnitude": "slight",
+                               "why": "It was noticed abroad."})
+                break
+    return nudges[:3], why
+
+
 def freeform_answer(conn: sqlite3.Connection, world_id: str, *, nation_id: str,
                     order_text: str) -> dict[str, Any]:
-    """An order no mechanic covers: recorded and narrated, changing nothing measurable.
+    """An order no mechanic covers: recorded, narrated, and felt -- a little.
 
-    A rule cannot judge what an arbitrary sentence would do to a country's mood, and the
-    schema itself says most such orders are colour. So the bot never nudges.
+    A rule cannot judge an arbitrary sentence, so the bot only reads the plainest signals
+    -- a crackdown steadies the streets and costs trust, a festival lifts the mood, aid
+    warms the country it is sent to -- and always as a `slight` nudge. Anything it cannot
+    read changes nothing measurable, which is still an answer.
     """
     name = _name(conn, world_id, nation_id)
     said = order_text.strip().rstrip(".")
-    return {
-        "narrative": _pick((
+    nudges, why = _mood_nudges(conn, world_id, nation_id, order_text)
+    if nudges:
+        narrative = f"{name}'s ministries saw to it: {said}. {why or 'It was noticed.'}"
+    else:
+        narrative = _pick((
             f"The order went out and was carried out: {said}. It drew notice in the "
             "capital and little beyond it.",
             f"{name}'s ministries saw to it: {said}. The country took it in its stride.",
             f"It was done: {said}. Opinion was divided, and nothing measurable changed.",
-        ), nation_id, order_text),
+        ), nation_id, order_text)
+    return {
+        "narrative": narrative,
         "event_text": f"{name}: {said}.",
-        "nudges": [],
+        "nudges": nudges,
         "refused": None,
     }

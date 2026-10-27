@@ -4,13 +4,25 @@
   "note": "Generated from Natural Earth admin-1 by scripts/gen_territory.py, then corrected by the OVERRIDES table: Natural Earth files Crimea under Russia, and the four oblasts the front runs through are given regions of their own so a line of control can be drawn. Regenerating overwrites hand edits.",
   "countries": [
     "CHN",
+    "DEU",
+    "EGY",
+    "FRA",
+    "GBR",
     "IND",
+    "IRN",
+    "ISR",
+    "ITA",
+    "JPN",
     "KOR",
     "PAK",
+    "POL",
     "PRK",
     "RUS",
+    "SAU",
+    "TUR",
     "TWN",
-    "UKR"
+    "UKR",
+    "VNM"
   ],
   "nations": {
     "chn": {
@@ -71,6 +83,490 @@
           "admin1-10m:CHN-1151",
           "admin1-10m:CHN-1662",
           "admin1-10m:CHN-1756"
+        ]
+      }
+    },
+    "deu": {
+      "capital": "Berlin",
+      "regions": {
+        "Baden-Wurttemberg": [
+          "admin1-10m:DEU-1573",
+          "admin1-10m:DEU-1591"
+        ],
+        "Berlin": [
+          "admin1-10m:DEU-1599"
+        ],
+        "Brandenburg": [
+          "admin1-10m:DEU-3487",
+          "admin1-10m:DEU-3488"
+        ],
+        "Hamburg": [
+          "admin1-10m:DEU-1578",
+          "admin1-10m:DEU-1579"
+        ],
+        "Hessen": [
+          "admin1-10m:DEU-1572",
+          "admin1-10m:DEU-1574"
+        ],
+        "Niedersachsen": [
+          "admin1-10m:DEU-1575",
+          "admin1-10m:DEU-1576"
+        ],
+        "Saarland": [
+          "admin1-10m:DEU-1580",
+          "admin1-10m:DEU-1581"
+        ],
+        "Sachsen": [
+          "admin1-10m:DEU-1601"
+        ],
+        "Sachsen-Anhalt": [
+          "admin1-10m:DEU-1577",
+          "admin1-10m:DEU-1600"
+        ]
+      }
+    },
+    "egy": {
+      "capital": "Al Qahirah",
+      "regions": {
+        "Ad Daqahliyah": [
+          "admin1-10m:EGY-1537",
+          "admin1-10m:EGY-1539",
+          "admin1-10m:EGY-1547"
+        ],
+        "Al Bahr al Ahmar": [
+          "admin1-10m:EGY-1548",
+          "admin1-10m:EGY-1556",
+          "admin1-10m:EGY-5494"
+        ],
+        "Al Jizah": [
+          "admin1-10m:EGY-1540",
+          "admin1-10m:EGY-1543",
+          "admin1-10m:EGY-1544"
+        ],
+        "Al Minufiyah": [
+          "admin1-10m:EGY-1530",
+          "admin1-10m:EGY-1532",
+          "admin1-10m:EGY-1541"
+        ],
+        "Al Qahirah": [
+          "admin1-10m:EGY-1533"
+        ],
+        "Ash Sharqiyah": [
+          "admin1-10m:EGY-1531",
+          "admin1-10m:EGY-1534",
+          "admin1-10m:EGY-1535"
+        ],
+        "Asyut": [
+          "admin1-10m:EGY-1549",
+          "admin1-10m:EGY-1550",
+          "admin1-10m:EGY-1552"
+        ],
+        "Bani Suwayf": [
+          "admin1-10m:EGY-1542",
+          "admin1-10m:EGY-1545",
+          "admin1-10m:EGY-1546"
+        ],
+        "Bur Sa`id": [
+          "admin1-10m:EGY-1536",
+          "admin1-10m:EGY-1538",
+          "admin1-10m:EGY-1558"
+        ],
+        "Qina": [
+          "admin1-10m:EGY-1551",
+          "admin1-10m:EGY-1557"
+        ]
+      }
+    },
+    "fra": {
+      "capital": "Paris",
+      "regions": {
+        "Aisne": [
+          "admin1-10m:FRA-5263",
+          "admin1-10m:FRA-5268",
+          "admin1-10m:FRA-5270",
+          "admin1-10m:FRA-5317",
+          "admin1-10m:FRA-5323",
+          "admin1-10m:FRA-5330",
+          "admin1-10m:FRA-5331",
+          "admin1-10m:FRA-5334",
+          "admin1-10m:FRA-5342",
+          "admin1-10m:FRA-5345"
+        ],
+        "Allier": [
+          "admin1-10m:FRA-5264",
+          "admin1-10m:FRA-5279",
+          "admin1-10m:FRA-5280",
+          "admin1-10m:FRA-5282",
+          "admin1-10m:FRA-5315",
+          "admin1-10m:FRA-5329",
+          "admin1-10m:FRA-5335",
+          "admin1-10m:FRA-5338",
+          "admin1-10m:FRA-5339",
+          "admin1-10m:FRA-5356"
+        ],
+        "Alpes-de-Haute-Provence": [
+          "admin1-10m:FRA-5265",
+          "admin1-10m:FRA-5266",
+          "admin1-10m:FRA-5267",
+          "admin1-10m:FRA-5274",
+          "admin1-10m:FRA-5288",
+          "admin1-10m:FRA-5304",
+          "admin1-10m:FRA-5311",
+          "admin1-10m:FRA-5341",
+          "admin1-10m:FRA-5351",
+          "admin1-10m:FRA-5352"
+        ],
+        "Aveyron": [
+          "admin1-10m:FRA-5269",
+          "admin1-10m:FRA-5271",
+          "admin1-10m:FRA-5272",
+          "admin1-10m:FRA-5276",
+          "admin1-10m:FRA-5293",
+          "admin1-10m:FRA-5299",
+          "admin1-10m:FRA-5307",
+          "admin1-10m:FRA-5320",
+          "admin1-10m:FRA-5337",
+          "admin1-10m:FRA-5346"
+        ],
+        "Haute-Savoie": [
+          "admin1-10m:FRA-5262",
+          "admin1-10m:FRA-5281",
+          "admin1-10m:FRA-5297",
+          "admin1-10m:FRA-5302",
+          "admin1-10m:FRA-5312"
+        ],
+        "Ille-et-Vilaine": [
+          "admin1-10m:FRA-5275",
+          "admin1-10m:FRA-5283",
+          "admin1-10m:FRA-5292",
+          "admin1-10m:FRA-5308",
+          "admin1-10m:FRA-5316",
+          "admin1-10m:FRA-5321",
+          "admin1-10m:FRA-5322",
+          "admin1-10m:FRA-5324",
+          "admin1-10m:FRA-5327",
+          "admin1-10m:FRA-5353"
+        ],
+        "Lot-et-Garonne": [
+          "admin1-10m:FRA-5286",
+          "admin1-10m:FRA-5294",
+          "admin1-10m:FRA-5295",
+          "admin1-10m:FRA-5298",
+          "admin1-10m:FRA-5305",
+          "admin1-10m:FRA-5313",
+          "admin1-10m:FRA-5318",
+          "admin1-10m:FRA-5319",
+          "admin1-10m:FRA-5336",
+          "admin1-10m:FRA-5347"
+        ],
+        "Martinique": [
+          "admin1-10m:FRA-1442",
+          "admin1-10m:FRA-2000",
+          "admin1-10m:FRA-4603"
+        ],
+        "Mayotte": [
+          "admin1-10m:FRA-4601",
+          "admin1-10m:FRA-4602"
+        ],
+        "Paris": [
+          "admin1-10m:FRA-5333"
+        ],
+        "Vienne": [
+          "admin1-10m:FRA-5277",
+          "admin1-10m:FRA-5278",
+          "admin1-10m:FRA-5284",
+          "admin1-10m:FRA-5285",
+          "admin1-10m:FRA-5303",
+          "admin1-10m:FRA-5309",
+          "admin1-10m:FRA-5310",
+          "admin1-10m:FRA-5314",
+          "admin1-10m:FRA-5340",
+          "admin1-10m:FRA-5354"
+        ],
+        "Vosges": [
+          "admin1-10m:FRA-5273",
+          "admin1-10m:FRA-5287",
+          "admin1-10m:FRA-5296",
+          "admin1-10m:FRA-5300",
+          "admin1-10m:FRA-5301",
+          "admin1-10m:FRA-5325",
+          "admin1-10m:FRA-5326",
+          "admin1-10m:FRA-5328",
+          "admin1-10m:FRA-5348",
+          "admin1-10m:FRA-5355"
+        ],
+        "Yvelines": [
+          "admin1-10m:FRA-5289",
+          "admin1-10m:FRA-5290",
+          "admin1-10m:FRA-5291",
+          "admin1-10m:FRA-5306",
+          "admin1-10m:FRA-5332",
+          "admin1-10m:FRA-5343",
+          "admin1-10m:FRA-5344",
+          "admin1-10m:FRA-5349",
+          "admin1-10m:FRA-5350",
+          "admin1-10m:FRA-5357"
+        ]
+      }
+    },
+    "gbr": {
+      "capital": "Westminster",
+      "regions": {
+        "Bradford": [
+          "admin1-10m:GBR-2032",
+          "admin1-10m:GBR-2120",
+          "admin1-10m:GBR-2122",
+          "admin1-10m:GBR-2123",
+          "admin1-10m:GBR-2140",
+          "admin1-10m:GBR-2744",
+          "admin1-10m:GBR-2747",
+          "admin1-10m:GBR-5671",
+          "admin1-10m:GBR-5672",
+          "admin1-10m:GBR-5673",
+          "admin1-10m:GBR-5674",
+          "admin1-10m:GBR-5675",
+          "admin1-10m:GBR-5676",
+          "admin1-10m:GBR-5678",
+          "admin1-10m:GBR-5679",
+          "admin1-10m:GBR-5680",
+          "admin1-10m:GBR-5681",
+          "admin1-10m:GBR-5682",
+          "admin1-10m:GBR-5684",
+          "admin1-10m:GBR-5687",
+          "admin1-10m:GBR-5688"
+        ],
+        "Caerphilly": [
+          "admin1-10m:GBR-2043",
+          "admin1-10m:GBR-2044",
+          "admin1-10m:GBR-2045",
+          "admin1-10m:GBR-2046",
+          "admin1-10m:GBR-2047",
+          "admin1-10m:GBR-2104",
+          "admin1-10m:GBR-2106",
+          "admin1-10m:GBR-2111",
+          "admin1-10m:GBR-2112",
+          "admin1-10m:GBR-2113",
+          "admin1-10m:GBR-2114",
+          "admin1-10m:GBR-2115",
+          "admin1-10m:GBR-2116",
+          "admin1-10m:GBR-2117",
+          "admin1-10m:GBR-2118",
+          "admin1-10m:GBR-2119",
+          "admin1-10m:GBR-2131",
+          "admin1-10m:GBR-2132",
+          "admin1-10m:GBR-2133",
+          "admin1-10m:GBR-2134",
+          "admin1-10m:GBR-2775"
+        ],
+        "Cambridgeshire": [
+          "admin1-10m:GBR-2053",
+          "admin1-10m:GBR-2055",
+          "admin1-10m:GBR-2056",
+          "admin1-10m:GBR-2057",
+          "admin1-10m:GBR-2060",
+          "admin1-10m:GBR-2061",
+          "admin1-10m:GBR-2063",
+          "admin1-10m:GBR-2081",
+          "admin1-10m:GBR-2124",
+          "admin1-10m:GBR-2317",
+          "admin1-10m:GBR-2318",
+          "admin1-10m:GBR-2319",
+          "admin1-10m:GBR-2674",
+          "admin1-10m:GBR-2675",
+          "admin1-10m:GBR-2676",
+          "admin1-10m:GBR-2677",
+          "admin1-10m:GBR-2678",
+          "admin1-10m:GBR-2679",
+          "admin1-10m:GBR-2760",
+          "admin1-10m:GBR-2762",
+          "admin1-10m:GBR-3409"
+        ],
+        "Conwy": [
+          "admin1-10m:GBR-2096",
+          "admin1-10m:GBR-2098",
+          "admin1-10m:GBR-2099",
+          "admin1-10m:GBR-2103",
+          "admin1-10m:GBR-2105",
+          "admin1-10m:GBR-2108",
+          "admin1-10m:GBR-2125",
+          "admin1-10m:GBR-2126",
+          "admin1-10m:GBR-2127",
+          "admin1-10m:GBR-2128",
+          "admin1-10m:GBR-2129",
+          "admin1-10m:GBR-2130",
+          "admin1-10m:GBR-2137",
+          "admin1-10m:GBR-5666",
+          "admin1-10m:GBR-5667",
+          "admin1-10m:GBR-5668",
+          "admin1-10m:GBR-5669",
+          "admin1-10m:GBR-5670",
+          "admin1-10m:GBR-5677",
+          "admin1-10m:GBR-5707",
+          "admin1-10m:GBR-5708"
+        ],
+        "Enfield": [
+          "admin1-10m:GBR-2038",
+          "admin1-10m:GBR-2040",
+          "admin1-10m:GBR-2042",
+          "admin1-10m:GBR-2065",
+          "admin1-10m:GBR-2067",
+          "admin1-10m:GBR-2068",
+          "admin1-10m:GBR-2071",
+          "admin1-10m:GBR-2074",
+          "admin1-10m:GBR-2077",
+          "admin1-10m:GBR-2078",
+          "admin1-10m:GBR-2749",
+          "admin1-10m:GBR-2752",
+          "admin1-10m:GBR-2765",
+          "admin1-10m:GBR-2766",
+          "admin1-10m:GBR-2768",
+          "admin1-10m:GBR-2769",
+          "admin1-10m:GBR-2770",
+          "admin1-10m:GBR-2771",
+          "admin1-10m:GBR-4809",
+          "admin1-10m:GBR-5697",
+          "admin1-10m:GBR-5698"
+        ],
+        "Hounslow": [
+          "admin1-10m:GBR-2062",
+          "admin1-10m:GBR-2064",
+          "admin1-10m:GBR-2066",
+          "admin1-10m:GBR-2069",
+          "admin1-10m:GBR-2070",
+          "admin1-10m:GBR-2072",
+          "admin1-10m:GBR-2073",
+          "admin1-10m:GBR-2075",
+          "admin1-10m:GBR-2076",
+          "admin1-10m:GBR-2079",
+          "admin1-10m:GBR-2748",
+          "admin1-10m:GBR-2753",
+          "admin1-10m:GBR-2754",
+          "admin1-10m:GBR-2755",
+          "admin1-10m:GBR-2759",
+          "admin1-10m:GBR-2767",
+          "admin1-10m:GBR-5701",
+          "admin1-10m:GBR-5702",
+          "admin1-10m:GBR-5703",
+          "admin1-10m:GBR-5704",
+          "admin1-10m:GBR-5705"
+        ],
+        "Mid Ulster": [
+          "admin1-10m:GBR-2082",
+          "admin1-10m:GBR-2083",
+          "admin1-10m:GBR-2084",
+          "admin1-10m:GBR-2085",
+          "admin1-10m:GBR-2086",
+          "admin1-10m:GBR-2087",
+          "admin1-10m:GBR-2088",
+          "admin1-10m:GBR-2089",
+          "admin1-10m:GBR-2090",
+          "admin1-10m:GBR-2091",
+          "admin1-10m:GBR-2092",
+          "admin1-10m:GBR-2093",
+          "admin1-10m:GBR-2094",
+          "admin1-10m:GBR-2095",
+          "admin1-10m:GBR-2097",
+          "admin1-10m:GBR-2100",
+          "admin1-10m:GBR-2101",
+          "admin1-10m:GBR-2102",
+          "admin1-10m:GBR-2135",
+          "admin1-10m:GBR-2136",
+          "admin1-10m:GBR-2773"
+        ],
+        "Northumberland": [
+          "admin1-10m:GBR-2012",
+          "admin1-10m:GBR-2013",
+          "admin1-10m:GBR-2014",
+          "admin1-10m:GBR-2019",
+          "admin1-10m:GBR-2020",
+          "admin1-10m:GBR-2021",
+          "admin1-10m:GBR-2022",
+          "admin1-10m:GBR-2024",
+          "admin1-10m:GBR-2026",
+          "admin1-10m:GBR-2028",
+          "admin1-10m:GBR-2029",
+          "admin1-10m:GBR-2030",
+          "admin1-10m:GBR-2031",
+          "admin1-10m:GBR-2033",
+          "admin1-10m:GBR-2034",
+          "admin1-10m:GBR-2139",
+          "admin1-10m:GBR-5661",
+          "admin1-10m:GBR-5662",
+          "admin1-10m:GBR-5663",
+          "admin1-10m:GBR-5664",
+          "admin1-10m:GBR-5665"
+        ],
+        "Staffordshire": [
+          "admin1-10m:GBR-2054",
+          "admin1-10m:GBR-2058",
+          "admin1-10m:GBR-2059",
+          "admin1-10m:GBR-2121",
+          "admin1-10m:GBR-2761",
+          "admin1-10m:GBR-2763",
+          "admin1-10m:GBR-2764",
+          "admin1-10m:GBR-2774",
+          "admin1-10m:GBR-2777",
+          "admin1-10m:GBR-2778",
+          "admin1-10m:GBR-2779",
+          "admin1-10m:GBR-5683",
+          "admin1-10m:GBR-5685",
+          "admin1-10m:GBR-5686",
+          "admin1-10m:GBR-5689",
+          "admin1-10m:GBR-5690",
+          "admin1-10m:GBR-5691",
+          "admin1-10m:GBR-5693",
+          "admin1-10m:GBR-5694",
+          "admin1-10m:GBR-5696",
+          "admin1-10m:GBR-5706"
+        ],
+        "West Dunbartonshire": [
+          "admin1-10m:GBR-2001",
+          "admin1-10m:GBR-2002",
+          "admin1-10m:GBR-2003",
+          "admin1-10m:GBR-2004",
+          "admin1-10m:GBR-2005",
+          "admin1-10m:GBR-2006",
+          "admin1-10m:GBR-2007",
+          "admin1-10m:GBR-2008",
+          "admin1-10m:GBR-2009",
+          "admin1-10m:GBR-2010",
+          "admin1-10m:GBR-2011",
+          "admin1-10m:GBR-2015",
+          "admin1-10m:GBR-2016",
+          "admin1-10m:GBR-2017",
+          "admin1-10m:GBR-2018",
+          "admin1-10m:GBR-2023",
+          "admin1-10m:GBR-2025",
+          "admin1-10m:GBR-2138",
+          "admin1-10m:GBR-2745",
+          "admin1-10m:GBR-2746",
+          "admin1-10m:GBR-2772"
+        ],
+        "Westminster": [
+          "admin1-10m:GBR-2080"
+        ],
+        "Wiltshire": [
+          "admin1-10m:GBR-2035",
+          "admin1-10m:GBR-2036",
+          "admin1-10m:GBR-2039",
+          "admin1-10m:GBR-2048",
+          "admin1-10m:GBR-2050",
+          "admin1-10m:GBR-2051",
+          "admin1-10m:GBR-2052",
+          "admin1-10m:GBR-2110",
+          "admin1-10m:GBR-2141",
+          "admin1-10m:GBR-2142",
+          "admin1-10m:GBR-2750",
+          "admin1-10m:GBR-2751",
+          "admin1-10m:GBR-2756",
+          "admin1-10m:GBR-2757",
+          "admin1-10m:GBR-2758",
+          "admin1-10m:GBR-2776",
+          "admin1-10m:GBR-5692",
+          "admin1-10m:GBR-5695",
+          "admin1-10m:GBR-5699",
+          "admin1-10m:GBR-5700",
+          "admin1-10m:GBR-5988"
         ]
       }
     },
@@ -135,6 +631,300 @@
         ]
       }
     },
+    "irn": {
+      "capital": "Tehran",
+      "regions": {
+        "Alborz": [
+          "admin1-10m:IRN-3214",
+          "admin1-10m:IRN-3232",
+          "admin1-10m:IRN-5490"
+        ],
+        "Chahar Mahall and Bakhtiari": [
+          "admin1-10m:IRN-3209",
+          "admin1-10m:IRN-3218",
+          "admin1-10m:IRN-3219"
+        ],
+        "Fars": [
+          "admin1-10m:IRN-3210",
+          "admin1-10m:IRN-3211",
+          "admin1-10m:IRN-3212"
+        ],
+        "Golestan": [
+          "admin1-10m:IRN-3213",
+          "admin1-10m:IRN-3215",
+          "admin1-10m:IRN-3246"
+        ],
+        "Hormozgan": [
+          "admin1-10m:IRN-3228",
+          "admin1-10m:IRN-3245",
+          "admin1-10m:IRN-3247"
+        ],
+        "Ilam": [
+          "admin1-10m:IRN-3220",
+          "admin1-10m:IRN-3221",
+          "admin1-10m:IRN-3239"
+        ],
+        "Kerman": [
+          "admin1-10m:IRN-3217",
+          "admin1-10m:IRN-3244",
+          "admin1-10m:IRN-3248"
+        ],
+        "Markazi": [
+          "admin1-10m:IRN-3231",
+          "admin1-10m:IRN-3233",
+          "admin1-10m:IRN-3235"
+        ],
+        "Tehran": [
+          "admin1-10m:IRN-3216"
+        ],
+        "West Azarbaijan": [
+          "admin1-10m:IRN-3237",
+          "admin1-10m:IRN-3238",
+          "admin1-10m:IRN-3241"
+        ],
+        "Zanjan": [
+          "admin1-10m:IRN-3230",
+          "admin1-10m:IRN-3234",
+          "admin1-10m:IRN-3240"
+        ]
+      }
+    },
+    "isr": {
+      "capital": "Jerusalem",
+      "regions": {
+        "HaDarom": [
+          "admin1-10m:ISR-3053"
+        ],
+        "HaMerkaz": [
+          "admin1-10m:ISR-3055"
+        ],
+        "HaZafon": [
+          "admin1-10m:ISR-3056"
+        ],
+        "Haifa": [
+          "admin1-10m:ISR-3054"
+        ],
+        "Jerusalem": [
+          "admin1-10m:ISR-3058"
+        ],
+        "Tel Aviv": [
+          "admin1-10m:ISR-3057"
+        ]
+      }
+    },
+    "ita": {
+      "capital": "Roma",
+      "regions": {
+        "Benevento": [
+          "admin1-10m:ITA-5390",
+          "admin1-10m:ITA-5396",
+          "admin1-10m:ITA-5397",
+          "admin1-10m:ITA-5398",
+          "admin1-10m:ITA-5399",
+          "admin1-10m:ITA-5400",
+          "admin1-10m:ITA-5401",
+          "admin1-10m:ITA-5404",
+          "admin1-10m:ITA-5405",
+          "admin1-10m:ITA-5426"
+        ],
+        "Biella": [
+          "admin1-10m:ITA-5434",
+          "admin1-10m:ITA-5435",
+          "admin1-10m:ITA-5436",
+          "admin1-10m:ITA-5437",
+          "admin1-10m:ITA-5438",
+          "admin1-10m:ITA-5439",
+          "admin1-10m:ITA-5440",
+          "admin1-10m:ITA-5442",
+          "admin1-10m:ITA-5450",
+          "admin1-10m:ITA-5451"
+        ],
+        "Brescia": [
+          "admin1-10m:ITA-5359",
+          "admin1-10m:ITA-5443",
+          "admin1-10m:ITA-5444",
+          "admin1-10m:ITA-5445",
+          "admin1-10m:ITA-5446",
+          "admin1-10m:ITA-5447",
+          "admin1-10m:ITA-5452",
+          "admin1-10m:ITA-5453",
+          "admin1-10m:ITA-5460",
+          "admin1-10m:ITA-5464"
+        ],
+        "Cosenza": [
+          "admin1-10m:ITA-5389",
+          "admin1-10m:ITA-5391",
+          "admin1-10m:ITA-5392",
+          "admin1-10m:ITA-5393",
+          "admin1-10m:ITA-5394",
+          "admin1-10m:ITA-5403",
+          "admin1-10m:ITA-5406",
+          "admin1-10m:ITA-5407",
+          "admin1-10m:ITA-5408"
+        ],
+        "Enna": [
+          "admin1-10m:ITA-5395",
+          "admin1-10m:ITA-5409",
+          "admin1-10m:ITA-5410",
+          "admin1-10m:ITA-5411",
+          "admin1-10m:ITA-5412",
+          "admin1-10m:ITA-5413",
+          "admin1-10m:ITA-5414",
+          "admin1-10m:ITA-5415",
+          "admin1-10m:ITA-5416",
+          "admin1-10m:ITA-5417"
+        ],
+        "Genova": [
+          "admin1-10m:ITA-5360",
+          "admin1-10m:ITA-5361",
+          "admin1-10m:ITA-5367",
+          "admin1-10m:ITA-5368",
+          "admin1-10m:ITA-5369",
+          "admin1-10m:ITA-5370",
+          "admin1-10m:ITA-5441",
+          "admin1-10m:ITA-5448",
+          "admin1-10m:ITA-5449",
+          "admin1-10m:ITA-5454"
+        ],
+        "Macerata": [
+          "admin1-10m:ITA-5419",
+          "admin1-10m:ITA-5423",
+          "admin1-10m:ITA-5424",
+          "admin1-10m:ITA-5427",
+          "admin1-10m:ITA-5428",
+          "admin1-10m:ITA-5429",
+          "admin1-10m:ITA-5430",
+          "admin1-10m:ITA-5431",
+          "admin1-10m:ITA-5432",
+          "admin1-10m:ITA-5433"
+        ],
+        "Nuoro": [
+          "admin1-10m:ITA-5371",
+          "admin1-10m:ITA-5372",
+          "admin1-10m:ITA-5373",
+          "admin1-10m:ITA-5374",
+          "admin1-10m:ITA-5375",
+          "admin1-10m:ITA-5376",
+          "admin1-10m:ITA-5377",
+          "admin1-10m:ITA-5378",
+          "admin1-10m:ITA-5379",
+          "admin1-10m:ITA-5380"
+        ],
+        "Prato": [
+          "admin1-10m:ITA-5358",
+          "admin1-10m:ITA-5362",
+          "admin1-10m:ITA-5381",
+          "admin1-10m:ITA-5382",
+          "admin1-10m:ITA-5383",
+          "admin1-10m:ITA-5384",
+          "admin1-10m:ITA-5385",
+          "admin1-10m:ITA-5386",
+          "admin1-10m:ITA-5387",
+          "admin1-10m:ITA-5388"
+        ],
+        "Rimini": [
+          "admin1-10m:ITA-5364",
+          "admin1-10m:ITA-5365",
+          "admin1-10m:ITA-5366",
+          "admin1-10m:ITA-5402",
+          "admin1-10m:ITA-5418",
+          "admin1-10m:ITA-5420",
+          "admin1-10m:ITA-5421",
+          "admin1-10m:ITA-5425",
+          "admin1-10m:ITA-5457",
+          "admin1-10m:ITA-5458"
+        ],
+        "Roma": [
+          "admin1-10m:ITA-5422"
+        ],
+        "Treviso": [
+          "admin1-10m:ITA-5363",
+          "admin1-10m:ITA-5455",
+          "admin1-10m:ITA-5456",
+          "admin1-10m:ITA-5459",
+          "admin1-10m:ITA-5461",
+          "admin1-10m:ITA-5462",
+          "admin1-10m:ITA-5463",
+          "admin1-10m:ITA-5465",
+          "admin1-10m:ITA-5466",
+          "admin1-10m:ITA-5467"
+        ]
+      }
+    },
+    "jpn": {
+      "capital": "Tokyo",
+      "regions": {
+        "Fukushima": [
+          "admin1-10m:JPN-1856",
+          "admin1-10m:JPN-1859",
+          "admin1-10m:JPN-1864",
+          "admin1-10m:JPN-1867",
+          "admin1-10m:JPN-1868"
+        ],
+        "Gifu": [
+          "admin1-10m:JPN-1840",
+          "admin1-10m:JPN-1841",
+          "admin1-10m:JPN-1842",
+          "admin1-10m:JPN-1844",
+          "admin1-10m:JPN-1846"
+        ],
+        "Hokkaido": [
+          "admin1-10m:JPN-1847"
+        ],
+        "Kagoshima": [
+          "admin1-10m:JPN-1827",
+          "admin1-10m:JPN-1830",
+          "admin1-10m:JPN-3500",
+          "admin1-10m:JPN-3501",
+          "admin1-10m:JPN-3502"
+        ],
+        "Miyagi": [
+          "admin1-10m:JPN-1855",
+          "admin1-10m:JPN-1862",
+          "admin1-10m:JPN-1863",
+          "admin1-10m:JPN-1865",
+          "admin1-10m:JPN-1866"
+        ],
+        "Oita": [
+          "admin1-10m:JPN-1826",
+          "admin1-10m:JPN-1829",
+          "admin1-10m:JPN-1831",
+          "admin1-10m:JPN-1832",
+          "admin1-10m:JPN-1835"
+        ],
+        "Okayama": [
+          "admin1-10m:JPN-1821",
+          "admin1-10m:JPN-1822",
+          "admin1-10m:JPN-1824",
+          "admin1-10m:JPN-1825",
+          "admin1-10m:JPN-1833"
+        ],
+        "Shiga": [
+          "admin1-10m:JPN-1843",
+          "admin1-10m:JPN-1848",
+          "admin1-10m:JPN-1850",
+          "admin1-10m:JPN-1851",
+          "admin1-10m:JPN-1853"
+        ],
+        "Tokushima": [
+          "admin1-10m:JPN-1834",
+          "admin1-10m:JPN-1836",
+          "admin1-10m:JPN-1849",
+          "admin1-10m:JPN-1852",
+          "admin1-10m:JPN-1854"
+        ],
+        "Tokyo": [
+          "admin1-10m:JPN-1860"
+        ],
+        "Yamanashi": [
+          "admin1-10m:JPN-1845",
+          "admin1-10m:JPN-1857",
+          "admin1-10m:JPN-1858",
+          "admin1-10m:JPN-1861",
+          "admin1-10m:JPN-3503"
+        ]
+      }
+    },
     "kor": {
       "capital": "Seoul",
       "regions": {
@@ -175,54 +965,6 @@
         ]
       }
     },
-    "twn": {
-      "capital": "Taipei City",
-      "regions": {
-        "Chiayi": [
-          "admin1-10m:TWN-1160",
-          "admin1-10m:TWN-1170"
-        ],
-        "Chiayi City": [
-          "admin1-10m:TWN-1171",
-          "admin1-10m:TWN-1176"
-        ],
-        "Hsinchu City": [
-          "admin1-10m:TWN-1161",
-          "admin1-10m:TWN-1165"
-        ],
-        "Kaohsiung City": [
-          "admin1-10m:TWN-1156",
-          "admin1-10m:TWN-1158"
-        ],
-        "Keelung City": [
-          "admin1-10m:TWN-1164",
-          "admin1-10m:TWN-1167"
-        ],
-        "Kinmen": [
-          "admin1-10m:TWN-3414",
-          "admin1-10m:TWN-3415"
-        ],
-        "Nantou": [
-          "admin1-10m:TWN-1172",
-          "admin1-10m:TWN-1173"
-        ],
-        "Taichung City": [
-          "admin1-10m:TWN-1169",
-          "admin1-10m:TWN-1174"
-        ],
-        "Taipei City": [
-          "admin1-10m:TWN-1166"
-        ],
-        "Taitung": [
-          "admin1-10m:TWN-1163",
-          "admin1-10m:TWN-1177"
-        ],
-        "Taoyuan": [
-          "admin1-10m:TWN-1162",
-          "admin1-10m:TWN-1168"
-        ]
-      }
-    },
     "pak": {
       "capital": "F.C.T.",
       "regions": {
@@ -249,6 +991,45 @@
         ],
         "Sind": [
           "admin1-10m:PAK-1114"
+        ]
+      }
+    },
+    "pol": {
+      "capital": "Masovian",
+      "regions": {
+        "Greater Poland": [
+          "admin1-10m:POL-3144",
+          "admin1-10m:POL-3145"
+        ],
+        "Lublin": [
+          "admin1-10m:POL-3151",
+          "admin1-10m:POL-3152"
+        ],
+        "Lubusz": [
+          "admin1-10m:POL-3142",
+          "admin1-10m:POL-3143"
+        ],
+        "Masovian": [
+          "admin1-10m:POL-3148"
+        ],
+        "Opole": [
+          "admin1-10m:POL-3141",
+          "admin1-10m:POL-3167"
+        ],
+        "Podlachian": [
+          "admin1-10m:POL-3150"
+        ],
+        "Pomeranian": [
+          "admin1-10m:POL-3139",
+          "admin1-10m:POL-3140"
+        ],
+        "Silesian": [
+          "admin1-10m:POL-3146",
+          "admin1-10m:POL-3170"
+        ],
+        "Swietokrzyskie": [
+          "admin1-10m:POL-3147",
+          "admin1-10m:POL-3149"
         ]
       }
     },
@@ -403,6 +1184,194 @@
         ]
       }
     },
+    "sau": {
+      "capital": "Ar Riyad",
+      "regions": {
+        "Al Bahah": [
+          "admin1-10m:SAU-885",
+          "admin1-10m:SAU-888"
+        ],
+        "Al Hudud ash Shamaliyah": [
+          "admin1-10m:SAU-846",
+          "admin1-10m:SAU-861"
+        ],
+        "Al Jawf": [
+          "admin1-10m:SAU-848",
+          "admin1-10m:SAU-862"
+        ],
+        "Al Madinah": [
+          "admin1-10m:SAU-845",
+          "admin1-10m:SAU-847"
+        ],
+        "Ar Riyad": [
+          "admin1-10m:SAU-1097"
+        ],
+        "Ash Sharqiyah": [
+          "admin1-10m:SAU-1096",
+          "admin1-10m:SAU-1098"
+        ],
+        "Jizan": [
+          "admin1-10m:SAU-886",
+          "admin1-10m:SAU-887"
+        ]
+      }
+    },
+    "tur": {
+      "capital": "Ankara",
+      "regions": {
+        "Ankara": [
+          "admin1-10m:TUR-3008"
+        ],
+        "Bitlis": [
+          "admin1-10m:TUR-2307",
+          "admin1-10m:TUR-2311",
+          "admin1-10m:TUR-3042",
+          "admin1-10m:TUR-3043",
+          "admin1-10m:TUR-3044",
+          "admin1-10m:TUR-3047",
+          "admin1-10m:TUR-3048",
+          "admin1-10m:TUR-4840"
+        ],
+        "Corum": [
+          "admin1-10m:TUR-2270",
+          "admin1-10m:TUR-2286",
+          "admin1-10m:TUR-2291",
+          "admin1-10m:TUR-2294",
+          "admin1-10m:TUR-3009",
+          "admin1-10m:TUR-3019",
+          "admin1-10m:TUR-3026",
+          "admin1-10m:TUR-5521"
+        ],
+        "Denizli": [
+          "admin1-10m:TUR-2229",
+          "admin1-10m:TUR-2230",
+          "admin1-10m:TUR-2273",
+          "admin1-10m:TUR-2274",
+          "admin1-10m:TUR-2276",
+          "admin1-10m:TUR-2277",
+          "admin1-10m:TUR-2278",
+          "admin1-10m:TUR-3014"
+        ],
+        "Duzce": [
+          "admin1-10m:TUR-2263",
+          "admin1-10m:TUR-2266",
+          "admin1-10m:TUR-2267",
+          "admin1-10m:TUR-2268",
+          "admin1-10m:TUR-2269",
+          "admin1-10m:TUR-3010",
+          "admin1-10m:TUR-5519",
+          "admin1-10m:TUR-5520"
+        ],
+        "Elazig": [
+          "admin1-10m:TUR-2281",
+          "admin1-10m:TUR-2282",
+          "admin1-10m:TUR-2300",
+          "admin1-10m:TUR-2308",
+          "admin1-10m:TUR-2309",
+          "admin1-10m:TUR-3017",
+          "admin1-10m:TUR-3041",
+          "admin1-10m:TUR-3045"
+        ],
+        "Erzurum": [
+          "admin1-10m:TUR-2298",
+          "admin1-10m:TUR-2299",
+          "admin1-10m:TUR-2301",
+          "admin1-10m:TUR-2302",
+          "admin1-10m:TUR-2310",
+          "admin1-10m:TUR-3032",
+          "admin1-10m:TUR-3040",
+          "admin1-10m:TUR-4839"
+        ],
+        "Konya": [
+          "admin1-10m:TUR-2271",
+          "admin1-10m:TUR-2272",
+          "admin1-10m:TUR-2275",
+          "admin1-10m:TUR-2285",
+          "admin1-10m:TUR-3011",
+          "admin1-10m:TUR-3012",
+          "admin1-10m:TUR-3020",
+          "admin1-10m:TUR-3021"
+        ],
+        "Ordu": [
+          "admin1-10m:TUR-2284",
+          "admin1-10m:TUR-2290",
+          "admin1-10m:TUR-2292",
+          "admin1-10m:TUR-2293",
+          "admin1-10m:TUR-2295",
+          "admin1-10m:TUR-2296",
+          "admin1-10m:TUR-2297",
+          "admin1-10m:TUR-3031"
+        ],
+        "Osmaniye": [
+          "admin1-10m:TUR-2283",
+          "admin1-10m:TUR-2287",
+          "admin1-10m:TUR-2288",
+          "admin1-10m:TUR-2289",
+          "admin1-10m:TUR-3016",
+          "admin1-10m:TUR-3018",
+          "admin1-10m:TUR-4841",
+          "admin1-10m:TUR-4842"
+        ],
+        "Tekirdag": [
+          "admin1-10m:TUR-2238",
+          "admin1-10m:TUR-2239",
+          "admin1-10m:TUR-2240",
+          "admin1-10m:TUR-2241",
+          "admin1-10m:TUR-2242",
+          "admin1-10m:TUR-2264",
+          "admin1-10m:TUR-2265",
+          "admin1-10m:TUR-5518"
+        ]
+      }
+    },
+    "twn": {
+      "capital": "Taipei City",
+      "regions": {
+        "Chiayi": [
+          "admin1-10m:TWN-1160",
+          "admin1-10m:TWN-1170"
+        ],
+        "Chiayi City": [
+          "admin1-10m:TWN-1171",
+          "admin1-10m:TWN-1176"
+        ],
+        "Hsinchu City": [
+          "admin1-10m:TWN-1161",
+          "admin1-10m:TWN-1165"
+        ],
+        "Kaohsiung City": [
+          "admin1-10m:TWN-1156",
+          "admin1-10m:TWN-1158"
+        ],
+        "Keelung City": [
+          "admin1-10m:TWN-1164",
+          "admin1-10m:TWN-1167"
+        ],
+        "Kinmen": [
+          "admin1-10m:TWN-3414",
+          "admin1-10m:TWN-3415"
+        ],
+        "Nantou": [
+          "admin1-10m:TWN-1172",
+          "admin1-10m:TWN-1173"
+        ],
+        "Taichung City": [
+          "admin1-10m:TWN-1169",
+          "admin1-10m:TWN-1174"
+        ],
+        "Taipei City": [
+          "admin1-10m:TWN-1166"
+        ],
+        "Taitung": [
+          "admin1-10m:TWN-1163",
+          "admin1-10m:TWN-1177"
+        ],
+        "Taoyuan": [
+          "admin1-10m:TWN-1162",
+          "admin1-10m:TWN-1168"
+        ]
+      }
+    },
     "ukr": {
       "capital": "Kiev City",
       "regions": {
@@ -456,6 +1425,98 @@
         ],
         "Zaporizhzhya": [
           "admin1-10m:UKR-331"
+        ]
+      }
+    },
+    "vnm": {
+      "capital": "Ha Noi",
+      "regions": {
+        "Binh Duong": [
+          "admin1-10m:VNM-444",
+          "admin1-10m:VNM-483",
+          "admin1-10m:VNM-484",
+          "admin1-10m:VNM-495",
+          "admin1-10m:VNM-497",
+          "admin1-10m:VNM-501"
+        ],
+        "Ha Noi": [
+          "admin1-10m:VNM-462"
+        ],
+        "Hai Duong": [
+          "admin1-10m:VNM-460",
+          "admin1-10m:VNM-4600",
+          "admin1-10m:VNM-461",
+          "admin1-10m:VNM-463",
+          "admin1-10m:VNM-470",
+          "admin1-10m:VNM-471"
+        ],
+        "Hau Giang": [
+          "admin1-10m:VNM-499",
+          "admin1-10m:VNM-502",
+          "admin1-10m:VNM-505",
+          "admin1-10m:VNM-506",
+          "admin1-10m:VNM-507",
+          "admin1-10m:VNM-508"
+        ],
+        "Khanh Hoa": [
+          "admin1-10m:VNM-479",
+          "admin1-10m:VNM-482"
+        ],
+        "Lam Đong": [
+          "admin1-10m:VNM-477",
+          "admin1-10m:VNM-480",
+          "admin1-10m:VNM-481",
+          "admin1-10m:VNM-4835",
+          "admin1-10m:VNM-496",
+          "admin1-10m:VNM-509"
+        ],
+        "Lao Cai": [
+          "admin1-10m:VNM-450",
+          "admin1-10m:VNM-453",
+          "admin1-10m:VNM-455",
+          "admin1-10m:VNM-457",
+          "admin1-10m:VNM-458",
+          "admin1-10m:VNM-5483"
+        ],
+        "Ninh Binh": [
+          "admin1-10m:VNM-456",
+          "admin1-10m:VNM-459",
+          "admin1-10m:VNM-466",
+          "admin1-10m:VNM-467",
+          "admin1-10m:VNM-468",
+          "admin1-10m:VNM-475"
+        ],
+        "Quang Ngai": [
+          "admin1-10m:VNM-429",
+          "admin1-10m:VNM-454",
+          "admin1-10m:VNM-478",
+          "admin1-10m:VNM-485",
+          "admin1-10m:VNM-486",
+          "admin1-10m:VNM-488"
+        ],
+        "Quang Tri": [
+          "admin1-10m:VNM-474",
+          "admin1-10m:VNM-476",
+          "admin1-10m:VNM-487",
+          "admin1-10m:VNM-489",
+          "admin1-10m:VNM-490",
+          "admin1-10m:VNM-491"
+        ],
+        "Tien Giang": [
+          "admin1-10m:VNM-4834",
+          "admin1-10m:VNM-498",
+          "admin1-10m:VNM-500",
+          "admin1-10m:VNM-503",
+          "admin1-10m:VNM-504",
+          "admin1-10m:VNM-510"
+        ],
+        "Đong Bac": [
+          "admin1-10m:VNM-451",
+          "admin1-10m:VNM-452",
+          "admin1-10m:VNM-464",
+          "admin1-10m:VNM-469",
+          "admin1-10m:VNM-511",
+          "admin1-10m:VNM-512"
         ]
       }
     }

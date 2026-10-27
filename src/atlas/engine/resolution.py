@@ -2071,6 +2071,13 @@ def _resolve_one(
     pressure_after = max(
         0.0, min(CAPTURE_THRESHOLD, (existing or 0.0) + outcome.advance)
     )
+    # **Ground does not fall on a day its defenders won.** The advance is deliberately
+    # continuous in the margin (see `BASELINE_ADVANCE`), so a narrow defensive win still
+    # lets the attacker creep forward -- but a region changing hands in the same breath as
+    # "Iran prevailed" read as the dice cheating. The campaign can reach the brink; the last
+    # step takes a day the attacker actually wins.
+    if not outcome.attacker_wins:
+        pressure_after = min(pressure_after, max(existing or 0.0, _HELD_AT))
     captured = pressure_after >= CAPTURE_THRESHOLD and held != attacker
 
     names = _names(conn, (attacker, defender))
@@ -2083,8 +2090,11 @@ def _resolve_one(
         origin=EventOrigin.ENGINE,
         text=(
             f"{names[attacker]} attacked {names[defender]} in {region['name']}. "
-            f"{names[attacker] if outcome.attacker_wins else names[defender]} prevailed "
-            f"{'decisively' if outcome.decisive else 'narrowly'}. "
+            + _day_sentence(
+                attacker=names[attacker], defender=names[defender],
+                attacker_wins=outcome.attacker_wins, decisive=outcome.decisive,
+                gained=pressure_after > (existing or 0.0),
+            )
             + _progress_sentence(
                 attacker=names[attacker],
                 region_name=str(region["name"]),
@@ -2341,6 +2351,29 @@ def _resolve_one(
             f"refused ({applied.reason})"
         )
     _merge(report, staged)
+
+
+#: How close a campaign can come to taking a region on a day the defenders won. Short of
+#: the threshold, so the next day the attacker wins carries it.
+_HELD_AT = CAPTURE_THRESHOLD * 0.95
+
+
+def _day_sentence(
+    *, attacker: str, defender: str, attacker_wins: bool, decisive: bool, gained: bool
+) -> str:
+    """Who had the better of the day, without contradicting the progress sentence after it.
+
+    A narrow defensive win still lets the attacker inch forward (the advance is continuous
+    in the margin), and "Iran prevailed narrowly. Turkey is 75% of the way (+40%)" read as
+    a contradiction. Saying "held, but gave ground" is the same two facts in an order a
+    reader can follow.
+    """
+    how = "decisively" if decisive else "narrowly"
+    if attacker_wins:
+        return f"{attacker} prevailed {how}. "
+    if gained:
+        return f"{defender} prevailed {how}, but gave ground. "
+    return f"{defender} prevailed {how} and held the line. "
 
 
 def _progress_sentence(
