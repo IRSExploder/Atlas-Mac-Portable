@@ -32,6 +32,8 @@ from ..humanize import regard, regard_word, signed
 from .grounding import NEUTRAL_PROMPT, example_order
 from .plain import technical
 from .preferences import key_for
+from .rail_left import _TabStrip
+from .research_panel import ResearchBlock
 from .theme import TYPE, Theme
 from .widgets import (
     Chip,
@@ -63,6 +65,9 @@ class RightRail(Rail):
     close_chat = Signal()
     orders_submitted = Signal(str)
     jump_requested = Signal(int)
+    #: An order chosen on a panel here (a research programme): the window writes it into
+    #: the orders box, as it does a province panel's.
+    order_written = Signal(str)
 
     def __init__(self, theme: Theme, parent: QWidget | None = None) -> None:
         super().__init__("Your turn", width=scaled(404), opens_right=True, theme=theme,
@@ -96,7 +101,17 @@ class RightRail(Rail):
         self._diplomacy.open_advisor.connect(self.open_advisor.emit)
         self._diplomacy.send_message.connect(self.send_message.emit)
         self._diplomacy.close_chat.connect(self.close_chat.emit)
-        layout.addWidget(self._diplomacy, 1)
+        # **Research gets a tab of its own beside the talking.** It used to be reachable
+        # only by typing a programme's name, which nothing on the screen ever told you.
+        self._research = ResearchBlock(theme, orders_text=self.orders_text)
+        self._research.start.connect(self.order_written.emit)
+        self._lower_tabs = _TabStrip(("Diplomacy", "Research"), theme=theme)
+        self._lower = QStackedWidget()
+        self._lower.addWidget(self._diplomacy)
+        self._lower.addWidget(self._research)
+        self._lower_tabs.changed.connect(self._show_lower)
+        layout.addWidget(self._lower_tabs)
+        layout.addWidget(self._lower, 1)
 
         self.apply_theme(theme)
 
@@ -113,6 +128,16 @@ class RightRail(Rail):
         if self._conn is None:
             return
         self._diplomacy.load(self._conn, self._world_id, self._player, self._theme)
+        self._research.load(self._conn, self._world_id, self._player, self._theme)
+
+    def show_research(self) -> None:
+        self._lower_tabs.select(1)
+
+    def _show_lower(self, index: int) -> None:
+        self._lower.setCurrentIndex(index)
+        if index == 1:
+            # The orders box may have changed since it was drawn.
+            self._research.rebuild()
 
     def set_tracked_count(self, count: int) -> None:
         self._tracked = count
@@ -135,9 +160,11 @@ class RightRail(Rail):
     # -- delegation to the blocks ------------------------------------------
 
     def start_chat(self, nation_name: str) -> None:
+        self._lower_tabs.select(0)
         self._diplomacy.start_chat(nation_name, self._theme)
 
     def start_advisor(self, title: str) -> None:
+        self._lower_tabs.select(0)
         self._diplomacy.start_advisor(title, self._theme)
 
     def append_turn(self, speaker: str, text: str, *, is_player: bool) -> None:

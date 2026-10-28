@@ -339,6 +339,7 @@ class MarkerItem(QGraphicsPathItem):
         self.setData(5, bool(visual.selected))
         self.setData(6, visual.outline)
         self.setData(7, str(visual.domain or ""))
+        self.setData(8, int(visual.mark or 1))
         self.show_figure(bool(visual.label))
         self.setVisible(True)
 
@@ -381,7 +382,7 @@ class MarkerItem(QGraphicsPathItem):
     def boundingRect(self) -> QRectF:  # noqa: N802 -- Qt override
         rect = super().boundingRect()
         # Room for the shadow, which is drawn below and around the token's outline.
-        return rect.adjusted(-3.0, -3.0, 3.0, 5.0) if self.data(3) else rect
+        return rect.adjusted(-7.0, -7.0, 3.0, 5.0) if self.data(3) else rect
 
     def paint(self, painter, option, widget=None) -> None:
         if not self.is_counter or not self.data(3):
@@ -419,6 +420,10 @@ class MarkerItem(QGraphicsPathItem):
         painter.setBrush(QColor(COUNTER_INK))
         glyph = _glyph(str(self.data(7) or "land"), medallion.width() * 0.68)
         painter.drawPath(glyph.translated(medallion.center()))
+
+        mark = int(self.data(8) or 1)
+        if mark > 1:
+            _draw_mark(painter, medallion, mark)
         painter.restore()
 
     def _apply_name(self, visual: MarkerVisual) -> None:
@@ -455,6 +460,39 @@ class MarkerItem(QGraphicsPathItem):
 COUNTER_PLATE = "#EE121821"
 COUNTER_INK = "#F6F8FB"
 COUNTER_RING = "#F6F8FB"
+
+
+#: The gold of an upgraded formation's chevrons.
+COUNTER_MARK = "#F2C14E"
+
+
+def _draw_mark(painter: QPainter, medallion: QRectF, mark: int) -> None:
+    """A dark badge on the token's shoulder with one gold chevron per mark above Mk I --
+    the first thing that says these formations are better than the standard ones."""
+    radius = max(5.5, medallion.width() * 0.27)
+    centre = QPointF(medallion.left() + radius * 0.55, medallion.top() + radius * 0.55)
+    badge = QRectF(centre.x() - radius, centre.y() - radius, radius * 2, radius * 2)
+    rim = QPen(QColor(COUNTER_MARK))
+    rim.setWidthF(1.1)
+    painter.setPen(rim)
+    painter.setBrush(QColor(COUNTER_PLATE))
+    painter.drawEllipse(badge)
+    stripes = mark - 1
+    pen = QPen(QColor(COUNTER_MARK))
+    pen.setWidthF(max(1.3, radius * 0.28))
+    pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+    pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+    painter.setPen(pen)
+    painter.setBrush(Qt.BrushStyle.NoBrush)
+    half = radius * 0.5
+    gap = radius * 0.42
+    top = centre.y() - (stripes - 1) * gap / 2.0 - half * 0.25
+    for index in range(stripes):
+        y = top + index * gap
+        chevron = QPainterPath(QPointF(centre.x() - half, y + half * 0.55))
+        chevron.lineTo(QPointF(centre.x(), y - half * 0.15))
+        chevron.lineTo(QPointF(centre.x() + half, y + half * 0.55))
+        painter.drawPath(chevron)
 
 
 def _lifted(colour: QColor, share: float = 0.25) -> QColor:

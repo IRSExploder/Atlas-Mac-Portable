@@ -49,7 +49,10 @@ def test_orders_and_advance_come_before_the_talking(qapp, conn):
     body = rail.body
     order = [body.itemAt(i).widget() for i in range(body.count())]
     assert order.index(rail._orders) < order.index(rail._advance) < order.index(
-        rail._diplomacy)
+        rail._lower_tabs) < order.index(rail._lower)
+    # Talks first beneath the turn; research is the tab beside them.
+    assert rail._lower.currentWidget() is rail._diplomacy
+    assert rail._lower.indexOf(rail._research) == 1
     assert rail._advance._button._label.text() == "Advance one month"
 
 

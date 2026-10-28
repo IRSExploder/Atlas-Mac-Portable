@@ -449,6 +449,7 @@ class AtlasWindow(QMainWindow):
         self._right.close_chat.connect(self._on_close_chat)
         self._right.orders_submitted.connect(self._on_check_orders)
         self._right.jump_requested.connect(self._on_jump)
+        self._right.order_written.connect(self._write_order)
 
         self._status = StatusStrip(self._theme)
         #: Whether the player has overruled the breakpoint for a rail. Cleared when the

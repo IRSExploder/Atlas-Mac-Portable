@@ -25,13 +25,21 @@ import sqlite3
 from dataclasses import dataclass, replace
 
 __all__ = [
+    "MAX_MARK",
+    "MAX_RESEARCH_SHARE",
     "TECHNOLOGIES",
+    "UPGRADE_LINES",
     "Technology",
     "TechEffect",
+    "UpgradeLine",
     "available_technologies",
     "catalogue_for",
     "known_technologies",
+    "all_marks",
+    "marks",
+    "mark_name",
     "technology_by_id",
+    "upgrade_programmes",
 ]
 
 
@@ -61,6 +69,87 @@ class Technology:
     #: Pursued out of sight. What actually hides it is the visibility of the events the
     #: programme writes; this only records that it was meant to be hidden.
     secret: bool = False
+    #: The upgrade line this programme belongs to ("armour"), and the mark it brings that
+    #: line to. Empty and zero for a programme that stands on its own.
+    line: str = ""
+    mark: int = 0
+
+
+#: The highest mark a line reaches. Every formation starts at Mk I; two programmes take it
+#: to Mk III, and there is no Mk IV -- a country cannot research its way to an invincible
+#: army, only to a better one.
+MAX_MARK = 3
+
+#: And however a country's programmes stack -- an upgrade line and a one-off programme can
+#: both touch the same kind -- research never makes a formation more than this much
+#: stronger than its era's standard one.
+MAX_RESEARCH_SHARE = 0.5
+
+
+@dataclass(frozen=True, slots=True)
+class UpgradeLine:
+    """A family of formations improved together, one mark at a time."""
+
+    id: str
+    name: str
+    #: Every unit kind the line improves. An era passes the ones it fields.
+    kinds: tuple[str, ...]
+    #: Full strength added at each mark.
+    step: float
+    #: What each mark is, in a phrase: index 0 for Mk II, 1 for Mk III.
+    blurbs: tuple[str, str]
+
+
+UPGRADE_LINES: tuple[UpgradeLine, ...] = (
+    UpgradeLine("infantry", "Infantry", ("infantry",), 0.5, (
+        "Better rifles, radios and training for every infantry formation.",
+        "Night fighting, body armour and a heavier support company.")),
+    UpgradeLine("armour", "Armour", ("armour",), 1.0, (
+        "A better gun and thicker plate on the next production run.",
+        "A new generation of tank: faster, better protected, harder hitting.")),
+    UpgradeLine("air", "Air wings", ("air_wing",), 1.0, (
+        "Better engines and better weapons on the wing.",
+        "A new generation of combat aircraft.")),
+    UpgradeLine("navy", "Fleet", ("battleship", "cruiser", "destroyer", "submarine",
+                                  "carrier"), 1.2, (
+        "Better fire control and damage control across the fleet.",
+        "A refit programme that brings every hull to the newest standard.")),
+)
+
+#: What each mark costs and how many turns it takes. Dearer and slower each time: the
+#: second step is worth what the first was, and costs twice as much.
+_MARK_COST: dict[int, tuple[float, int]] = {2: (30.0, 5), 3: (60.0, 8)}
+
+
+def mark_name(mark: int) -> str:
+    return "Mk " + {1: "I", 2: "II", 3: "III"}.get(mark, str(mark))
+
+
+def upgrade_programmes(fielded: tuple[str, ...],
+                       lines: tuple[UpgradeLine, ...] = UPGRADE_LINES
+                       ) -> tuple[Technology, ...]:
+    """The upgrade programmes for an era that fields ``fielded``: Mk II and Mk III of every
+    line it has at least one kind for, the Mk III needing the Mk II."""
+    out: list[Technology] = []
+    for line in lines:
+        kinds = tuple(kind for kind in line.kinds if kind in fielded)
+        if not kinds:
+            continue
+        for mark in range(2, MAX_MARK + 1):
+            cost, turns = _MARK_COST[mark]
+            out.append(Technology(
+                id=f"{line.id}_mk{mark}",
+                name=f"{line.name} {mark_name(mark)}",
+                blurb=line.blurbs[mark - 2],
+                turns=turns,
+                cost_treasury=cost,
+                effects=tuple(TechEffect("unit_template", "base_strength", line.step, kind)
+                              for kind in kinds),
+                requires=(f"{line.id}_mk{mark - 1}",) if mark > 2 else (),
+                line=line.id,
+                mark=mark,
+            ))
+    return tuple(out)
 
 
 #: The default catalogue: what a nation can work out how to do when its world has no
@@ -169,6 +258,11 @@ TECHNOLOGIES: tuple[Technology, ...] = (
 )
 
 
+#: The default world's formations: the engine's land and air kinds and its 1936 fleet.
+TECHNOLOGIES = TECHNOLOGIES + upgrade_programmes(
+    ("infantry", "armour", "air_wing", "battleship", "carrier"))
+
+
 def catalogue_for(
     conn: sqlite3.Connection, world_id: str
 ) -> tuple[Technology, ...]:
@@ -221,7 +315,50 @@ def strength_bonus(conn: sqlite3.Connection, world_id: str, nation_id: str
             if (effect.scope == "unit_template" and effect.field_name == "base_strength"
                     and effect.subject):
                 bonus[effect.subject] = bonus.get(effect.subject, 0.0) + effect.amount
+    # The ceiling, against the era's own standard formation.
+    for kind, base in conn.execute(
+            "SELECT kind, base_strength FROM unit_template WHERE world_id = ?", (world_id,)):
+        if str(kind) in bonus:
+            bonus[str(kind)] = min(bonus[str(kind)],
+                                   round(float(base or 0.0) * MAX_RESEARCH_SHARE, 4))
     return bonus
+
+
+def all_marks(conn: sqlite3.Connection, world_id: str) -> dict[str, dict[str, int]]:
+    """:func:`marks` for every country that has improved anything, in one read -- for the
+    map, which draws every country's formations at once."""
+    done: dict[str, set[str]] = {}
+    for nation_id, tech_id in conn.execute(
+            "SELECT nation_id, tech_id FROM technology WHERE world_id = ?", (world_id,)):
+        done.setdefault(str(nation_id), set()).add(str(tech_id))
+    if not done:
+        return {}
+    upgrades = [tech for tech in catalogue_for(conn, world_id) if tech.mark]
+    out: dict[str, dict[str, int]] = {}
+    for nation_id, known in done.items():
+        for tech in upgrades:
+            if tech.id in known:
+                reached = out.setdefault(nation_id, {})
+                for effect in tech.effects:
+                    if effect.subject:
+                        reached[effect.subject] = max(reached.get(effect.subject, 1),
+                                                      tech.mark)
+    return out
+
+
+def marks(conn: sqlite3.Connection, world_id: str, nation_id: str) -> dict[str, int]:
+    """Per unit kind, the mark ``nation_id``'s formations of that kind have reached. A kind
+    no completed upgrade touches is not listed: it is at Mk I."""
+    done = known_technologies(conn, world_id, nation_id)
+    out: dict[str, int] = {}
+    if not done:
+        return out
+    for tech in catalogue_for(conn, world_id):
+        if tech.mark and tech.id in done:
+            for effect in tech.effects:
+                if effect.subject:
+                    out[effect.subject] = max(out.get(effect.subject, 1), tech.mark)
+    return out
 
 
 def establishment(conn: sqlite3.Connection, world_id: str, nation_id: str, kind: str,

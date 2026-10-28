@@ -129,6 +129,9 @@ class MapViewState:
     #: warmly is a thing its ambassadors can report, and there is no fog over it. What they
     #: think of somebody *else* is not here and is not this layer's business.
     attitude: dict[str, tuple[float, str, bool]] = field(default_factory=dict)
+    #: **How far each country's research has improved its formations**, as ``nation_id ->
+    #: {unit kind: mark}``. Only marks above Mk I are listed; the counters show them.
+    marks: dict[str, dict[str, int]] = field(default_factory=dict)
     #: **The ground the observer's wars are about**, as ``region_id -> ((claimant, kind,
     #: enemy), ...)``. Only wars the observer is in: its own aims and the aims declared
     #: against it. War aims are public -- a demand nobody has heard cannot be met, refused
@@ -547,6 +550,15 @@ def _independence(conn: sqlite3.Connection, world_id: str) -> dict[str, float]:
     return {str(row["region_id"]): float(row["momentum"]) for row in rows}
 
 
+def _marks(conn: sqlite3.Connection, world_id: str) -> dict[str, dict[str, int]]:
+    try:
+        from ..engine.research import all_marks
+
+        return all_marks(conn, world_id)
+    except sqlite3.OperationalError:  # a world from before research had a table
+        return {}
+
+
 def load_map_view(
     conn: sqlite3.Connection,
     world_id: str,
@@ -656,6 +668,7 @@ def load_map_view(
         nuclear_answer=nuclear_answer,
         nuclear_mine=nuclear_mine,
         attitude=_attitude(conn, world_id, observer_nation_id),
+        marks=_marks(conn, world_id),
         war_aims=_war_aims(conn, world_id, observer_nation_id),
         trade=_trade(conn, world_id, observer_nation_id),
         obligations=_obligations(conn, world_id, observer_nation_id),

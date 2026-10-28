@@ -646,8 +646,16 @@ def _programme_for(
         "   AND project_kind = 'research'", (world_id, nation_id)
     ).fetchone():
         return None
+    # **Better weapons are bought for a war.** The upgrade lines are eight programmes in
+    # every era, and a settled power that worked through them in peacetime spent its
+    # queue on them instead of on its economy -- development fell a tenth behind a power
+    # that did not. At war, a better tank is the thing worth the slot.
+    at_war = conn.execute(
+        "SELECT 1 FROM relation WHERE world_id = ? AND nation_a = ? AND at_war = 1",
+        (world_id, nation_id)).fetchone() is not None
     open_now = sorted(
-        available_technologies(conn, world_id, nation_id),
+        (tech for tech in available_technologies(conn, world_id, nation_id)
+         if at_war or not tech.mark),
         key=lambda tech: (tech.cost_treasury, tech.id),
     )
     for tech in open_now:

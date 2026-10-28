@@ -42,7 +42,7 @@ that are not its friends.
 from __future__ import annotations
 
 from ..engine.production import BUILD_DAYS
-from ..engine.research import TechEffect, Technology
+from ..engine.research import TechEffect, Technology, upgrade_programmes
 from ..map.pack import GeometryPack, PackSet
 from ..state.bootstrap import UnitTemplateSeed, WorldSeed
 from ..state.models import CommitmentKind, Difficulty, EventKind, TreatyStatus, Visibility
@@ -1209,6 +1209,10 @@ TECHNOLOGIES: tuple[Technology, ...] = (
         ),
     ),
 )
+
+#: And the upgrade lines every era has: Mk II and Mk III of each family it fields.
+TECHNOLOGIES = TECHNOLOGIES + upgrade_programmes(
+    tuple(template.kind for template in UNIT_TEMPLATES))
 
 
 #: Everything above, as the one object the seeder and the registry both read.

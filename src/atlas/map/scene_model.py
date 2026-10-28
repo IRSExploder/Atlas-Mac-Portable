@@ -249,6 +249,9 @@ class MarkerVisual:
     region_id: str = ""
     #: Whether this is the formation the player has selected. Presentation only.
     selected: bool = False
+    #: The research mark of the formations on a unit counter: 1 for the standard, 2 and 3
+    #: once the owner's upgrade lines have improved them.
+    mark: int = 1
 
 
 @dataclass(frozen=True, slots=True)

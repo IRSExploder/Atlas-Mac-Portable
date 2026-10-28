@@ -919,8 +919,13 @@ def build_scene(
         # Commonest first, and ties broken by name so the same stack reads the same way
         # twice. A scene description is a pure function of its inputs, and a tooltip that
         # reordered itself between frames would quietly break that.
+        # **And how good they are.** The marks are the dominant owner's: research is a
+        # country's, and a counter wears its strongest contributor's colour already.
+        reached = view.marks.get(dominant_id, {})
+        mark = max((reached.get(str(kind), 1) for kind in kinds), default=1)
         composition = ", ".join(
             f"{tally}x {str(kind).replace('_', ' ')}"
+            + (f" Mk {'I' * reached[str(kind)]}" if reached.get(str(kind), 1) > 1 else "")
             for kind, tally in sorted(kinds.items(), key=lambda kv: (-int(kv[1]), str(kv[0])))
         )
         offset_x, offset_y = offsets[domain]
@@ -954,6 +959,7 @@ def build_scene(
                 domain=domain,
                 offset_x=offset_x,
                 offset_y=offset_y,
+                mark=mark,
                 outline=(palette.outline_selected if chosen else palette.marker_outline),
                 label_colour=palette.marker_text,
                 # **The province, carried on the counter.** A click lands on the counter,

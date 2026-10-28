@@ -137,6 +137,24 @@ the defenders hold, the attacker can still gain ground, but the province stays p
   enemy asks ("Iran asks for a ceasefire…") and gives the order that accepts it; nothing
   is agreed on your behalf.
 
+## Research and upgrades
+
+The **Research** tab sits beside Diplomacy in the right-hand panel.
+
+* **Upgrades.** Infantry, Armour, Air wings and Fleet each go from **Mk I to Mk III**. Each
+  mark is dearer and slower than the last (30 money and 5 turns, then 60 and 8), and the
+  Mk III needs the Mk II. There is no Mk IV.
+* **Programmes.** The era's own technologies (drones, semiconductors, hypersonics…), with
+  what each one does, what it costs and what it needs first.
+* **Start** writes the order ("Research Armour Mk II") into your orders box; nothing is
+  spent until you advance. Each programme takes one build slot until it finishes.
+* **Limits.** However programmes stack, research never makes a formation more than **50%**
+  stronger than its era's standard one. Existing formations reach their new strength
+  through the monthly refits.
+* **On the map**, an improved formation's counter wears gold chevrons: one for Mk II, two
+  for Mk III. Hover for "2x armour Mk III".
+* Computer-run countries buy upgrades **while at war**; in peacetime they build.
+
 ## Creative orders
 
 Write what you would actually do; the engine finds the mechanic and keeps the effect bounded.
