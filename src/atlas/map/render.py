@@ -69,7 +69,14 @@ def should_dissolve(zoom: float) -> bool:
     this the question a player is asking is "who holds what", and the answer is a
     country.
     """
-    return zoom < 4.0
+    return zoom < DISSOLVE_BELOW
+
+
+#: Below this zoom provinces merge into countries. It was 4.0, above the zoom the game
+#: opens at (3.0), so a player never saw a province unless they went looking -- and asked
+#: whether the map had any. At 2.0 the opening view shows them; a whole continent still
+#: reads as countries.
+DISSOLVE_BELOW = 2.0
 
 
 def _tooltip(view: MapViewState, region, owner_name: str | None) -> str:
@@ -739,7 +746,12 @@ def build_scene(
             or pattern is not FillPattern.SOLID
             or region.kind == "ocean"
         )
-        if dissolve and (known or charted) and not interesting and region.owner_nation_id:
+        # **Your own ground and your enemies' are never merged.** That is where the war
+        # is, and a front is a line between provinces: merged into one shape each, two
+        # countries at war read as two blocks of colour with nothing between them.
+        frontline = calm and region.owner_nation_id in ({me} | enemies)
+        if (dissolve and (known or charted) and not interesting and not frontline
+                and region.owner_nation_id):
             quiet.setdefault((region.owner_nation_id, known), []).append(visual)
         else:
             regions.append(visual)

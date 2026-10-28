@@ -24,7 +24,7 @@ from collections.abc import Sequence
 
 from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPainterPath, QPen, QPixmap
-from PySide6.QtWidgets import QGraphicsPathItem, QGraphicsSimpleTextItem
+from PySide6.QtWidgets import QGraphicsPathItem, QGraphicsSimpleTextItem, QStyle
 
 from ..map.projection import Projection
 from ..map.scene_model import FillPattern, MarkerKind, MarkerVisual, RegionVisual, UnitDomain
@@ -164,6 +164,37 @@ class RegionItem(QGraphicsPathItem):
         self.setFlag(
             QGraphicsPathItem.GraphicsItemFlag.ItemIsSelectable, visual.selectable
         )
+
+    def paint(self, painter, option, widget=None) -> None:
+        """Without Qt's own selection box, and with hatching at screen resolution.
+
+        A selected path item draws a dotted rectangle round its bounding box -- a square
+        of dots cutting across the map, nowhere near the province's real shape. The map
+        marks selection itself, in the outline.
+
+        **The hatch is laid in screen pixels, not map units.** A texture brush is scaled
+        with everything else the painter draws, and the map's units are degrees: at the
+        zoom a game opens at, one pixel of the 8x8 hatch tile was drawn tens of pixels
+        wide, and the diagonal stripe that says "occupied" became a staircase of
+        enormous squares across the province.
+        """
+        option.state &= ~QStyle.StateFlag.State_Selected
+        brush = self.brush()
+        if brush.style() != Qt.BrushStyle.TexturePattern:
+            super().paint(painter, option, widget)
+            return
+        painter.save()
+        to_screen = painter.worldTransform()
+        on_screen = to_screen.map(self.path())
+        painter.resetTransform()
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(brush)  # untransformed now: one texel is one screen pixel
+        painter.drawPath(on_screen)
+        painter.restore()
+        # The outline over it, as an ordinary path item draws it.
+        painter.setPen(self.pen())
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawPath(self.path())
 
 
 class MarkerItem(QGraphicsPathItem):
