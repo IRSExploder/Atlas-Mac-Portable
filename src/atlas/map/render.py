@@ -884,10 +884,12 @@ def build_scene(
         assert isinstance(kinds, dict)
         kinds[unit.kind] = int(kinds.get(unit.kind, 0)) + 1
 
+    # A short column under the province's centre: a counter is a plate with its figure
+    # inside, wider than it is tall, so side by side the three domains overlapped.
     offsets = {
-        UnitDomain.LAND: (-18.0, 13.0),
-        UnitDomain.SEA: (0.0, 18.0),
-        UnitDomain.AIR: (18.0, 13.0),
+        UnitDomain.LAND: (0.0, 14.0),
+        UnitDomain.SEA: (0.0, 37.0),
+        UnitDomain.AIR: (0.0, 60.0),
     }
     names = {
         UnitDomain.LAND: "Land forces",

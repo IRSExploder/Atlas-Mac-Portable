@@ -178,11 +178,16 @@ class SceneApplier:
                 left = origin.x() + label.pos().x()
                 top = origin.y() + label.pos().y()
                 rect = (left, top, left + box.width(), top + box.height())
-                if any(_overlapping(rect, taken) for taken in placed):
-                    label.setVisible(False)
+                collides = any(_overlapping(rect, taken) for taken in placed)
+                if item.is_counter:
+                    # A counter folds down to its silhouette rather than losing a figure
+                    # off the side of an empty plate.
+                    item.show_figure(not collides)
+                else:
+                    label.setVisible(not collides)
+                if collides:
                     hidden += 1
                 else:
-                    label.setVisible(True)
                     placed.append(rect)
         return hidden
 

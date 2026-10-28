@@ -23,7 +23,16 @@ from array import array
 from collections.abc import Sequence
 
 from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPainterPath, QPen, QPixmap
+from PySide6.QtGui import (
+    QBrush,
+    QColor,
+    QFont,
+    QLinearGradient,
+    QPainter,
+    QPainterPath,
+    QPen,
+    QPixmap,
+)
 from PySide6.QtWidgets import QGraphicsPathItem, QGraphicsSimpleTextItem, QStyle
 
 from ..map.projection import Projection
@@ -256,6 +265,9 @@ class MarkerItem(QGraphicsPathItem):
         if visual.kind is MarkerKind.NAME:
             self._apply_name(visual)
             return
+        if visual.kind is MarkerKind.UNIT:
+            self._apply_counter(visual)
+            return
         half = visual.size / 2.0
         label = self.childItems()[0] if self.childItems() else None
         if isinstance(label, QGraphicsSimpleTextItem):
@@ -291,6 +303,124 @@ class MarkerItem(QGraphicsPathItem):
             label.setVisible(bool(text))
         self.setVisible(True)
 
+    def _apply_counter(self, visual: MarkerVisual) -> None:
+        """A formation as a token: a medallion in its side's colour with a white rim and a
+        white silhouette, its strength on a dark tab beside it, and a shadow under both.
+
+        **It used to be the silhouette itself, filled in the side's colour** -- which is the
+        colour of the ground whenever an army is at home, so a player's own divisions
+        vanished into their own country and an enemy's into the enemy's: the two places a
+        counter matters most. The white rim and the shadow lift the token off any ground,
+        and the medallion still says whose it is.
+        """
+        self.setPos(QPointF(visual.x, visual.y))
+        self.setData(1, visual.region_id)
+        self.setData(2, str(visual.kind))
+        self.setZValue(visual.z)
+        self.setToolTip(visual.tooltip)
+        for child in self.childItems():
+            if isinstance(child, QGraphicsPathItem):  # an icon item from an older layout
+                child.setVisible(False)
+
+        label = self.strength_label
+        if label is not None:
+            font = QFont()
+            font.setPointSizeF(8.5)
+            font.setWeight(QFont.Weight.Bold)
+            label.setFont(font)
+            label.setText(visual.label)
+            label.setBrush(QBrush(QColor(COUNTER_INK)))
+            label.setPen(QPen(Qt.PenStyle.NoPen))
+        # Everything the painter needs, kept on the item so the view's declutter can fold
+        # the tab away without asking the renderer again.
+        diameter = max(21.0, min(28.0, visual.size + 10.0))
+        self.setData(3, (visual.offset_x, visual.offset_y, diameter))
+        self.setData(4, visual.colour)
+        self.setData(5, bool(visual.selected))
+        self.setData(6, visual.outline)
+        self.setData(7, str(visual.domain or ""))
+        self.show_figure(bool(visual.label))
+        self.setVisible(True)
+
+    def _token(self) -> tuple[QRectF, QRectF | None]:
+        """The medallion's rectangle and the tab's, or ``None`` for a folded tab."""
+        cx, cy, diameter = self.data(3)
+        medallion = QRectF(cx - diameter / 2.0, cy - diameter / 2.0, diameter, diameter)
+        label = self.strength_label
+        if label is None or not label.isVisible():
+            return medallion, None
+        text = label.boundingRect()
+        height = diameter * 0.74
+        width = diameter / 2.0 + 5.0 + text.width() + 6.0
+        tab = QRectF(cx, cy - height / 2.0, width, height)
+        return medallion, tab
+
+    def show_figure(self, shown: bool) -> None:
+        """Lay the token out with its strength tab, or as the medallion alone when the
+        figure would collide with a neighbour's (see `declutter_labels`)."""
+        if not self.data(3):
+            return
+        label = self.strength_label
+        if label is not None:
+            label.setVisible(shown and bool(label.text()))
+        medallion, tab = self._token()
+        outline = QPainterPath()
+        outline.addEllipse(medallion)
+        if tab is not None:
+            pill = QPainterPath()
+            pill.addRoundedRect(tab, tab.height() / 2.0, tab.height() / 2.0)
+            outline = outline.united(pill)
+            text = label.boundingRect()
+            label.setPos(medallion.right() + 3.0, tab.center().y() - text.height() / 2.0)
+        # The path is what a click hits and what the scene culls by; the look is `paint`.
+        self.prepareGeometryChange()
+        self.setPath(outline)
+        self.setPen(QPen(Qt.PenStyle.NoPen))
+        self.setBrush(QBrush(Qt.BrushStyle.NoBrush))
+
+    def boundingRect(self) -> QRectF:  # noqa: N802 -- Qt override
+        rect = super().boundingRect()
+        # Room for the shadow, which is drawn below and around the token's outline.
+        return rect.adjusted(-3.0, -3.0, 3.0, 5.0) if self.data(3) else rect
+
+    def paint(self, painter, option, widget=None) -> None:
+        if not self.is_counter or not self.data(3):
+            super().paint(painter, option, widget)
+            return
+        medallion, tab = self._token()
+        side = QColor(str(self.data(4) or "#CCCCCC"))
+        selected = bool(self.data(5))
+        painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+
+        # A soft shadow: two passes, so the edge falls off rather than stopping.
+        painter.setPen(Qt.PenStyle.NoPen)
+        for spread, alpha in ((2.2, 40), (1.0, 70)):
+            painter.setBrush(QColor(0, 0, 0, alpha))
+            painter.drawPath(self.path().translated(0.0, 1.6 + spread * 0.4))
+
+        if tab is not None:
+            painter.setBrush(QColor(COUNTER_PLATE))
+            rim = QPen(_lifted(side, 0.35))
+            rim.setWidthF(1.2)
+            painter.setPen(rim)
+            painter.drawRoundedRect(tab, tab.height() / 2.0, tab.height() / 2.0)
+
+        shade = QLinearGradient(medallion.topLeft(), medallion.bottomLeft())
+        shade.setColorAt(0.0, _lifted(side, 0.35))
+        shade.setColorAt(1.0, side.darker(135))
+        painter.setBrush(QBrush(shade))
+        ring = QPen(QColor(str(self.data(6))) if selected else QColor(COUNTER_RING))
+        ring.setWidthF(2.6 if selected else 1.6)
+        painter.setPen(ring)
+        painter.drawEllipse(medallion)
+
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(COUNTER_INK))
+        glyph = _glyph(str(self.data(7) or "land"), medallion.width() * 0.68)
+        painter.drawPath(glyph.translated(medallion.center()))
+        painter.restore()
+
     def _apply_name(self, visual: MarkerVisual) -> None:
         """A country's name: spaced capitals, centred on the point, with a dark edge so it
         reads on any fill."""
@@ -318,6 +448,77 @@ class MarkerItem(QGraphicsPathItem):
             label.setPos(-box.width() / 2.0, -box.height() / 2.0)
             label.setVisible(True)
         self.setVisible(True)
+
+
+#: A counter's plate and the ink drawn on it: dark enough to read on any ground,
+#: whatever colour the country under it is.
+COUNTER_PLATE = "#EE121821"
+COUNTER_INK = "#F6F8FB"
+COUNTER_RING = "#F6F8FB"
+
+
+def _lifted(colour: QColor, share: float = 0.25) -> QColor:
+    """A colour moved ``share`` of the way toward white."""
+    return QColor(
+        round(colour.red() + (255 - colour.red()) * share),
+        round(colour.green() + (255 - colour.green()) * share),
+        round(colour.blue() + (255 - colour.blue()) * share),
+    )
+
+
+def _glyph(domain: str, size: float) -> QPainterPath:
+    """A unit's silhouette, centred on the origin and ``size`` across.
+
+    Drawn as paths rather than shipped as images, so it stays sharp at any display scale.
+    """
+    s = size
+    path = QPainterPath()
+    if domain == "sea":
+        # A warship in profile: raked bow, superstructure, bridge, mast and a forward gun.
+        hull = QPainterPath()
+        hull.moveTo(-0.52 * s, 0.06 * s)
+        hull.lineTo(0.56 * s, 0.06 * s)
+        hull.lineTo(0.40 * s, 0.30 * s)
+        hull.lineTo(-0.44 * s, 0.30 * s)
+        hull.closeSubpath()
+        path.addPath(hull)
+        path.addRect(QRectF(-0.26 * s, -0.12 * s, 0.40 * s, 0.20 * s))
+        path.addRect(QRectF(-0.12 * s, -0.30 * s, 0.18 * s, 0.20 * s))
+        path.addRect(QRectF(-0.04 * s, -0.50 * s, 0.035 * s, 0.22 * s))
+        path.addRect(QRectF(0.18 * s, -0.04 * s, 0.30 * s, 0.05 * s))
+        return path.simplified()
+    if domain == "air":
+        # A jet seen from above: nose, swept wings, tailplane.
+        points = (
+            (0.00, -0.55), (0.08, -0.30), (0.09, -0.08), (0.52, 0.14), (0.52, 0.24),
+            (0.09, 0.14), (0.07, 0.36), (0.24, 0.48), (0.24, 0.55), (0.00, 0.49),
+            (-0.24, 0.55), (-0.24, 0.48), (-0.07, 0.36), (-0.09, 0.14), (-0.52, 0.24),
+            (-0.52, 0.14), (-0.09, -0.08), (-0.08, -0.30),
+        )
+        path.moveTo(points[0][0] * s, points[0][1] * s)
+        for x, y in points[1:]:
+            path.lineTo(x * s, y * s)
+        path.closeSubpath()
+        return path
+    # A tank in profile: tracks with road wheels, a sloped hull, turret and barrel.
+    tracks = QPainterPath()
+    tracks.addRoundedRect(QRectF(-0.50 * s, 0.06 * s, 1.00 * s, 0.30 * s),
+                          0.15 * s, 0.15 * s)
+    wheels = QPainterPath()
+    for i in range(4):
+        x = -0.33 * s + i * 0.22 * s
+        wheels.addEllipse(QPointF(x, 0.21 * s), 0.075 * s, 0.075 * s)
+    path.addPath(tracks.subtracted(wheels))
+    hull = QPainterPath()
+    hull.moveTo(-0.44 * s, 0.03 * s)
+    hull.lineTo(0.46 * s, 0.03 * s)
+    hull.lineTo(0.34 * s, -0.12 * s)
+    hull.lineTo(-0.38 * s, -0.12 * s)
+    hull.closeSubpath()
+    path.addPath(hull)
+    path.addRoundedRect(QRectF(-0.22 * s, -0.32 * s, 0.38 * s, 0.21 * s), 0.07 * s, 0.07 * s)
+    path.addRect(QRectF(0.14 * s, -0.25 * s, 0.44 * s, 0.06 * s))
+    return path.simplified()
 
 
 def _marker_path(visual: MarkerVisual) -> QPainterPath:
