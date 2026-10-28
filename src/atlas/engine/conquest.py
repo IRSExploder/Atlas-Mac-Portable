@@ -36,7 +36,7 @@ from ..state.apply import apply_batch, record_event, unrecord_events
 from ..state.diff import Diff, DiffBatch
 from ..state.models import DiffOp, EventKind, EventOrigin, Role, Visibility
 
-__all__ = ["Annexation", "annex", "annexable"]
+__all__ = ["Annexation", "annex", "annexable", "settle_buried_land"]
 
 
 @dataclass(slots=True)
@@ -142,9 +142,11 @@ def annex(conn: sqlite3.Connection, world_id: str, *, nation_id: str, target: st
         diffs.append(Diff("nation", target, "is_alive", DiffOp.SET, 0,
                           reason_event_id=event_id, visibility_scope=Visibility.PUBLIC))
 
+    # Whole or not at all. Severed, a refused transfer left the burial standing: the
+    # summary said the country was annexed and gone, and the map kept it as the owner.
     applied = apply_batch(conn, DiffBatch(
         world_id=world_id, turn=turn, proposer_role=Role.ENGINE, proposer_model=None,
-        diffs=tuple(diffs)))
+        diffs=tuple(diffs)), whole=True)
     if not applied.applied:
         unrecord_events(conn, [event_id])
         outcome.refused = f"the annexation of {them} was refused: {applied.reason}"
@@ -156,3 +158,51 @@ def annex(conn: sqlite3.Connection, world_id: str, *, nation_id: str, target: st
     outcome.headline = (f"{me} annexed {them}; it has ceased to exist as a state."
                         if not kept else f"{me} annexed {names} from {them}.")
     return outcome
+
+
+def settle_buried_land(conn: sqlite3.Connection, world_id: str, *, turn: int,
+                       date: str) -> tuple[list[str], list[str]]:
+    """Give land still owned by a country that no longer exists to whoever occupies it.
+
+    **A conquest left half done.** Before annexation went through whole, a refused transfer
+    was cut out of the batch and the rest stood: the country was buried, its land kept it as
+    owner, and no order could finish the job because there was no longer a country to name.
+    Saves made then carry that state, and this is what mends them -- and anything else that
+    ever leaves a dead state owning ground under somebody's flag.
+
+    Returns ``(headlines, problems)``.
+    """
+    rows = conn.execute(
+        "SELECT r.id, r.owner_nation_id AS dead, r.controller_nation_id AS holder"
+        "  FROM region r"
+        "  JOIN nation gone ON gone.id = r.owner_nation_id AND gone.world_id = r.world_id"
+        "  JOIN nation n ON n.id = r.controller_nation_id AND n.world_id = r.world_id"
+        " WHERE r.world_id = ? AND r.kind <> 'ocean'"
+        "   AND gone.is_alive = 0 AND n.is_alive = 1"
+        " ORDER BY r.controller_nation_id, r.owner_nation_id, r.id",
+        (world_id,)).fetchall()
+    headlines: list[str] = []
+    problems: list[str] = []
+    pairs: dict[tuple[str, str], list[str]] = {}
+    for row in rows:
+        pairs.setdefault((str(row["holder"]), str(row["dead"])), []).append(str(row["id"]))
+    for (holder, dead), regions in pairs.items():
+        me, them = _name(conn, world_id, holder), _name(conn, world_id, dead)
+        text = f"{me} annexed what was left of {them}."
+        event_id = record_event(
+            conn, world_id=world_id, turn=turn, date=date,
+            kind=EventKind.TERRITORY_TRANSFER, origin=EventOrigin.ENGINE,
+            actor_nation_id=holder, text=text, visibility=Visibility.PUBLIC,
+            participants=(("actor", holder), ("target", dead)),
+        )
+        applied = apply_batch(conn, DiffBatch(
+            world_id=world_id, turn=turn, proposer_role=Role.ENGINE, proposer_model=None,
+            diffs=tuple(Diff("region", region_id, "owner_nation_id", DiffOp.SET, holder,
+                             reason_event_id=event_id, visibility_scope=Visibility.PUBLIC)
+                        for region_id in regions)), whole=True)
+        if applied.applied:
+            headlines.append(text)
+        else:
+            unrecord_events(conn, [event_id])
+            problems.append(f"{them}'s last ground could not pass to {me}: {applied.reason}")
+    return headlines, problems

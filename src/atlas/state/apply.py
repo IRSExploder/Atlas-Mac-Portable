@@ -576,11 +576,16 @@ def apply_batch(
     *,
     difficulty: Difficulty = Difficulty.NORMAL,
     days: int = 30,
+    whole: bool = False,
 ) -> ApplyOutcome:
     """Record, apply, validate, and either keep or roll back a batch.
 
     Returns rather than raises on rejection: a refused batch is an ordinary, expected
     outcome that the player is shown, not an exceptional condition.
+
+    ``whole`` refuses the batch outright instead of severing the diffs a rule condemned.
+    For a batch whose parts only make sense together -- an annexation that buries a
+    country is wrong if the land it was buried for stayed where it was.
     """
     batch = batch.with_seq()
 
@@ -634,7 +639,8 @@ def apply_batch(
     conn.execute("ROLLBACK TO atlas_batch")
 
     # A handful of bad writes should cost their own writes, not the turn's narrative.
-    partial = _sever_and_stand(conn, batch, batch_id, result, difficulty, days)
+    partial = None if whole else _sever_and_stand(
+        conn, batch, batch_id, result, difficulty, days)
     if partial is not None:
         return partial
 

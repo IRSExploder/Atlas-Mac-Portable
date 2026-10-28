@@ -24,6 +24,9 @@ __all__ = [
     "own_transfer_justified",
 ]
 
+#: A controller no diff in the batch wrote; told apart from one written as ``None``.
+_UNSEEN = object()
+
 
 @register("UNIT-001", "Units may not be created without a raise event and the means to pay.")
 def unit_conservation(ctx: RuleContext):
@@ -206,6 +209,21 @@ def own_transfer_justified(ctx: RuleContext):
             (diff.target_id, diff.target_id, diff.target_id, new_owner, new_owner),
         )
         if adjacent:
+            continue
+
+        # **Ground the new owner already occupies has been reached.** Annexing a beaten
+        # country's occupied land is conquest made formal, and the front that took it may
+        # be long gone: Turkey reached Afghanistan through Iran, made peace with Iran, and
+        # the annexation was refused for want of a border while the summary reported it
+        # done. Read as it stood *before* this batch -- an annexation writes the controller
+        # too -- so a batch cannot occupy a province and claim it in one breath.
+        prior = next((d.old_value for d in ctx.batch.diffs
+                      if d.target_table == "region" and d.target_id == diff.target_id
+                      and d.field == "controller_nation_id"), _UNSEEN)
+        if prior is _UNSEEN:
+            prior = ctx.one("SELECT controller_nation_id FROM region"
+                            " WHERE world_id = ? AND id = ?", (ctx.world_id, diff.target_id))
+        if prior == new_owner:
             continue
 
         ceded = ctx.one(

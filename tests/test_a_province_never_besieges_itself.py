@@ -387,7 +387,8 @@ def test_the_reconciliation_runs_after_every_pass_that_can_move_a_province():
 
     source = pathlib.Path("src/atlas/engine/turn_engine.py").read_text(encoding="utf-8")
     reconcile_at = source.index("reconcile_self_sieges(\n")
-    for pass_name in ("assess_partisans(", "honour_peace_terms(", "_run_tracked_agents("):
+    for pass_name in ("assess_partisans(", "honour_peace_terms(", "_run_tracked_agents(",
+                      "settle_buried_land("):
         assert source.index(pass_name) < reconcile_at, (
             f"{pass_name} moves a province after the reconciliation and nothing looks again")
 
@@ -398,8 +399,10 @@ def test_the_reconciliation_runs_after_every_pass_that_can_move_a_province():
         if re.search(r'Diff\(\s*"region",[^)]*"(controller|owner)_nation_id"',
                      path.read_text(encoding="utf-8"), re.S)
     }
-    assert writers == {"decolonisation.py", "objectives.py", "peace.py", "resolution.py",
-                       "unrest.py"}, writers
+    # (conquest.py: `settle_buried_land`, ordered above. `annex` is an order, run in the
+    # enact phase before any of this.)
+    assert writers == {"conquest.py", "decolonisation.py", "objectives.py", "peace.py",
+                       "resolution.py", "unrest.py"}, writers
 
     # **The fifth, checked rather than assumed.** `objectives._hand_back` (behind
     # ATLAS_VOLUNTARY_RETURN) returns occupied ground to its owner. It is reached only

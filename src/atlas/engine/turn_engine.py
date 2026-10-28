@@ -51,6 +51,7 @@ from .budget import collect_revenue, erode_development
 from .capitulation import assess_capitulation
 from .causality import audience_of, breakdown_of
 from .concert import award_leadership
+from .conquest import settle_buried_land
 from .constituencies import assess_constituencies
 from .decolonisation import assess_independence, decolonise
 from .digest import consolidate
@@ -2268,6 +2269,11 @@ class TurnEngine:
         # `captured` requires that the attacker does *not* hold it -- and reconciling
         # inside the resolution cannot see a transfer that happens after the resolution.
         # South Vietnam at Quang Tri, in five recorded runs.
+        # A conquest left half done -- see `conquest.settle_buried_land`.
+        settled, unsettled = settle_buried_land(
+            self.conn, self.world_id, turn=turn, date=new_date)
+        report.annexed.extend(settled)
+        report.rejections.extend(unsettled)
         report.rejections.extend(
             reconcile_self_sieges(
                 self.conn, self.world_id, turn=turn, date=new_date)

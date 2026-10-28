@@ -336,7 +336,8 @@ class LeftRail(Rail):
         row = self._conn.execute(
             """
             SELECT r.id, r.name, r.terrain, r.kind, r.population, r.development,
-                   n.name AS owner, n.colour AS colour, r.controller_nation_id
+                   n.name AS owner, n.colour AS colour, r.controller_nation_id,
+                   r.owner_nation_id
               FROM region r LEFT JOIN nation n ON n.id = r.owner_nation_id
              WHERE r.id = ?
             """,
@@ -365,7 +366,10 @@ class LeftRail(Rail):
         self._region_body.addLayout(owner_row)
         self._region_body.addSpacing(18)
 
-        if row["controller_nation_id"] and row["controller_nation_id"] != row["owner"]:
+        # Ids against ids: this compared the occupier's id with the owner's *name*, so every
+        # province with a controller written -- every annexed one -- read as occupied.
+        if (row["controller_nation_id"]
+                and row["controller_nation_id"] != row["owner_nation_id"]):
             self._region_body.addWidget(
                 _Notice("Occupied, not annexed. Ownership has not changed.",
                         tone="warn", theme=self._theme)
