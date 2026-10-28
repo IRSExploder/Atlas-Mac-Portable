@@ -762,6 +762,21 @@ class _PowerRow(QFrame):
         self._mark = TextLabel(scale, style="label", colour="ink_ghost", theme=theme)
         layout.addWidget(self._mark, 0, Qt.AlignmentFlag.AlignTop)
 
+        # **A list you can see more than two of.** With its temperament written out, a
+        # row was a hundred pixels and the box showed two of twenty-four countries. The
+        # panel beside the list already tells a chosen power's story, so the plain list
+        # is a name and a size; the sentence is the tooltip, and comes back in full with
+        # technical details on.
+        from .plain import technical
+
+        if not technical():
+            self._character.setVisible(False)
+            self.setToolTip(character)
+            layout.setContentsMargins(12, 8, 12, 8)
+            layout.setAlignment(self._shield, Qt.AlignmentFlag.AlignVCenter)
+            layout.setAlignment(self._mark, Qt.AlignmentFlag.AlignVCenter)
+            self._shield.setFixedSize(16, 20)
+
     def matches(self, needle: str) -> bool:
         return not needle or needle in self._haystack
 

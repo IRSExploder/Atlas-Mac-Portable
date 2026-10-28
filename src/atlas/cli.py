@@ -412,7 +412,7 @@ def _cmd_start(args: argparse.Namespace) -> int:
     from .runtime.loop_thread import AsyncRuntime
     from .ui.app import ensure_app
     from .ui.launcher import Launcher
-    from .ui.preferences import load_app_preferences
+    from .ui.preferences import load_app_preferences, set_current
     from .ui.theme import DARK, load_fonts
     from .ui.widgets import set_text_scale
 
@@ -434,6 +434,8 @@ def _cmd_start(args: argparse.Namespace) -> int:
     app.setQuitOnLastWindowClosed(False)
     load_fonts()
     set_text_scale(load_app_preferences().text_scale)
+    # Plain or technical type for the menus, as the player last chose it.
+    set_current(load_app_preferences())
     runtime = AsyncRuntime()
     runtime.start()
     launcher = Launcher(

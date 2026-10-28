@@ -304,6 +304,7 @@ class AtlasWindow(QMainWindow):
         self._end_screen = None
         self._preferences = load_preferences(conn)
         set_current(self._preferences)
+        self._unit_domains = _domains_for(self._preferences.technical)
         set_text_scale(self._preferences.text_scale)
         if self._preferences.colour_safe:
             self._theme = colour_safe(self._theme)
@@ -429,6 +430,7 @@ class AtlasWindow(QMainWindow):
         self._guide.finished.connect(self._guide_seen)
         self._chrome.layer_changed.connect(self._on_layer_changed)
         self._chrome.unit_domains_changed.connect(self._on_unit_domains_changed)
+        self._chrome.set_unit_domains(self._unit_domains)
         self._chrome.zoom_in_requested.connect(lambda: self._zoom(1.35))
         self._chrome.zoom_out_requested.connect(lambda: self._zoom(1 / 1.35))
         self._chrome.fit_requested.connect(self._map.fit_world)
@@ -473,6 +475,8 @@ class AtlasWindow(QMainWindow):
         middle.addWidget(self._matters)
         middle.addWidget(self._chrome, 1)
         middle.addWidget(self._right)
+        self._middle = middle
+        self._float_record(not self._preferences.technical)
 
         central = QWidget()
         layout = QVBoxLayout(central)
@@ -591,7 +595,14 @@ class AtlasWindow(QMainWindow):
             ("turn", self._right,
              handle + self._right.full_width + scaled(MIN_MAP_FOR_TURN)),
         ):
-            tight = width < threshold or (plain and key == "record")
+            if key == "record" and plain:
+                # Floating over the map, so the width question does not arise: it is put
+                # away until a province is chosen, and folds back when asked.
+                if not rail._collapsible:  # noqa: SLF001
+                    rail.set_collapsible(True)
+                    rail.set_collapsed(self._rail_choice.get(key, True))
+                continue
+            tight = width < threshold
             if rail._collapsible != tight:  # noqa: SLF001
                 self._rail_choice.pop(key, None)
                 rail.set_collapsible(tight)
@@ -640,6 +651,9 @@ class AtlasWindow(QMainWindow):
         # event feed is redrawn; the next turn summary reads the preference as it opens.
         self._chrome.set_technical(preferences.technical)
         self._status.set_technical(preferences.technical)
+        self._float_record(not preferences.technical)
+        self._unit_domains = _domains_for(preferences.technical)
+        self._chrome.set_unit_domains(self._unit_domains)
         self._left.refresh()
         self._fit_rails(self.width())
         # The meters read in words or in numbers according to the same switch.
@@ -924,6 +938,26 @@ class AtlasWindow(QMainWindow):
         """Slide the record out if it is put away: a province was chosen to look at."""
         if self._left.collapsed:
             self._left.set_collapsed(False)
+
+    def _float_record(self, floating: bool) -> None:
+        """**The plain interface floats the record over the map instead of beside it.**
+
+        Beside it, every province click took the column's 380px out of the map, so the
+        world jumped and shrank to under half the window at 1440 -- the map, which is the
+        game, became the smallest thing on screen the moment anybody looked at it. Over
+        it, the map keeps its whole width and never moves: the panel slides over its left
+        edge and folds back to a handle. With technical details on, the record is a column
+        again, as it always was.
+        """
+        if floating == (self._left.parent() is self._chrome):
+            return
+        if floating:
+            self._middle.removeWidget(self._left)
+            self._chrome.set_side_panel(self._left)
+        else:
+            self._chrome.set_side_panel(None)
+            self._middle.insertWidget(0, self._left)
+        self._left.show()
 
     def _on_counter_clicked(self, marker_id: str, region_id: str) -> None:
         """A counter is a formation standing somewhere, so a click on it means both.
@@ -2166,3 +2200,12 @@ def _add_days(iso: str, days: int) -> str:
         return (date.fromisoformat(iso) + timedelta(days=days)).isoformat()
     except (TypeError, ValueError):
         return iso
+
+
+def _domains_for(technical: bool) -> frozenset[UnitDomain]:
+    """Which forces the map draws counters for. Plain: armies and fleets. Air wings sit
+    over every airfield and crowd the counters a player actually reads, so they show only
+    with technical details on -- the air situation has a screen of its own."""
+    if technical:
+        return frozenset(UnitDomain)
+    return frozenset({UnitDomain.LAND, UnitDomain.SEA})

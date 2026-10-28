@@ -159,9 +159,22 @@ anything you typed. Things you cannot do yet are listed underneath with the reas
 orders, and what Advance does. Skip them or read them; either way they do not come back.
 
 **Map first.** The game opens on your own country with the map taking most of the window.
-The record (events, the province panel and its **Orders here**) slides out from the left when
-you click a province, and folds away with its edge tab; **What is waiting** opens from the
-Attention button. The ⌂ button on the map shows the whole world.
+The record (events, the province panel and its **Orders here**) slides out *over* the map's
+left edge when you click a province, so the map never shrinks or jumps, and folds away with
+its edge tab; **What is waiting** opens from the Attention button. The map keeps one row of
+modes; its key is folded to a line (click it to open), and air wings are left off the map
+(the air situation has its own screen). The ⌂ button shows the whole world.
+
+**The turn column**, top to bottom:
+1. **Your orders**: type, **Enter** to check.
+2. **Week / Month / Season / Year**, then **Advance one month** (the button says how far).
+3. **Talk to a country**, with **Ask your council** beside it: the countries at war with you,
+   your allies and pacts, and others you deal with, one line each. Everyone else is a search
+   away in **Find a country…**.
+
+**Readable text.** Headings and labels are in sentence case at a readable size, the top bar
+has **Search** and **Menu** buttons instead of symbols, and the check-your-orders screen says
+*Move forces* or *Stir up unrest* rather than the engine's names.
 
 **A calm map.** Your country keeps its colour and is outlined; every power at war with you is
 red and every ally teal, whatever their own colours; everybody else is muted to a quiet slate.

@@ -321,6 +321,33 @@ TYPE = {
     "mono_small": TypeStyle(FONT.mono, 9, 400),
 }
 
+#: The type scale as the engine's designers set it, kept so the plain set can be undone.
+_TECHNICAL_TYPE = dict(TYPE)
+
+#: **The plain interface reads in sentence case, at a size you can read.** The base scale
+#: leans on 9pt capitals tracked wide for every heading, label and tab, and on 7.5pt for the
+#: top bar's meters -- fine for a dense instrument panel, and the first thing two
+#: play-testers in a row called hard to read. With technical details off, those styles are
+#: swapped for these; with them on, the instrument panel comes back exactly as it was.
+_PLAIN_TYPE = {
+    "section": TypeStyle(FONT.sans, 11, 600),
+    "label": TypeStyle(FONT.sans, 10.5, 500),
+    "tab": TypeStyle(FONT.sans, 11, 500),
+    "meter": TypeStyle(FONT.sans, 9, 500),
+    "button": TypeStyle(FONT.sans, 11.5, 500),
+    "body_small": TypeStyle(FONT.sans, 11.5, 400),
+    "mono_small": TypeStyle(FONT.mono, 10, 400),
+}
+
+
+def use_plain_type(on: bool) -> None:
+    """Swap the plain type set in (``on``) or restore the technical one. Takes effect on
+    the next theme pass, which is what every preference change already runs."""
+    TYPE.clear()
+    TYPE.update(_TECHNICAL_TYPE)
+    if on:
+        TYPE.update(_PLAIN_TYPE)
+
 
 # ---------------------------------------------------------------------------
 # Spacing scale

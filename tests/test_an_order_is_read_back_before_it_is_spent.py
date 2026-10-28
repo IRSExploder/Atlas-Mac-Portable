@@ -83,13 +83,17 @@ def test_a_whole_number_is_read_back_as_a_whole_number(conn, parsed):
     assert dict(read_back(conn, WORLD, list(parsed.actions))[0]["details"])["How many"] == "2"
 
 
-def test_the_act_carries_what_the_catalogue_says_it_is(conn, parsed):
+def test_the_act_carries_what_the_catalogue_says_it_is(conn, parsed, monkeypatch):
     """Read from the capability manifest, never restated here."""
     from atlas.engine.capabilities import by_type
+    from atlas.ui import preferences
 
     read = read_back(conn, WORLD, list(parsed.actions))
-    assert read[0]["act"] == "move units"
+    # In a player's words without technical details; the schema's name with them.
+    assert read[0]["act"] == "Move forces"
     assert read[0]["explain"] == by_type("move_units").explain
+    monkeypatch.setattr(preferences, "_CURRENT", preferences.Preferences(technical=True))
+    assert read_back(conn, WORLD, list(parsed.actions))[0]["act"] == "move units"
 
 
 def test_every_field_the_parser_may_resolve_is_read_back():

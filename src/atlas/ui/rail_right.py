@@ -19,6 +19,7 @@ from PySide6.QtGui import QColor, QKeySequence, QPainter, QShortcut
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
+    QLineEdit,
     QPlainTextEdit,
     QScrollArea,
     QSizePolicy,
@@ -29,6 +30,7 @@ from PySide6.QtWidgets import (
 
 from ..humanize import regard, regard_word, signed
 from .grounding import NEUTRAL_PROMPT, example_order
+from .plain import technical
 from .preferences import key_for
 from .theme import TYPE, Theme
 from .widgets import (
@@ -74,23 +76,27 @@ class RightRail(Rail):
 
         layout = self.body
 
+        # **The turn first, the talking after.** Orders and Advance are what every turn
+        # is spent on, so they sit at the top of the column where the eye lands; talks
+        # and the council take what is left below. They used to be the other way round,
+        # with the one brass button at the very bottom, under a list of two hundred
+        # countries.
+        self._orders = _OrdersBlock(theme)
+        self._orders.submitted.connect(self.orders_submitted.emit)
+        layout.addWidget(self._orders)
+
+        self._advance = _AdvanceBlock(theme)
+        self._advance.span_changed.connect(self._on_span)
+        self._advance.jump.connect(lambda: self.jump_requested.emit(self._days))
+        layout.addWidget(self._advance)
+
+        layout.addWidget(Divider(theme=theme))
         self._diplomacy = _DiplomacyBlock(theme)
         self._diplomacy.open_chat.connect(self.open_chat.emit)
         self._diplomacy.open_advisor.connect(self.open_advisor.emit)
         self._diplomacy.send_message.connect(self.send_message.emit)
         self._diplomacy.close_chat.connect(self.close_chat.emit)
         layout.addWidget(self._diplomacy, 1)
-
-        layout.addWidget(Divider(theme=theme))
-        self._orders = _OrdersBlock(theme)
-        self._orders.submitted.connect(self.orders_submitted.emit)
-        layout.addWidget(self._orders)
-
-        layout.addWidget(Divider(theme=theme))
-        self._advance = _AdvanceBlock(theme)
-        self._advance.span_changed.connect(self._on_span)
-        self._advance.jump.connect(lambda: self.jump_requested.emit(self._days))
-        layout.addWidget(self._advance)
 
         self.apply_theme(theme)
 
@@ -280,7 +286,8 @@ class _NationListPage(QWidget):
         council_layout = QVBoxLayout(council)
         council_layout.setContentsMargins(20, 16, 20, 12)
         council_layout.setSpacing(6)
-        council_layout.addWidget(SectionLabel("Your council", theme=theme))
+        self._council_heading = SectionLabel("Your council", theme=theme)
+        council_layout.addWidget(self._council_heading)
         self._council_hint = TextLabel(
             "Ask your own government what it makes of the position. Advice only.",
             style="body_small", colour="ink_faint", theme=theme, wrap=True,
@@ -294,7 +301,10 @@ class _NationListPage(QWidget):
         row.addStretch(1)
         council_layout.addLayout(row)
         layout.addWidget(council)
-        layout.addWidget(Divider(soft=True, theme=theme))
+        self._council = council
+        self._council_layout = council_layout
+        self._council_rule = Divider(soft=True, theme=theme)
+        layout.addWidget(self._council_rule)
 
         head = QWidget()
         head_layout = QHBoxLayout(head)
@@ -304,6 +314,11 @@ class _NationListPage(QWidget):
         head_layout.addWidget(self._heading)
         head_layout.addStretch(1)
         head_layout.addWidget(self._count)
+        # The plain column's council: one button on the heading's row rather than a
+        # section of its own above it.
+        self._council_inline = Chip("Ask your council", theme=theme, padding=(10, 4))
+        self._council_inline.clicked.connect(self.advise.emit)
+        head_layout.addWidget(self._council_inline)
         layout.addWidget(head)
 
         # A row that opens talks has to say so. Without this the list reads as a status
@@ -314,6 +329,22 @@ class _NationListPage(QWidget):
         )
         self._hint.setContentsMargins(20, 0, 20, 10)
         layout.addWidget(self._hint)
+
+        # Two hundred countries is a list to search, not to scroll.
+        self._find = QLineEdit()
+        self._find.setObjectName("findPower")
+        self._find.setPlaceholderText("Find a country…")
+        self._find.setClearButtonEnabled(True)
+        self._find.textChanged.connect(self._filter)
+        finder = QWidget()
+        finder_layout = QHBoxLayout(finder)
+        finder_layout.setContentsMargins(20, 0, 20, 10)
+        finder_layout.addWidget(self._find)
+        layout.addWidget(finder)
+        self._rows: list[tuple[str, QWidget, QWidget | None, str]] = []
+        self._headers: list[QWidget] = []
+        self._rest_note: QWidget | None = None
+        self._has_player = False
 
         self._area = QScrollArea()
         self._area.setWidgetResizable(True)
@@ -338,6 +369,7 @@ class _NationListPage(QWidget):
         self._theme = theme
         _empty(self._body)
         # A spectator has no government to consult.
+        self._has_player = bool(player)
         self._council_button.setEnabled(bool(player))
         self._council_button.setVisible(bool(player))
         self._council_hint.setVisible(bool(player))
@@ -363,22 +395,112 @@ class _NationListPage(QWidget):
         ).fetchall()
 
         self._count.setText(f"{len(rows)} powers")
-        for index, row in enumerate(rows):
-            if index:
-                self._body.addWidget(Divider(soft=True, theme=theme))
-            entry = _NationRow(row, theme=theme)
-            entry.clicked.connect(lambda nid=row["id"]: self.chosen.emit(nid))
-            self._body.addWidget(entry)
+        self._rows = []
+        self._headers = []
+        self._rest_note = None
+        if technical():
+            for index, row in enumerate(rows):
+                rule = None
+                if index:
+                    rule = Divider(soft=True, theme=theme)
+                    self._body.addWidget(rule)
+                self._add_row(row, theme, rule=rule, group="all")
+        else:
+            self._load_grouped(rows, theme)
         self._body.addStretch(1)
+        self._filter(self._find.text())
+        self._plain(not technical())
+
+    def _add_row(self, row, theme: Theme, *, rule, group: str, compact: bool = False) -> None:
+        entry = _NationRow(row, theme=theme, compact=compact)
+        entry.clicked.connect(lambda nid=row["id"]: self.chosen.emit(nid))
+        self._body.addWidget(entry)
+        self._rows.append((str(row["name"]).lower(), entry, rule, group))
+
+    def _load_grouped(self, rows, theme: Theme) -> None:
+        """**The countries that matter to you, then a search for the rest.**
+
+        Two hundred rows of names and bars, nearly all of them countries that have never
+        had an opinion about you, was the part of the screen play-testers called hard to
+        read. The plain list says who is at war with you, who is bound to you, and who
+        else you have dealings with, one line each; everyone else is a search away.
+        """
+        groups: dict[str, list] = {"war": [], "bound": [], "dealings": [], "rest": []}
+        for row in rows:
+            treaty = str(row["treaty"] or "none")
+            if row["at_war"]:
+                groups["war"].append(row)
+            elif treaty in ("alliance", "defensive", "vassal"):
+                groups["bound"].append(row)
+            elif treaty != "none" or abs(float(row["score"])) >= 10:
+                groups["dealings"].append(row)
+            else:
+                groups["rest"].append(row)
+        for key, title in (("war", "At war with you"), ("bound", "Allies and pacts"),
+                           ("dealings", "Others you deal with")):
+            if not groups[key]:
+                continue
+            header = TextLabel(title, style="label", colour="ink_faint", theme=theme)
+            header.setContentsMargins(0, 10, 0, 4)
+            self._body.addWidget(header)
+            self._headers.append(header)
+            for row in groups[key]:
+                self._add_row(row, theme, rule=None, group=key, compact=True)
+        for row in groups["rest"]:
+            self._add_row(row, theme, rule=None, group="rest", compact=True)
+        if groups["rest"]:
+            count = len(groups["rest"])
+            self._rest_note = TextLabel(
+                f"{count} other {'country' if count == 1 else 'countries'}: "
+                "type a name above to find one.",
+                style="body_small", colour="ink_faint", theme=theme, wrap=True)
+            self._rest_note.setContentsMargins(0, 12, 0, 0)
+            self._body.addWidget(self._rest_note)
+
+    def _filter(self, text: str) -> None:
+        wanted = text.strip().lower()
+        first = True
+        for name, entry, rule, group in self._rows:
+            # Unsearched, the plain list keeps the countries nobody has dealt with out of
+            # the way; searching reaches all of them.
+            show = wanted in name if wanted else group != "rest"
+            entry.setVisible(show)
+            if rule is not None:
+                rule.setVisible(show and not first)
+            if show:
+                first = False
+        for header in self._headers:
+            header.setVisible(not wanted)
+        if self._rest_note is not None:
+            self._rest_note.setVisible(not wanted)
+
+    def _plain(self, plain: bool) -> None:
+        """The council as one button and talks as a searchable list, without the captions
+        that explain them; with technical details on, both read as they always have."""
+        self._council.setVisible(not plain)
+        self._council_rule.setVisible(not plain)
+        self._council_hint.setVisible(not plain and self._has_player)
+        self._council_inline.setVisible(plain and self._has_player)
+        self._heading.setText("Talk to a country" if plain else "Diplomacy")
+        self._count.setVisible(not plain)
+        self._hint.setVisible(not plain)
+        # Who is bound to you is what the grouped list now says; the sentence under it
+        # repeated it.
+        self._commitments.setVisible(not plain and bool(self._commitments.text()))
 
     def show_commitments(self, entries: list[str], theme: Theme) -> None:
         self._commitments.setText("\n".join(entries) if entries else "")
-        self._commitments.setVisible(bool(entries))
+        self._commitments.setVisible(bool(entries) and technical())
         self._commitments.apply_theme(theme)
 
     def apply_theme(self, theme: Theme) -> None:
         self._theme = theme
+        self._find.setStyleSheet(
+            f"QLineEdit#findPower {{ background: {theme.inset}; color: {theme.ink};"
+            f" border: 1px solid {theme.edge}; padding: 6px 8px; }}"
+            f"QLineEdit#findPower:focus {{ border: 1px solid {theme.brass}; }}")
         restyle(self, theme)
+        self._plain(not technical())
 
 
 class _NationRow(QWidget):
@@ -386,24 +508,28 @@ class _NationRow(QWidget):
 
     clicked = Signal()
 
-    def __init__(self, row, *, theme: Theme, parent: QWidget | None = None) -> None:
+    def __init__(self, row, *, theme: Theme, compact: bool = False,
+                 parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._score = float(row["score"])
         self._at_war = bool(row["at_war"])
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 13, 0, 13)
-        layout.setSpacing(12)
+        layout.setContentsMargins(0, 6 if compact else 13, 0, 6 if compact else 13)
+        layout.setSpacing(10 if compact else 12)
 
-        self._shield = ShieldSwatch(row["colour"] or "#888888", width=17, height=22)
-        layout.addWidget(self._shield, 0, Qt.AlignmentFlag.AlignTop)
+        self._shield = ShieldSwatch(row["colour"] or "#888888",
+                                    width=13 if compact else 17, height=17 if compact else 22)
+        layout.addWidget(self._shield, 0, Qt.AlignmentFlag.AlignVCenter if compact
+                         else Qt.AlignmentFlag.AlignTop)
 
         column = QVBoxLayout()
         column.setSpacing(7)
         head = QHBoxLayout()
         head.setSpacing(8)
-        self._name = TextLabel(row["name"], style="row", colour="ink", theme=theme, elide=True)
+        self._name = TextLabel(row["name"], style="body" if compact else "row", colour="ink",
+                               theme=theme, elide=True)
         head.addWidget(self._name, 1)
 
         # **The word and the figure, in one label.** The word is what a player reads at a
@@ -424,6 +550,7 @@ class _NationRow(QWidget):
         # ink anyway. See `tests.test_the_interface_stays_inside_its_frame_budget` for what
         # this rail is being kept inside.
         self._state = TextLabel(
+            _plain_relation(self._score, self._at_war, row["treaty"]) if compact else
             _relation_word(self._score, self._at_war, row["treaty"])
             + ("" if round(self._score) == 0 else f"   {signed(self._score)}"),
             style="label",
@@ -435,13 +562,16 @@ class _NationRow(QWidget):
             "  Your government's regard for them; theirs for you is their own business.")
         # The affordance. A pointing-hand cursor is invisible until the mouse is already
         # over the row, which is too late to tell someone the row does anything.
-        self._talk = TextLabel("TALK →", style="label", colour="brass", theme=theme)
+        self._talk = TextLabel("Talk →" if compact else "TALK →", style="label",
+                               colour="brass", theme=theme)
         self._talk.setVisible(False)
         head.addWidget(self._talk)
         column.addLayout(head)
         self.setAttribute(Qt.WidgetAttribute.WA_Hover)
 
         self._bar = _RelationBar(theme, self._score, self._at_war)
+        # The word says it; the bar is the instrument-panel reading of the same thing.
+        self._bar.setVisible(not compact)
         column.addWidget(self._bar)
         layout.addLayout(column, 1)
 
@@ -666,7 +796,8 @@ class _OrdersBlock(QWidget):
         # The binding as it stands, not as it shipped: a player who has re-bound *send*
         # was being told the wrong key by the one label whose whole job is to say it.
         self._hint = TextLabel("Enter to check",
-                               style="mono_small", colour="ink_ghost", theme=theme)
+                               style="mono_small" if technical() else "body_small",
+                               colour="ink_ghost", theme=theme)
         head.addWidget(self._hint)
         layout.addLayout(head)
 
@@ -943,6 +1074,7 @@ class _AdvanceBlock(QWidget):
         self._days = days
         for value, chip in self._chips.items():
             chip.set_selected(value == days)
+        self._button.set_span(days)
         self.span_changed.emit(days)
 
     def set_estimate(self, days: int, tracked: int) -> None:
@@ -961,12 +1093,15 @@ class _AdvanceBlock(QWidget):
         )
         from .plain import technical
 
+        plain = not technical()
         self._estimate.setText(
             f"{days} days · {powers}. "
-            "Longer jumps make more history and take longer to live through."
-            if technical() else
-            f"Advance {days} days. Your orders are carried out, then the world answers."
-        )
+            "Longer jumps make more history and take longer to live through.")
+        # The button says how far it goes, so the plain column needs neither the
+        # heading nor the sentence that repeated it.
+        self._estimate.setVisible(not plain)
+        self._heading.setVisible(not plain)
+        self._button.set_span(days)
 
     def set_busy(self, busy: bool, theme: Theme) -> None:
         self._button.set_busy(busy, theme)
@@ -974,6 +1109,7 @@ class _AdvanceBlock(QWidget):
     def apply_theme(self, theme: Theme) -> None:
         self._theme = theme
         restyle(self, theme)
+        self.set_estimate(self._days, 0)
 
 
 class _AdvanceButton(PressFeedback, QFrame):
@@ -993,11 +1129,22 @@ class _AdvanceButton(PressFeedback, QFrame):
         self._label = TextLabel("Advance", style="action", theme=theme)
         self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._label)
+        self._idle = "Advance"
         self.apply_theme(theme)
+
+    def set_span(self, days: int) -> None:
+        """"Advance one month" rather than "Advance" over a caption saying it is a month."""
+        from .plain import technical
+
+        name = {7: "one week", 30: "one month", 90: "one season", 365: "one year"}.get(
+            days, f"{days} days")
+        self._idle = "Advance" if technical() else f"Advance {name}"
+        if not self._busy:
+            self._label.setText(self._idle)
 
     def set_busy(self, busy: bool, theme: Theme) -> None:
         self._busy = busy
-        self._label.setText("The world turns…" if busy else "Advance")
+        self._label.setText("The world turns…" if busy else self._idle)
         self.setCursor(
             Qt.CursorShape.BusyCursor if busy else Qt.CursorShape.PointingHandCursor
         )
@@ -1049,6 +1196,19 @@ def _score_ink(score: float) -> str:
     if score <= -25:
         return "danger"
     return "ink_faint"
+
+
+#: Treaties as a player says them. The engine's names are its column values.
+_PLAIN_TREATY = {"alliance": "Ally", "defensive": "Defence pact", "trade": "Trade partner",
+                 "non_aggression": "Non-aggression pact", "vassal": "Vassal"}
+
+
+def _plain_relation(score: float, at_war: bool, treaty: str) -> str:
+    """The relationship as a player would put it: "At war", "Ally", "Friendly"."""
+    if not at_war and treaty in _PLAIN_TREATY:
+        return _PLAIN_TREATY[treaty]
+    word = _relation_word(score, at_war, treaty)
+    return word[:1].upper() + word[1:]
 
 
 def _relation_word(score: float, at_war: bool, treaty: str) -> str:

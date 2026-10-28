@@ -408,8 +408,9 @@ def test_the_plain_advance_estimate_says_what_pressing_it_does(qapp, conn, playe
     rail.bind(conn, "sandbox", player)
     rail.set_tracked_count(4)
     rail._advance._pick(365)
-    assert rail._advance._estimate.text() == (
-        "Advance 365 days. Your orders are carried out, then the world answers.")
+    # The button says how far it goes, so the caption that used to repeat it is gone.
+    assert rail._advance._button._label.text() == "Advance one year"
+    assert rail._advance._estimate.isHidden()
 
 
 def test_advance_button_reports_being_busy(qapp, conn, player):
@@ -427,7 +428,7 @@ def test_advance_button_reports_being_busy(qapp, conn, player):
     assert fired == []  # a busy button does not start a second turn
     assert rail._advance._button.property("pressed") in (None, False)
     rail.set_busy(False)
-    assert rail._advance._button._label.text() == "Advance"
+    assert rail._advance._button._label.text() == "Advance one month"
 
 
 def test_relation_words_are_words(qapp):
@@ -485,6 +486,9 @@ def _legend_lines(chrome) -> list[str]:
 def test_map_chrome_legend_names_the_player(qapp):
     chrome = MapChrome(QWidget(), DARK)
     chrome.set_player("Germany", "#5A5A5A")
+    # The plain map starts with its key folded to one line; a click opens it.
+    assert chrome._legend._folded
+    chrome._legend.set_folded(False)
     assert any(line == "Germany — you" for line in _legend_lines(chrome))
 
 

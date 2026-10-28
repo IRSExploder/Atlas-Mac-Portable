@@ -193,6 +193,23 @@ class _IconButton(PressFeedback, QFrame):
     def set_glyph(self, glyph: str) -> None:
         self._glyph.setText(glyph)
 
+    def set_word(self, word: str | None, glyph: str) -> None:
+        """Show ``word`` instead of the glyph, or the glyph again for ``None``.
+
+        A glyph is a puzzle for anyone who has not met it: "¤" means *find*, "…" means
+        *the other panels*, and nobody guesses either. The plain interface spends the
+        width on the word; the instrument panel keeps its 30px squares.
+        """
+        self._glyph.setText(word or glyph)
+        if word:
+            self.setMinimumWidth(30)
+            self.setMaximumWidth(16777215)
+            self.setFixedHeight(30)
+            self.layout().setContentsMargins(10, 0, 10, 0)
+        else:
+            self.setFixedSize(30, 30)
+            self.layout().setContentsMargins(0, 0, 0, 0)
+
     def apply_theme(self, theme: Theme) -> None:
         self._theme = theme
         self.setStyleSheet(control_qss("_IconButton", theme))
@@ -597,8 +614,9 @@ class TopBar(QFrame):
             meter.setAccessibleName(label)
             meter.asked.connect(self.meter_asked)
             self._meters[key] = meter
-            self._meter_labels[key] = (
-                label.upper(), _SHORT_METER_LABELS.get(label, label).upper())
+            # Cased by the type style (capitals in the technical set, as written in the
+            # plain one), not here, so the plain interface can read in sentence case.
+            self._meter_labels[key] = (label, _SHORT_METER_LABELS.get(label, label))
             meters.addWidget(meter, 1)
         layout.addLayout(meters, 2)
         return holder
@@ -992,6 +1010,11 @@ class TopBar(QFrame):
         restyle(self, theme)
         self._more_menu.setStyleSheet(_menu_qss(theme))
         self._theme_btn.set_label(_theme_label(theme))
+        from .plain import technical
+
+        plain = not technical()
+        self._search.set_word("Search" if plain else None, "¤")
+        self._more.set_word("Menu" if plain else None, "…")
 
 
 class _BrandMark(QWidget):

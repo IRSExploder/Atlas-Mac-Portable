@@ -107,6 +107,7 @@ class MapChrome(QWidget):
         self._zoom.zoom_out.connect(self.zoom_out_requested.emit)
         self._zoom.fit.connect(self.fit_requested.emit)
         self._legend = _Legend(theme, self)
+        self._legend.toggled.connect(self._tell_the_legend)
         self._readout = _Readout(theme, self)
 
         from .plain import technical
@@ -114,10 +115,57 @@ class MapChrome(QWidget):
         self.set_technical(technical())
         self.apply_theme(theme)
 
+    def set_side_panel(self, panel: QWidget | None) -> None:
+        """Float ``panel`` over the map's left edge, full height, or stop floating one.
+
+        The map underneath keeps its whole width. The panel is raised over the map and
+        its overlays and placed again whenever it opens, folds or the map is resized;
+        the key at the bottom left moves out from under it.
+        """
+        old = getattr(self, "_side", None)
+        if old is not None:
+            old.removeEventFilter(self)
+            old.setParent(None)
+        self._side = panel
+        if panel is not None:
+            panel.setParent(self)
+            panel.installEventFilter(self)
+            panel.raise_()
+            panel.show()
+        self.resizeEvent(None)
+
+    def eventFilter(self, watched, event) -> bool:  # noqa: N802 -- Qt override
+        from PySide6.QtCore import QEvent
+
+        if watched is getattr(self, "_side", None) and event.type() in (
+                QEvent.Type.Resize, QEvent.Type.Show, QEvent.Type.Hide):
+            self._place_side()
+        return super().eventFilter(watched, event)
+
+    def _side_width(self) -> int:
+        side = getattr(self, "_side", None)
+        return side.width() if side is not None and side.isVisible() else 0
+
+    def _place_side(self) -> None:
+        side = getattr(self, "_side", None)
+        if side is None:
+            return
+        side.setGeometry(0, 0, side.width(), self.height())
+        side.raise_()
+        self._legend.move(_INSET + self._side_width(),
+                          self.height() - self._legend.height() - _INSET)
+
     def set_technical(self, on: bool) -> None:
-        """Show the projection placard and every map mode, or only what a player needs."""
+        """Show the projection placard and every map mode, or only what a player needs.
+
+        Without technical details the map keeps one row of controls: the Land/Sea/Air
+        filter goes (ground forces are what a player reads on the map; fleets and air
+        wings have their own screens), and the key starts folded to a line.
+        """
         self._where.setVisible(on)
         self._layers.show_layers(None if on else _PLAIN_LAYERS)
+        self._unit_layers.setVisible(on)
+        self._legend.set_folded(not on)
         self.resizeEvent(None)
 
     # -- data --------------------------------------------------------------
@@ -149,7 +197,8 @@ class MapChrome(QWidget):
     def _tell_the_legend(self) -> None:
         self._legend.set_layer(self._layer)
         self._legend.adjustSize()
-        self._legend.move(_INSET, self.height() - self._legend.height() - _INSET)
+        self._legend.move(_INSET + self._side_width(),
+                          self.height() - self._legend.height() - _INSET)
 
     def set_layer(self, layer: MapLayer) -> None:
         self._layer = MapLayer(layer)
@@ -195,7 +244,9 @@ class MapChrome(QWidget):
             self.height() - self._zoom.height() - _INSET,
         )
         self._legend.adjustSize()
-        self._legend.move(_INSET, self.height() - self._legend.height() - _INSET)
+        self._legend.move(_INSET + self._side_width(),
+                          self.height() - self._legend.height() - _INSET)
+        self._place_side()
         self._place_readout()
 
     def _place_readout(self) -> None:
@@ -476,11 +527,16 @@ class _Legend(_Frosted):
     fourteenth's key. See `atlas.map.legend`.
     """
 
+    #: Folded to a single line and opened again by a click. See `set_folded`.
+    toggled = Signal()
+
     def __init__(self, theme: Theme, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._theme = theme
         self._player_name = "You"
         self._player_colour = theme.ink_dim
+        self._folded = False
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
         self._legend = legend_for(MapLayer.POLITICAL)
         # A definite measure, because most of what goes in here now is a sentence rather
         # than a label -- and a column of wrapping text with no width to wrap to collapses
@@ -505,6 +561,19 @@ class _Legend(_Frosted):
         self._theme = theme
         self._build()
 
+    def set_folded(self, folded: bool) -> None:
+        """**A key you can put away.** Open, it covered a fifth of the map -- most of
+        Africa at the default zoom -- to explain five colours a player learns in a turn.
+        Folded, it is one line saying where the key is; a click opens or folds it."""
+        if folded != self._folded:
+            self._folded = folded
+            self._build()
+            self.toggled.emit()
+
+    def mousePressEvent(self, event) -> None:
+        self.set_folded(not self._folded)
+        super().mousePressEvent(event)
+
     def _build(self) -> None:
         # Let go of the height the last legend was pinned to before measuring this one,
         # or the layout answers with the old key's height and then with nothing.
@@ -512,6 +581,18 @@ class _Legend(_Frosted):
         self.setMaximumHeight(QWIDGETSIZE_MAX)
         clear_layout(self._layout)
         theme, legend = self._theme, self._legend
+        if self._folded:
+            self.setFixedWidth(scaled(150))
+            self._layout.addWidget(TextLabel(
+                f"{legend.title} · key ▸", style="label", colour="ink_dim", theme=theme))
+            self.setToolTip("Show what the colours mean")
+            for child in self.findChildren(QWidget):
+                child.show()
+            self._layout.activate()
+            self.setFixedHeight(self._layout.sizeHint().height())
+            return
+        self.setFixedWidth(self._measure)
+        self.setToolTip("Click to fold the key away")
         self._layout.addWidget(
             TextLabel(legend.title, style="label", colour="ink_faint", theme=theme))
 

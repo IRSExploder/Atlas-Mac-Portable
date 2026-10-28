@@ -242,6 +242,10 @@ def current() -> Preferences:
 def set_current(preferences: Preferences) -> None:
     global _CURRENT
     _CURRENT = preferences
+    # The type scale follows the same switch the wording does: see `use_plain_type`.
+    from .theme import use_plain_type
+
+    use_plain_type(not preferences.technical)
 
 
 def key_for(action: str) -> str:

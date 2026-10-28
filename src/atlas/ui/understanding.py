@@ -49,6 +49,7 @@ from PySide6.QtWidgets import (
 
 from ..humanize import exact
 from .overlays import Overlay
+from .plain import technical
 from .theme import PANEL, SPACE, Theme
 from .widgets import (
     Chip,
@@ -90,6 +91,33 @@ FIELDS: tuple[tuple[str, str], ...] = (
 
 def _humanise(action_type: str) -> str:
     return str(action_type).replace("_", " ")
+
+
+#: The acts and undertakings as a player says them, for the plain read-back. The engine's
+#: names are its schema's ("move units", "gambit", "incite") and read like one.
+_PLAIN_ACTS = {
+    "move_units": "Move forces", "raise_units": "Raise forces", "reinforce": "Reinforce",
+    "disband_units": "Disband forces", "declare_war": "Declare war",
+    "sue_for_peace": "Make peace", "propose_treaty": "Propose a treaty",
+    "diplomatic_message": "Send word", "build_project": "Build or research",
+    "economic_investment": "Invest", "fortify": "Dig in", "annex": "Annex",
+    "espionage": "Spy", "counterintelligence": "Hunt their spies",
+    "adopt_doctrine": "Change doctrine", "freeform": "Something else",
+    "gambit": "Covert or bold move",
+}
+_PLAIN_GAMBITS = {
+    "incite": "Stir up unrest", "sabotage": "Sabotage", "bribe": "Bribe",
+    "expose": "Expose them", "summit": "Summit", "envoy": "Send an envoy",
+    "sting": "Counter-spy sting", "air_strike": "Air strike",
+}
+
+
+def _plain_act(action: dict) -> str:
+    kind = str(action.get("type", ""))
+    if kind == "gambit" and action.get("gambit_kind") in _PLAIN_GAMBITS:
+        return _PLAIN_GAMBITS[str(action["gambit_kind"])]
+    word = _PLAIN_ACTS.get(kind) or _humanise(kind)
+    return word[:1].upper() + word[1:]
 
 
 def _explain(action_type: str) -> str:
@@ -142,13 +170,17 @@ def read_back(conn: sqlite3.Connection, world_id: str,
                 # the read-back, on the one screen whose whole job is showing a player
                 # that their sentence was understood.
                 shown = exact(value)
+            elif key == "gambit_kind" and not technical():
+                # Said in the heading already, in words.
+                continue
             else:
                 shown = names.get(str(value), str(value))
             details.append((label, shown))
         read.append({
             "summary": str(action.get("summary") or "").strip()
                        or _humanise(action.get("type", "")),
-            "act": _humanise(action.get("type", "")),
+            "act": (_humanise(action.get("type", "")) if technical()
+                    else _plain_act(action)),
             "explain": _explain(action.get("type", "")),
             "details": details,
         })
@@ -182,7 +214,8 @@ class _ActionBlock(QFrame):
 
         head = QHBoxLayout()
         head.setSpacing(12)
-        self._add(head, TextLabel(read["act"].upper(), style="label", colour="brass",
+        self._add(head, TextLabel(read["act"].upper() if technical() else read["act"],
+                                  style="label", colour="brass",
                                   theme=theme))
         head.addStretch(1)
         outer.addLayout(head)
@@ -190,8 +223,6 @@ class _ActionBlock(QFrame):
         # The parser's own clause, which is the sentence the player is actually checking.
         self._add(outer, TextLabel(read["summary"], style="row", colour="ink_bright",
                                    theme=theme, wrap=True))
-        from .plain import technical
-
         detail = technical()
         # The catalogue's gloss on the act and the parser's tone are its working: shown
         # with technical details. Who, from where and to where are what a player checks.
@@ -331,9 +362,15 @@ class UnderstoodOverlay(Overlay):
         actions = list(parsed.actions)
         rejected = list(parsed.rejected)
         self._wrote.setText(f"You wrote: “{wrote.strip()}”")
-        self._count.setText(
-            f"{len(actions)} ACTION(S)"
-            + (f"  ·  {len(rejected)} REFUSED" if rejected else ""))
+        if technical():
+            self._count.setText(
+                f"{len(actions)} ACTION(S)"
+                + (f"  ·  {len(rejected)} REFUSED" if rejected else ""))
+        else:
+            self._count.set_style("body", theme)
+            self._count.setText(
+                f"{len(actions)} order{'' if len(actions) == 1 else 's'}"
+                + (f" · {len(rejected)} not possible" if rejected else ""))
 
         clear_layout(self._stack)
         if warnings:

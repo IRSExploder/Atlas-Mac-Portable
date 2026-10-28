@@ -93,7 +93,10 @@ class Launcher:
                                provider_status=self._provider_status, parent=self.menu)
 
         def saved(preferences) -> None:
+            from .preferences import set_current
+
             save_app_preferences(preferences)
+            set_current(preferences)
             set_text_scale(preferences.text_scale)
 
         sheet.saved.connect(saved)
