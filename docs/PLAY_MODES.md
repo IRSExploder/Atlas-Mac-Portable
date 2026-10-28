@@ -123,6 +123,20 @@ eleven provinces, not one roll. A province only falls on a day the attacker *win
 the defenders hold, the attacker can still gain ground, but the province stays put
 ("Iran prevailed narrowly, but gave ground").
 
+**Long wars.** A campaign across provinces runs for many months, so:
+
+* Formations in supply **refill a little every month** on their own (about a tenth of
+  full strength, paid from manpower and treasury). **"Reinforce my army"** refills faster.
+* When you take a province, **one formation stays behind** in each province the attack
+  came from, so ground you took last month isn't simply walked back into.
+* An army **cut off** by a counterattack **breaks out** to your nearest lines (up to three
+  provinces away) at the cost of half its strength, instead of being lost entirely.
+* Research makes **your own** formations bigger; another country's research no longer
+  changes yours.
+* **Peace and ceasefire offers to you are yours to accept.** The turn summary says when an
+  enemy asks ("Iran asks for a ceasefire…") and gives the order that accepts it; nothing
+  is agreed on your behalf.
+
 ## Creative orders
 
 Write what you would actually do; the engine finds the mechanic and keeps the effect bounded.

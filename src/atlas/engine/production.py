@@ -40,7 +40,7 @@ from ..state.models import DiffOp, EventKind, EventOrigin, Role, Visibility
 from .bounds import absorbable
 from .constituencies import industrial_throughput
 from .projects import CIVIL_PROJECTS, CivilProject, Effect, project_by_id
-from .research import catalogue_for, known_technologies, technology_by_id
+from .research import catalogue_for, establishment, known_technologies, technology_by_id
 
 __all__ = [
     "raised_strength",
@@ -1053,6 +1053,11 @@ def _deliver_research(
                                 effect.field_name, effect.amount),
                      reason_event_id=event_id, visibility_scope=scope)
             )
+        elif (effect.scope == "unit_template" and effect.subject
+              and effect.field_name == "base_strength"):
+            # The country's own: read through `research.strength_bonus`, never written
+            # into the template every country shares.
+            continue
         elif effect.scope == "unit_template" and effect.subject:
             # The floor matters: a build time driven to zero by two programmes would put a
             # battleship on the map the turn it was ordered, which is the thing the yards
@@ -1349,7 +1354,9 @@ def advance_construction(
                         "region_id": row["region_id"], "kind": row["kind"],
                         "strength": raised_strength(
                             conn, world_id, nation_id,
-                            float(strength["base_strength"]) if strength else 1.0,
+                            establishment(conn, world_id, nation_id, str(row["kind"]),
+                                          float(strength["base_strength"]))
+                            if strength else 1.0,
                             str(strength["domain"]) if strength else "land"),
                         "morale": 50.0,
                     },

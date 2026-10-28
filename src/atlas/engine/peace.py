@@ -303,6 +303,8 @@ class Settlement:
     #: What the world should be told, in the words the resolver has always used: a power
     #: *recovered* its own people's ground and *annexed* somebody else's.
     headlines: list[str] = field(default_factory=list)
+    #: Set instead of signing when the offer was made *to* the player: what to tell them.
+    to_player: str = ""
 
 
 # ------------------------------------------------------------------------ enforceability
@@ -1317,6 +1319,20 @@ def offer_peace(
             f"{declared.get('against')!r} is nobody you can make peace with")
         return outcome
 
+    # **An offer to the player is the player's to answer**, never the engine's on their
+    # behalf. See `resolution._put_to_the_player` for the play-test that found it.
+    if _played(conn, world_id, enemy) and not _played(conn, world_id, nation_id):
+        from .resolution import offer_to_player
+
+        kind = str(declared.get("kind") or "peace").strip().lower()
+        name = conn.execute("SELECT name FROM nation WHERE world_id = ? AND id = ?",
+                            (world_id, nation_id)).fetchone()
+        outcome.to_player = offer_to_player(
+            str(name["name"]) if name else nation_id,
+            "ceasefire" if kind == "ceasefire" else "peace")
+        outcome.refused.append(f"{enemy} is played by a person; the offer was put to them")
+        return outcome
+
     # **A truce and a settlement come through the same door**, because from a staff's
     # point of view they are the same decision made two ways: stop for a while, or stop
     # for good. What separates them is what the engine then does -- see
@@ -1539,3 +1555,9 @@ def _names(
     for nation_id in ids:
         names.setdefault(nation_id, nation_id)
     return names
+
+
+def _played(conn: sqlite3.Connection, world_id: str, nation_id: str) -> bool:
+    row = conn.execute("SELECT is_player FROM nation WHERE world_id = ? AND id = ?",
+                       (world_id, nation_id)).fetchone()
+    return bool(row and row["is_player"])

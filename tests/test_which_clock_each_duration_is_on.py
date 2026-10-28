@@ -217,6 +217,9 @@ PLAYER_CLOCK: dict[str, str] = {
 #: down once -- and a regex tuned until nothing awkward matches is a regex that will miss
 #: the next real one.
 NOT_A_DURATION: dict[str, str] = {
+    "BREAKOUT_LOSS": "the share of strength an encircled formation loses breaking out, "
+                     "charged once at the moment of the breakout -- an event, not a flow, "
+                     "so it is the same whatever the turn length",
     "_DAYS_PER_MONTH": "a unit conversion, not a duration: how many days a month is, so a "
                        "window written in months can be compared against days elapsed",
     "REFERENCE_DAYS": "the length of the tuning unit itself, which is what every other "

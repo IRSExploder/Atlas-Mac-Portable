@@ -192,6 +192,9 @@ class ResolutionReport:
     #: being fought but has taken no ground yet is progress, and the report should
     #: not read as though nothing happened.
     fronts_moved: int = 0
+    #: Peace and ceasefire offers set aside for the player to answer. See
+    #: `_put_to_the_player`.
+    offers_to_player: list[str] = field(default_factory=list)
     #: Formations moved between regions the nation already held. Not a battle, and the
     #: thing that decides whether there will be one worth fighting.
     redeployed: int = 0
@@ -283,6 +286,9 @@ def resolve_turn(
                 target_value=entry.get("target"), report=report,
                 justification=str(entry.get("justification") or ""),
             )
+        elif action in ("peace", "ceasefire") and _put_to_the_player(
+                conn, world_id, entry, player_nation, action, report):
+            continue
         elif action == "peace":
             # **Through the settlement layer, not the old shortcut.** `_settle_war` clears
             # two flags and moves occupied provinces: no agreement, no acceptance check,
@@ -1546,6 +1552,37 @@ def _invoke_defensive_pacts(
         )
 
 
+def _put_to_the_player(conn: sqlite3.Connection, world_id: str, entry: dict,
+                       player_nation: str | None, action: str,
+                       report: ResolutionReport) -> bool:
+    """**An offer to the player is the player's to answer.** True when it was set aside.
+
+    The armistice and settlement layers decide acceptance by rule -- winning and not tired
+    refuses, tired accepts -- and they applied that rule to the player as well. A play-test
+    had Turkey, on the offensive in Iran, "agree" a three-month ceasefire it was never
+    asked about, because the engine judged it war-weary; the attack stalled for the length
+    of it and Iran refitted. The rule is right for every power the engine plays and wrong
+    for the one a person does. So the offer is reported to the player, with the order that
+    accepts it -- which then goes through the other side's acceptance like any proposal.
+    """
+    if not player_nation:
+        return False
+    actor = resolve_nation(conn, world_id, entry.get("actor"))
+    target = resolve_nation(conn, world_id, entry.get("target"))
+    if target != player_nation or not actor or actor == player_nation:
+        return False
+    report.offers_to_player.append(offer_to_player(_names(conn, (actor,))[actor], action))
+    return True
+
+
+def offer_to_player(them: str, kind: str) -> str:
+    """The line that puts an offer to the player, with the order that takes it."""
+    if kind == "ceasefire":
+        return (f"{them} asks for a ceasefire. To accept, write: "
+                f"\"Agree a ceasefire with {them}\".")
+    return f"{them} offers peace. To accept, write: \"Make peace with {them}\"."
+
+
 def _pause_the_fighting(
     conn: sqlite3.Connection,
     world_id: str,
@@ -2541,7 +2578,7 @@ def _units_staged_near(
     """
     return conn.execute(
         """
-        SELECT u.id, u.strength FROM unit u
+        SELECT u.id, u.strength, u.region_id FROM unit u
           LEFT JOIN unit_template t ON t.world_id = u.world_id AND t.kind = u.kind
          WHERE u.world_id = ? AND u.nation_id = ?
            AND COALESCE(t.domain, 'land') <> ?
@@ -2798,7 +2835,7 @@ def _evict_diffs(
         row
         for row in conn.execute(
             """
-            SELECT u.id, COALESCE(t.domain, 'land') AS domain FROM unit u
+            SELECT u.id, u.strength, COALESCE(t.domain, 'land') AS domain FROM unit u
               LEFT JOIN unit_template t ON t.world_id = u.world_id AND t.kind = u.kind
              WHERE u.world_id = ? AND u.nation_id = ? AND u.region_id = ? ORDER BY u.id
             """,
@@ -2852,10 +2889,27 @@ def _evict_diffs(
     #: taken prisoner. Every retreat where the survivors share a road narrated a
     #: non-existent encirclement, and the state was right the whole time.
     escaped: set[str] = set()
+    #: Where an encircled army can fight its way back to. See `_breakout_to`.
+    breakout = _breakout_to(conn, world_id, region_id, defender)
+    broke_out: set[str] = set()
     for unit in trapped:
         escapes = routes["sea" if unit["domain"] == "sea" else "land"]
         # Somewhere quiet first, and anywhere at all rather than nowhere.
         ordered = [region for region in escapes if region not in besieged] or escapes
+        if not ordered and unit["domain"] == "land" and breakout is not None:
+            # **Cut off, not captured.** See `_breakout_to`: the army reaches its own lines
+            # with half of what it had.
+            broke_out.add(str(unit["id"]))
+            escaped.add(str(unit["id"]))
+            report.retreated += 1
+            diffs.append(
+                Diff("unit", unit["id"], "region_id", DiffOp.SET, breakout,
+                     reason_event_id=event_id, visibility_scope=Visibility.PUBLIC))
+            diffs.append(
+                Diff("unit", unit["id"], "strength", DiffOp.ADJUST,
+                     -round(float(unit["strength"]) * BREAKOUT_LOSS, 2),
+                     reason_event_id=event_id, visibility_scope=Visibility.PUBLIC))
+            continue
         if ordered:
             withdrew.add(ordered[0])
             escaped.add(str(unit["id"]))
@@ -2872,6 +2926,10 @@ def _evict_diffs(
             )
 
     where = _region_name(conn, region_id)
+    if broke_out and breakout is not None:
+        report.headlines.append(
+            f"{names.get(defender, defender)}'s forces in {where} were surrounded and fought "
+            f"their way out to {_region_name(conn, breakout)}, losing half their strength.")
     if withdrew:
         report.headlines.append(
             f"{names.get(defender, defender)}'s forces withdrew from {where} to "
@@ -2886,14 +2944,77 @@ def _evict_diffs(
     return diffs
 
 
+#: What a breakout costs an encircled formation, as a share of its strength.
+BREAKOUT_LOSS = 0.5
+
+#: How far an encircled army can fight its way back, in provinces.
+BREAKOUT_REACH = 3
+
+
+def _breakout_to(conn: sqlite3.Connection, world_id: str, region_id: str,
+                 defender: str) -> str | None:
+    """The nearest land ``defender`` holds within :data:`BREAKOUT_REACH` provinces, if any.
+
+    **Encirclement used to delete the army.** That was a fair rule when a country was one
+    region and an encircled garrison was a few divisions; drawn province by province, an
+    offensive's whole army stands in one province, and a play-test lost fourteen
+    formations in a single turn when the province behind them fell to a counterattack.
+    Armies cut off do try to break out, and most of a big one gets back: it costs half
+    its strength rather than all of it. A pocket with no friendly ground in reach is
+    still taken whole.
+    """
+    holder = {
+        str(row["id"]): (row["holder"], row["kind"])
+        for row in conn.execute(
+            "SELECT id, kind, COALESCE(controller_nation_id, owner_nation_id) AS holder"
+            "  FROM region WHERE world_id = ?", (world_id,))
+    }
+    frontier, seen = [region_id], {region_id}
+    for _ in range(BREAKOUT_REACH):
+        found: list[str] = []
+        following: list[str] = []
+        for here in frontier:
+            for there in sorted(_neighbours(conn, world_id, here)):
+                if there in seen or holder.get(there, (None, "ocean"))[1] == "ocean":
+                    continue
+                seen.add(there)
+                if holder[there][0] == defender:
+                    found.append(there)
+                following.append(there)
+        if found:
+            return sorted(found)[0]
+        frontier = following
+    return None
+
+
 def _advance_diffs(units: list, region_id: str, event_id: int):
     """Move the surviving attackers onto the ground they just took.
 
     Half of them, not all: an army that wins a battle does not abandon the territory it
     came from, and leaving the whole force in one region makes the next counterattack a
     single decisive roll.
+
+    **And never the last formation out of a province.** The half used to be the first
+    half by unit id, wherever those units stood, so a province taken last month could be
+    emptied by the advance out of it and simply walked back into: a play-test lost West
+    Azarbaijan that way three turns after taking it, then lost the whole army when the
+    next province fell back with everyone in it. Each province the attack came from keeps
+    ``GARRISON_TARGET`` formations; if that leaves nobody to advance, one still goes, from
+    the province with the most to spare, so the ground taken is never left empty.
     """
-    for unit in units[: max(1, len(units) // 2)]:
+    budget = max(1, len(units) // 2)
+    by_source: dict[str | None, list] = {}
+    for unit in units:
+        source = unit["region_id"] if "region_id" in unit.keys() else None  # noqa: SIM118
+        by_source.setdefault(source, []).append(unit)
+    movers = [
+        unit
+        for source, group in by_source.items()
+        for unit in (group if source is None else group[GARRISON_TARGET:])
+    ][:budget]
+    if not movers and units:
+        movers = [max(by_source.values(), key=len)[0]]
+    for unit in movers:
         yield Diff(
             target_table="unit",
             target_id=unit["id"],

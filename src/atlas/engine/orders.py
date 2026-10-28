@@ -39,7 +39,7 @@ from .pacing import over, span_of
 from .production import order_construction, order_project, order_research, raised_strength
 from .projects import CIVIL_PROJECTS
 from .reference import resolve
-from .research import catalogue_for
+from .research import catalogue_for, establishment, strength_bonus
 from .warheads import TACTICAL_PROJECT, WARHEAD_PROJECT
 
 __all__ = [
@@ -391,7 +391,8 @@ def _raise_units(conn, world_id, turn, date, action, nation_id, effects) -> None
     # worth the same whichever door it came through.
     strength = raised_strength(
         conn, world_id, nation_id,
-        float(template["base_strength"]) if template else _UNIT_STRENGTH,
+        establishment(conn, world_id, nation_id, kind or "infantry",
+                      float(template["base_strength"])) if template else _UNIT_STRENGTH,
         str(template["domain"]) if template else "land")
     immediate_kind = kind or "infantry"
     affordable = min(
@@ -569,6 +570,7 @@ def replaceable_now(
         )
     }
     reachable = supply_map(conn, world_id, nation_id)
+    bonus = strength_bonus(conn, world_id, nation_id)
     for unit in conn.execute(
         "SELECT u.id, u.kind, u.strength, u.region_id, r.kind AS terrain"
         "  FROM unit u JOIN region r ON r.id = u.region_id"
@@ -577,12 +579,13 @@ def replaceable_now(
         (world_id, nation_id),
     ):
         template = templates.get(str(unit["kind"]))
-        establishment = (
-            float(template["base_strength"] or 0.0) if template is not None
+        full = (
+            float(template["base_strength"] or 0.0)
+            + bonus.get(str(unit["kind"]), 0.0) if template is not None
             else _UNIT_STRENGTH)
-        if establishment <= 0.0:
+        if full <= 0.0:
             continue
-        missing = establishment - float(unit["strength"])
+        missing = full - float(unit["strength"])
         if missing <= 0.01:
             continue
         out.short_formations += 1
@@ -596,7 +599,7 @@ def replaceable_now(
         if str(unit["region_id"]) not in reachable:
             out.blocked_out_of_supply += 1
             continue
-        allowance = min(missing, over(establishment * REINFORCE_MAX_FRACTION, span))
+        allowance = min(missing, over(full * REINFORCE_MAX_FRACTION, span))
         allowance = math.floor(allowance * 100.0) / 100.0
         if allowance <= 0.01:
             out.blocked_too_thin += 1
@@ -606,7 +609,9 @@ def replaceable_now(
     return out
 
 
-def _reinforce(conn, world_id, turn, date, action, nation_id, effects) -> None:
+def _reinforce(conn, world_id, turn, date, action, nation_id, effects, *,
+               max_fraction: float | None = None, budget_share: float | None = None,
+               quiet: bool = False) -> None:
     """Put strength back into the formations a nation already has.
 
     **The gap this fills.** `raise_units` could add a division and nothing could restore
@@ -646,6 +651,7 @@ def _reinforce(conn, world_id, turn, date, action, nation_id, effects) -> None:
         )
     }
     reachable = supply_map(conn, world_id, nation_id)
+    bonus = strength_bonus(conn, world_id, nation_id)
 
     wanted_kind = str(action.get("unit_kind") or "").strip().lower()
     wanted_region = (resolve_region(conn, world_id, action.get("region"))
@@ -659,7 +665,9 @@ def _reinforce(conn, world_id, turn, date, action, nation_id, effects) -> None:
         (world_id, nation_id),
     ).fetchall()
 
-    purse = float(nation["treasury"]) * REINFORCE_BUDGET_SHARE
+    purse = float(nation["treasury"]) * (
+        REINFORCE_BUDGET_SHARE if budget_share is None else budget_share)
+    cap = REINFORCE_MAX_FRACTION if max_fraction is None else max_fraction
     men = float(nation["manpower"])
     # ``Diff`` is frozen, so the drafts are held as plain pairs and turned into diffs once
     # the event they all cite exists. Building them first and stamping the id afterwards
@@ -683,8 +691,9 @@ def _reinforce(conn, world_id, turn, date, action, nation_id, effects) -> None:
         # and a mechanic that silently does nothing there is worse than one that prices a
         # formation generically, which is the choice raising already made.
         template = templates.get(str(unit["kind"]))
-        establishment = (
-            float(template["base_strength"] or 0.0) if template is not None
+        full = (
+            float(template["base_strength"] or 0.0)
+            + bonus.get(str(unit["kind"]), 0.0) if template is not None
             else _UNIT_STRENGTH)
         new_treasury = (
             float(template["cost_treasury"] or 0.0) if template is not None
@@ -692,8 +701,8 @@ def _reinforce(conn, world_id, turn, date, action, nation_id, effects) -> None:
         new_manpower = (
             float(template["cost_manpower"] or 0.0) if template is not None
             else _UNIT_MANPOWER_COST)
-        missing = establishment - float(unit["strength"])
-        if establishment <= 0.0 or missing <= 0.01:
+        missing = full - float(unit["strength"])
+        if full <= 0.0 or missing <= 0.01:
             continue
         if wanted_kind and str(unit["kind"]) != wanted_kind:
             continue
@@ -702,10 +711,10 @@ def _reinforce(conn, world_id, turn, date, action, nation_id, effects) -> None:
         if str(unit["region_id"]) not in reachable:
             continue
 
-        per_point_treasury = new_treasury / establishment * REINFORCE_TREASURY_SHARE
-        per_point_manpower = new_manpower / establishment * REINFORCE_MANPOWER_SHARE
+        per_point_treasury = new_treasury / full * REINFORCE_TREASURY_SHARE
+        per_point_manpower = new_manpower / full * REINFORCE_MANPOWER_SHARE
 
-        allowance = min(missing, over(establishment * REINFORCE_MAX_FRACTION, span))
+        allowance = min(missing, over(full * cap, span))
         if per_point_treasury > 0:
             allowance = min(allowance, purse / per_point_treasury)
         if per_point_manpower > 0:
@@ -730,6 +739,8 @@ def _reinforce(conn, world_id, turn, date, action, nation_id, effects) -> None:
         drafts.append((str(unit["id"]), allowance))
 
     if not drafts:
+        if quiet:
+            return
         effects.problems.append(
             f"{nation['name']} had nothing to reinforce: no formation of its own is both "
             "under strength and in supply, or neither the treasury nor the manpower would "
@@ -741,6 +752,8 @@ def _reinforce(conn, world_id, turn, date, action, nation_id, effects) -> None:
         conn, world_id=world_id, turn=turn, date=date,
         kind=EventKind.UNIT_RAISED, origin=EventOrigin.ENGINE,
         text=(
+            f"{nation['name']} refits {touched} formation(s) with {points:.1f} strength in "
+            "replacements." if quiet else
             f"{nation['name']} sends {points:.1f} strength in replacements to {touched} "
             f"formations in the line."
         ),

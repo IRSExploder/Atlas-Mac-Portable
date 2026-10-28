@@ -424,8 +424,16 @@ CAPTURE_THRESHOLD = 1.0
 #: casualties tipped the ratio, which sped up the advance, which inflicted more
 #: casualties. Halving them keeps the outcome driven by the armies the two sides started
 #: with rather than by how quickly the first exchange went.
-_LOSS_DECISIVE = 0.07
-_LOSS_CLOSE = 0.14
+#:
+#: **Halved again when the maps went to provinces.** These were set when most countries were
+#: one region and a war lasted two turns, so a month's fighting decided a country and its
+#: losses were incidental. Fought province by province the same war is fifteen or twenty
+#: months, an attacker fights a battle and a counterattack most of them, and at the old rate
+#: both armies were bled out long before either side was beaten -- a play-test watched
+#: Turkey's army go from 54 to nothing in Iran while taking three provinces of eleven. A
+#: province is a smaller fight than a country, and its month costs proportionately less.
+_LOSS_DECISIVE = 0.035
+_LOSS_CLOSE = 0.07
 
 #: Ground given up when a turn's fighting goes against the attacker. Much smaller than a
 #: turn's gain, so a grinding offensive that loses an exchange is set back rather than

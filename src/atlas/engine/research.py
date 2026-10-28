@@ -195,6 +195,41 @@ def catalogue_for(
         scenario.technologies if scenario is not None else TECHNOLOGIES)
 
 
+def strength_bonus(conn: sqlite3.Connection, world_id: str, nation_id: str
+                   ) -> dict[str, float]:
+    """Per unit kind, what ``nation_id``'s own research adds to a formation's full strength.
+
+    **Research is a country's, the unit template is the world's.** A programme that made
+    infantry stronger used to add to the world's one infantry template, so every country's
+    infantry grew whenever *anybody* finished it -- and grew again for each country that
+    did. A Modern Day play-test watched infantry go from 4.5 to 10.5 in five months as four
+    powers completed the same programme, and an AI ordering replacements every month
+    swelled its army past twice its size while a player who did not fell hopelessly
+    behind. The template now keeps the scenario's figure, and this is what a country adds
+    to it for what it has itself worked out.
+    """
+    done = {str(row[0]) for row in conn.execute(
+        "SELECT tech_id FROM technology WHERE world_id = ? AND nation_id = ?",
+        (world_id, nation_id))}
+    if not done:
+        return {}
+    bonus: dict[str, float] = {}
+    for tech in catalogue_for(conn, world_id):
+        if tech.id not in done:
+            continue
+        for effect in tech.effects:
+            if (effect.scope == "unit_template" and effect.field_name == "base_strength"
+                    and effect.subject):
+                bonus[effect.subject] = bonus.get(effect.subject, 0.0) + effect.amount
+    return bonus
+
+
+def establishment(conn: sqlite3.Connection, world_id: str, nation_id: str, kind: str,
+                  base: float) -> float:
+    """A formation's full strength for this country: the template plus its own research."""
+    return base + strength_bonus(conn, world_id, nation_id).get(kind, 0.0)
+
+
 def _renamed(catalogue: tuple[Technology, ...]) -> tuple[Technology, ...]:
     """Apply any programme rename the live re-record paid for.
 

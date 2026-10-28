@@ -99,6 +99,7 @@ from .pacing import rounds, span_of
 from .peace import honour_peace_terms, offer_peace
 from .production import advance_construction, autonomous_investment
 from .progress import ProgressReporter, StageState
+from .refit import refit
 from .resolution import reconcile_self_sieges, resolve_turn
 from .routing import (
     Band,
@@ -502,6 +503,9 @@ class JumpReport:
     eliminated: list[str] = field(default_factory=list)
     #: Land taken by annexation this turn, one line per conquest.
     annexed: list[str] = field(default_factory=list)
+    #: Peace and ceasefire offers made to the player, with the order that accepts each.
+    #: The engine answers every other power's offers by rule; the player's are theirs.
+    offers_to_you: list[str] = field(default_factory=list)
     promoted: list[str] = field(default_factory=list)
     demoted: list[str] = field(default_factory=list)
     tracked_acted: list[str] = field(default_factory=list)
@@ -851,6 +855,8 @@ class JumpReport:
             ranked.append((96, f"{line} has ceased to exist"))
         for line in self.annexed:
             ranked.append((93, line))
+        for line in self.offers_to_you:
+            ranked.append((97, line))
         for entry in self.fell:
             ranked.append((85, entry))
         # Above an ordinary fall, because it is rarer and because a reader who sees
@@ -1738,6 +1744,7 @@ class TurnEngine:
         # offensive saw "1 clash" three turns running and could not tell whether they were
         # winning, losing, or wasting a division a month on it.
         report.front.extend(resolution.headlines)
+        report.offers_to_you.extend(resolution.offers_to_player)
         report.front.extend(effects.headlines)
         report.annexed.extend(effects.annexed)
         report.air.extend(_air_lines(self.conn, self.world_id, resolution,
@@ -1904,6 +1911,13 @@ class TurnEngine:
             for line in spirit.news:
                 if line not in report.friction:
                     report.friction.append(line)
+
+            # Standing replacements for formations worn down in the fighting. After the
+            # supply walk, on the same reading of the map, because only what can be
+            # reached is refilled. See `atlas.engine.refit`.
+            refits = refit(self.conn, self.world_id, turn=turn, date=round_date,
+                           span=round_span)
+            report.rejections.extend(refits.problems)
 
             # **After the fighting has moved whatever it is going to move.** Entrenchment
             # is earned by being somewhere at the end of a round rather than at the start
@@ -3000,6 +3014,8 @@ class TurnEngine:
                 turn=turn,
                 date=date,
             )
+            if offered.to_player:
+                report.offers_to_you.append(offered.to_player)
             self._refused(
                 report, nation_id=nation_id, name=str(entry["name"]), turn=turn,
                 channel="peace_offer", reasons=offered.refused,
