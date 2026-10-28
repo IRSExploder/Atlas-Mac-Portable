@@ -49,7 +49,8 @@ hiddenimports = sorted(
 )
 # The API provider is imported lazily (only `--api` reaches it) and keyring finds its
 # backends through package metadata at run time; both are invisible to the import graph.
-hiddenimports += ["anthropic", "keyring", "keyring.backends.Windows", "keyring.backends.fail"]
+hiddenimports += ["anthropic", "httpx", "keyring", "keyring.backends.Windows",
+                  "keyring.backends.fail"]
 
 EXCLUDES = [
     "shapely", "topojson", "requests", "numpy", "pytest", "_pytest", "ruff",

@@ -26,14 +26,14 @@ def _start() -> int:
 def _double_click() -> list[str]:
     """What opening the app with no arguments means.
 
-    The downloadable app, on a Mac and on Windows alike, is the Claude API build: Claude
-    when a key is saved (Settings > AI providers), rule-based bots until then. A player who
-    downloads it has no subscription CLIs installed, so it never starts in that mode; from
-    a checkout, `atlas start` still does.
+    The downloadable app, on a Mac and on Windows alike, is the API build: Claude or Gemini
+    (whichever is chosen in Settings > AI providers) when a key is saved, rule-based bots
+    until then. A player who downloads it has no subscription CLIs installed, so it never
+    starts in that mode; from a checkout, `atlas start` still does.
     """
-    from atlas.providers.api_provider import api_key
+    from atlas.providers.api_choice import chosen, key_for
 
-    return ["start", "--api" if api_key() else "--no-ai"]
+    return ["start", "--api" if key_for(chosen()) else "--no-ai"]
 
 
 if __name__ == "__main__":

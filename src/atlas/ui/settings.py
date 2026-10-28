@@ -8,11 +8,12 @@ It decides nothing about where a preference is kept. It emits :attr:`SettingsScr
 with a new :class:`Preferences` and the caller stores it: the main menu as the player's
 own defaults, an open game window through ``set_preferences``.
 
-**The provider panel** shows the one-line status the caller hands it, and holds the
-Anthropic API key box for ``--api`` play. The key is not a preference and does not wait for
-Save: *Save key* writes it to the system keychain at once (see
-:mod:`atlas.providers.keystore`), the API provider reads it on its next call, and the field
-is cleared afterwards so the key is never left on screen.
+**The provider panel** shows the one-line status the caller hands it, a Claude | Gemini
+switch for which hosted model ``--api`` play uses, and the key box for the one selected.
+Neither is a preference and neither waits for Save: the switch is remembered at once (see
+:mod:`atlas.providers.api_choice`), *Save key* writes the key to the system keychain at
+once (see :mod:`atlas.providers.keystore`), the provider reads it on its next call, and the
+field is cleared afterwards so the key is never left on screen.
 """
 
 from __future__ import annotations
@@ -40,22 +41,23 @@ class _KeyTest(QThread):
 
     answered = Signal(str)
 
-    def __init__(self, key: str, parent=None) -> None:
+    def __init__(self, key: str, choice: str = "claude", parent=None) -> None:
         super().__init__(parent)
         self._key = key
+        self._choice = choice
 
     def run(self) -> None:
         import asyncio
 
-        from ..providers.api_provider import ApiProvider, api_role_models
+        from ..providers.api_choice import api_provider, role_models
         from ..providers.base import ProviderRequest
         from ..state.models import Role
 
-        model = api_role_models()[Role.ADVISOR][1]
+        model = role_models(self._choice)[Role.ADVISOR][1]
         try:
-            result = asyncio.run(ApiProvider(self._key).invoke(ProviderRequest(
-                role=Role.ADVISOR, prompt="Reply with the single word: ready.",
-                model=model, timeout_s=60.0)))
+            result = asyncio.run(api_provider(self._choice, key=self._key).invoke(
+                ProviderRequest(role=Role.ADVISOR, prompt="Reply with the single word: ready.",
+                                model=model, timeout_s=60.0)))
         except Exception as exc:  # noqa: BLE001 - reported, never raised into Qt
             self.answered.emit(f"Test failed: {exc}")
             return
@@ -63,25 +65,37 @@ class _KeyTest(QThread):
             served = result.audit.served if result.audit else model
             self.answered.emit(f"The key works: {served} answered in {result.duration_s:.1f}s.")
         elif result.failure.kind.value == "not_authenticated":
-            self.answered.emit("Anthropic refused this key. Check it was copied in full.")
+            who = "Google" if self._choice == "gemini" else "Anthropic"
+            self.answered.emit(f"{who} refused this key. Check it was copied in full.")
         else:
             self.answered.emit(f"Test failed: {result.failure.message}.")
 
 
-def _key_status() -> str:
+#: Per provider: the environment variable, the keychain account, how its keys start, and
+#: where a player gets one.
+_KEY_FACTS = {
+    "claude": ("ATLAS_ANTHROPIC_API_KEY", "anthropic-api-key", "sk-ant-",
+               "Anthropic API key", "console.anthropic.com"),
+    "gemini": ("ATLAS_GEMINI_API_KEY", "gemini-api-key", "AIza",
+               "Gemini API key", "aistudio.google.com"),
+}
+
+
+def _key_status(choice: str = "claude") -> str:
     """What the box should say about the key in use, never the key itself."""
     import os
 
-    from ..providers.api_provider import API_KEY_ENV
+    from ..providers.api_choice import LABELS
     from ..providers.keystore import stored_key
 
-    if os.environ.get(API_KEY_ENV, "").strip():
-        return f"Using the key from the {API_KEY_ENV} environment variable."
-    saved = stored_key()
+    env, account, _prefix, noun, where = _KEY_FACTS[choice]
+    if os.environ.get(env, "").strip():
+        return f"Using the key from the {env} environment variable."
+    saved = stored_key(account)
     if saved:
         return f"A key is saved (ending …{saved[-4:]}). Paste a new one to replace it."
-    return ("No API key saved. Paste your Anthropic API key to play in Claude API mode "
-            "(atlas start --api).")
+    return (f"No {noun} saved. Paste one (from {where}) to play with "
+            f"{LABELS[choice]} writing the world.")
 
 
 class SettingsScreen(QDialog):
@@ -169,11 +183,29 @@ class SettingsScreen(QDialog):
                                    style="body_small", colour="ink_dim", theme=theme, wrap=True)
         root.addWidget(self._provider)
 
-        root.addWidget(TextLabel("Anthropic API key", style="body", theme=theme))
+        from ..providers.api_choice import CHOICES, LABELS, chosen
+
+        self._choice = chosen()
+        pick = QHBoxLayout()
+        pick.setSpacing(8)
+        pick.addWidget(TextLabel("Model", style="body", theme=theme))
+        self._choice_chips: dict[str, Chip] = {}
+        for choice in CHOICES:
+            chip = Chip(LABELS[choice], theme=theme, selected=choice == self._choice)
+            chip.setToolTip({"claude": "Claude Haiku 5.5, over the Anthropic API",
+                             "gemini": "Gemini 3.5 Flash-Lite, over the Gemini API"}[choice])
+            chip.clicked.connect(lambda choice=choice: self._pick_provider(choice))
+            self._choice_chips[choice] = chip
+            pick.addWidget(chip)
+        pick.addStretch(1)
+        root.addLayout(pick)
+
+        self._key_label = TextLabel(_KEY_FACTS[self._choice][3], style="body", theme=theme)
+        root.addWidget(self._key_label)
         self._key_box = QLineEdit()
         self._key_box.setObjectName("apiKeyBox")
         self._key_box.setEchoMode(QLineEdit.EchoMode.Password)
-        self._key_box.setPlaceholderText("sk-ant-…")
+        self._key_box.setPlaceholderText(_KEY_FACTS[self._choice][2] + "…")
         root.addWidget(self._key_box)
         key_row = QHBoxLayout()
         key_row.setSpacing(8)
@@ -184,8 +216,8 @@ class SettingsScreen(QDialog):
             key_row.addWidget(chip)
         key_row.addStretch(1)
         root.addLayout(key_row)
-        self._key_status = TextLabel(_key_status(), style="body_small", colour="ink_dim",
-                                     theme=theme, wrap=True)
+        self._key_status = TextLabel(_key_status(self._choice), style="body_small",
+                                     colour="ink_dim", theme=theme, wrap=True)
         root.addWidget(self._key_status)
         self._tester: _KeyTest | None = None
 
@@ -248,45 +280,72 @@ class SettingsScreen(QDialog):
 
     # -- the API key: acts at once, independently of Save -----------------------------------
 
+    def _pick_provider(self, choice: str) -> None:
+        """Switch the key box to ``choice`` and make it the model API mode plays with.
+
+        Acts at once, like the key itself, because it is read at launch rather than from
+        the preferences Save writes.
+        """
+        from ..providers.api_choice import set_chosen
+
+        self._choice = choice
+        set_chosen(choice)
+        for name, chip in self._choice_chips.items():
+            chip.set_selected(name == choice)
+        self._key_label.setText(_KEY_FACTS[choice][3])
+        self._key_box.clear()
+        self._key_box.setPlaceholderText(_KEY_FACTS[choice][2] + "…")
+        from ..providers.api_choice import key_for
+
+        self._key_status.setText(_key_status(choice)
+                                 + (self._restart_note() if key_for(choice) else ""))
+
+    def _restart_note(self) -> str:
+        """The mode is chosen at launch, so a session without this model in its seats --
+        bots only, or the other provider -- picks the change up from the next one."""
+        from ..engine import bots
+        from ..providers.api_choice import LABELS, launched
+
+        if bots.controls_role("world_sim") or launched() != self._choice:
+            return f" Quit and reopen ATLAS to play with {LABELS[self._choice]}."
+        return ""
+
     def _save_key(self) -> None:
+        from ..providers.api_choice import set_chosen
         from ..providers.keystore import store_key
 
         key = self._key_box.text().strip()
         if not key:
             self._key_status.setText("Paste a key into the box first.")
             return
-        from ..engine import bots
-
-        where = store_key(key)
+        _env, account, prefix, noun, _where = _KEY_FACTS[self._choice]
+        where = store_key(key, account)
+        set_chosen(self._choice)
         self._key_box.clear()
-        warning = "" if key.startswith("sk-ant-") else (
-            " It does not look like an Anthropic key (they start sk-ant-); press Test.")
-        # Bots in the world simulator's seat means this session is bots-only; the mode is
-        # chosen at launch, so Claude takes over from the next one.
-        restart = (" Quit and reopen ATLAS to play with Claude."
-                   if bots.controls_role("world_sim") else "")
-        self._key_status.setText(f"Saved in {where}.{warning}{restart}")
+        warning = "" if key.startswith(prefix) else (
+            f" It does not look like an {noun} (they start {prefix}); press Test.")
+        self._key_status.setText(f"Saved in {where}.{warning}{self._restart_note()}")
 
     def _test_key(self) -> None:
-        from ..providers.api_provider import api_key
+        from ..providers.api_choice import key_for
 
-        key = self._key_box.text().strip() or api_key()
+        key = self._key_box.text().strip() or key_for(self._choice)
         if not key:
             self._key_status.setText("No key to test. Paste one, or save one first.")
             return
         if self._tester is not None and self._tester.isRunning():
             return
         self._key_status.setText("Testing with one tiny request (a fraction of a cent)…")
-        self._tester = _KeyTest(key, self)
+        self._tester = _KeyTest(key, self._choice, self)
         self._tester.answered.connect(self._key_status.setText)
         self._tester.start()
 
     def _remove_key(self) -> None:
         from ..providers.keystore import forget_key
 
-        forget_key()
+        forget_key(_KEY_FACTS[self._choice][1])
         self._key_box.clear()
-        self._key_status.setText(_key_status())
+        self._key_status.setText(_key_status(self._choice))
 
     def done(self, result: int) -> None:  # noqa: D401 -- Qt override
         # Closing while a test is in flight must not destroy its thread under it.

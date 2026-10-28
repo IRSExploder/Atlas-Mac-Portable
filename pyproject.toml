@@ -21,6 +21,8 @@ bake = [
 # The metered Anthropic API path (`--api`). Off unless asked for; see providers/api_provider.
 api = [
     "anthropic>=2.3",
+    # The Gemini provider posts to Google's API directly; anthropic already depends on it.
+    "httpx>=0.27",
     # The key typed into Settings goes to the macOS Keychain (or the OS equivalent).
     "keyring>=25",
 ]

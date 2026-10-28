@@ -41,12 +41,20 @@ developer, right-click it, choose **Open**, then **Open** again (once).
 
 ## API mode
 
-**The key:** open **Settings > AI providers**, paste it, press **Save key**, then **Test**. It
+**Claude or Gemini.** API mode runs on either Claude (Haiku 5.5, Anthropic key) or Gemini
+(3.5 Flash-Lite, Google AI Studio key). Pick one with the **Model: Claude | Gemini** switch
+in **Settings > AI providers**; each keeps its own key, and the switch applies from the next
+launch. Without a choice, ATLAS uses whichever has a key (Claude if both do). For one session,
+`atlas start --api --api-provider gemini` or `ATLAS_API_PROVIDER=gemini` overrides it.
+
+**The key:** open **Settings > AI providers**, pick the model, paste its key, press **Save
+key**, then **Test**. It
 is stored in your Mac's Keychain (or the system keychain elsewhere; a private file only
 where there is none) and takes effect on the next call, with no restart. **Remove** deletes
 it.
 
-Alternatively set `ATLAS_ANTHROPIC_API_KEY`, which wins over a saved key. Do not use
+Alternatively set `ATLAS_ANTHROPIC_API_KEY` (Claude) or `ATLAS_GEMINI_API_KEY` (Gemini),
+which win over a saved key. A Gemini key comes from aistudio.google.com and starts `AIza`. Do not use
 `ANTHROPIC_API_KEY`: ATLAS strips that variable from every CLI it launches, so a stray key
 cannot switch a subscription CLI to metered billing, and `atlas doctor` warns when it sees
 it. The separate name keeps that guard meaningful.
@@ -71,6 +79,12 @@ one role:
 
 Default effort: world simulation `high`, council `medium`, diplomacy, freeform and the
 extraction/digest calls `low`.
+
+**Gemini** defaults every seat to `gemini-3.5-flash-lite`. `ATLAS_GEMINI_MODEL` changes all
+of them, `ATLAS_GEMINI_MODEL_WORLD_SIM` (or any `_<ROLE>`) just one. Structured answers use
+Gemini's JSON-schema mode, with the same bare-JSON retry if a schema is refused, and the same
+rule gates afterwards. Overloaded or rate-limited calls are retried twice before a turn
+reports them.
 
 **If turn reports feel thin**, move only the world simulation up a model:
 `ATLAS_API_MODEL_WORLD_SIM=claude-sonnet-5-5` (≈ $0.43 per turn at list price). It produces

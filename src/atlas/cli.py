@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -210,9 +211,14 @@ def _add_offline_flags(parser: argparse.ArgumentParser) -> None:
     )
     parser.add_argument(
         "--api", action="store_true",
-        help="Claude over the Anthropic API (key in ATLAS_ANTHROPIC_API_KEY) writes the world, "
-             "talks, the council and odd orders; rule-based bots parse orders and play the "
-             "minor powers, covert channel and Security Council",
+        help="a hosted model -- Claude (key in ATLAS_ANTHROPIC_API_KEY) or Gemini (key in "
+             "ATLAS_GEMINI_API_KEY), as chosen in Settings or by --api-provider -- writes the "
+             "world, talks, the council and odd orders; rule-based bots parse orders and "
+             "play the minor powers, covert channel and Security Council",
+    )
+    parser.add_argument(
+        "--api-provider", choices=("claude", "gemini"),
+        help="which hosted model --api uses this session (default: the Settings choice)",
     )
     parser.add_argument(
         "--no-ai", action="store_true",
@@ -231,17 +237,33 @@ def _offline_providers(args: argparse.Namespace) -> dict | None:
     from .providers.mock import MockProvider
 
     if getattr(args, "api", False):
-        from .providers.api_provider import API_KEY_ENV, ApiProvider, api_role_models
+        from .providers.api_choice import (
+            CHOICE_ENV,
+            LABELS,
+            api_provider,
+            chosen,
+            mark_launched,
+            role_models,
+        )
+        from .providers.api_provider import API_KEY_ENV
         from .providers.cli_provider import use_api_pins
+        from .providers.gemini_provider import GEMINI_KEY_ENV
 
-        api = ApiProvider()
+        if getattr(args, "api_provider", None):
+            # For the session, and for anything later in it that asks which one is in use.
+            os.environ[CHOICE_ENV] = args.api_provider
+        choice = chosen()
+        mark_launched(choice)
+        api = api_provider(choice)
         if not api.available():
             # Not fatal: the window opens, and the key can be added under Settings > AI
             # providers. The provider reads it on every call, so no restart is needed.
-            print(f"api: no key yet; add it in Settings > AI providers, or set {API_KEY_ENV}")
+            env = GEMINI_KEY_ENV if choice == "gemini" else API_KEY_ENV
+            print(f"api: no {LABELS[choice]} key yet; add it in Settings > AI providers, "
+                  f"or set {env}")
         # The hybrid: a model where prose and judgement show, a rule where they do not.
         bots.set_bots(roles=bots.SCOPES | {"parser"})
-        pins = api_role_models()
+        pins = role_models(choice)
         use_api_pins(pins)
         print("api: " + ", ".join(f"{role.value} on {pins[role][1]}" for role in (
             Role.WORLD_SIM, Role.DIPLOMACY, Role.ADVISOR, Role.FREEFORM))
@@ -396,8 +418,11 @@ def _cmd_start(args: argparse.Namespace) -> int:
 
     offline = _offline_providers(args)
     if getattr(args, "api", False):
-        status = ("Claude API mode (metered): Claude writes the world, talks, the council and "
-                  "odd orders; rule-based bots play the rest. Your key is set below.")
+        from .providers.api_choice import LABELS, chosen
+
+        name = LABELS[chosen()]
+        status = (f"{name} API mode (metered): {name} writes the world, talks, the council "
+                  "and odd orders; rule-based bots play the rest. Your key is set below.")
     elif getattr(args, "no_ai", False):
         status = "No AI: rule-based bots play every seat; no model is called."
     elif offline is not None:
@@ -1301,15 +1326,17 @@ async def _probe_api(timeout_s: float) -> int:
     """
     from .engine.diplomacy import COMMITMENT_SCHEMA
     from .engine.freeform import FREEFORM_SCHEMA
-    from .providers.api_provider import API_KEY_ENV, ApiProvider, api_role_models
+    from .providers.api_choice import LABELS, api_provider, chosen, role_models
     from .providers.base import ProviderRequest
     from .state.diff import diff_batch_schema
 
-    provider = ApiProvider()
+    choice = chosen()
+    provider = api_provider(choice)
     if not provider.available():
-        print(f"{API_KEY_ENV} is not set; nothing to probe")
+        print(f"no {LABELS[choice]} API key is set; nothing to probe")
         return 1
-    pins = api_role_models()
+    print(f"probing {LABELS[choice]}")
+    pins = role_models(choice)
     checks = [
         (Role.ADVISOR, "Reply with the single word: ready.", None),
         (Role.WORLD_SIM, "Nothing happens this turn. Return no diffs, no events, no contests "
