@@ -126,7 +126,8 @@ _EXTRA_ALIASES: dict[str, tuple[str, ...]] = {
                    "pull back", "capture", "conquer", "seize", "take over", "take",
                    "overrun", "storm"),
     "raise_units": ("train", "draft"),
-    "economic_investment": ("boost the economy", "industrialise", "industrialize"),
+    "economic_investment": ("boost the economy", "industrialise", "industrialize",
+                            "rebuild", "reconstruct"),
     "espionage": ("spy on", "investigate", "scout"),
     "fortify": ("defend", "hold the line"),
     "build_project": ("construct",),
@@ -307,6 +308,12 @@ def _nations_in(conn: sqlite3.Connection, world_id: str, clause: str, *,
         if len(hits) == 1:
             return [hits.pop()]
     return []
+
+
+def _alive(conn: sqlite3.Connection, world_id: str, nation_id: str) -> bool:
+    row = conn.execute("SELECT is_alive FROM nation WHERE world_id = ? AND id = ?",
+                       (world_id, nation_id)).fetchone()
+    return bool(row and row[0])
 
 
 def _unit_kind(conn: sqlite3.Connection, world_id: str, clause: str) -> str | None:
@@ -541,6 +548,21 @@ def _parse_clause(conn: sqlite3.Connection, world_id: str, nation_id: str, claus
             return None, why
         action["target_nation"] = nations[0]
         return action, None
+    # **A country that no longer exists is now a place.** "Invest in Iraq" after Iraq was
+    # annexed means the land, and reading it as an act aimed at a state that is gone was
+    # refused with "Iraq no longer exists" -- a player asking how else to say Iraq. Its
+    # former ground becomes the order's ground, and nobody is its target.
+    gone = [n for n in nations if not _alive(conn, world_id, n)]
+    if gone:
+        nations = [n for n in nations if n not in gone]
+        if not regions:
+            regions = [(0, str(row[0])) for dead in gone for row in conn.execute(
+                "SELECT id FROM region WHERE world_id = ? AND home_nation_id = ?"
+                "   AND owner_nation_id IS NOT NULL ORDER BY development DESC, id",
+                (world_id, dead))]
+        if regions and action_type in ("build_project", "fortify", "raise_units",
+                                       "economic_investment", "reinforce"):
+            action["to_region"] = action["from_region"] = regions[0][1]
     action["tone"] = _tone(clause)
     if nations:
         action["target_nation"] = nations[0]

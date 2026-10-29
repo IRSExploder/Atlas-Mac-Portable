@@ -1014,7 +1014,23 @@ def _requirements_met(
             return Refusal("needs_target",
                            f"there is no nation called {target!r} on this map.", others)
         if not row["is_alive"]:
-            return Refusal("needs_target", f"{target} no longer exists.", others)
+            # Say where its land went, because that is what the player meant: "Iraq" after
+            # Iraq was annexed is a province of theirs, and the order for a province is the
+            # one that names it.
+            held = conn.execute(
+                "SELECT r.name, n.name FROM region r JOIN nation n ON n.id = r.owner_nation_id"
+                " WHERE r.world_id = ? AND r.home_nation_id = ? AND n.is_alive = 1"
+                " ORDER BY r.development DESC LIMIT 1", (world_id, target)).fetchone()
+            name = conn.execute("SELECT name FROM nation WHERE id = ?", (target,)).fetchone()
+            them = str(name[0]) if name else target
+            if held:
+                return Refusal(
+                    "needs_target",
+                    f"{them} is no longer a country; its land is now {held[1]}'s, so there "
+                    "is no state to aim this at.",
+                    f"to work on the land itself, name the province: "
+                    f"\"Invest in {held[0]}\" or \"Fortify {held[0]}\".")
+            return Refusal("needs_target", f"{them} no longer exists.", others)
 
     if "at_war" in kind.requires or "not_at_war" in kind.requires:
         row = conn.execute(

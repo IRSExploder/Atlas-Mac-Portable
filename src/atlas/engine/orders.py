@@ -85,6 +85,9 @@ def _unit_kind(conn: sqlite3.Connection, world_id: str, action: dict) -> str | N
 #: a quarter's administration, not of a five-year plan.
 _INVESTMENT_COST = 6.0
 _INVESTMENT_GAIN = 1.5
+#: And what it does for the province it was aimed at, when it names one of your own. A
+#: quarter of a land reform's development: money spent somewhere should show there.
+_INVESTMENT_DEVELOPMENT = 0.25
 _UNIT_TREASURY_COST = 6.0
 _UNIT_MANPOWER_COST = 10.0
 _UNIT_STRENGTH = 4.0
@@ -313,22 +316,36 @@ def _invest(conn, world_id, turn, date, action, nation_id, effects) -> None:
         )
         return
 
+    # **Aimed somewhere, when the order names a province of yours.** "Invest in Iraq" after
+    # annexing Iraq used to fund the national economy and leave Iraq exactly as it was.
+    place = None
+    for key in ("to_region", "region"):
+        if action.get(key):
+            place = conn.execute(
+                "SELECT id, name FROM region WHERE world_id = ? AND id = ?"
+                "   AND owner_nation_id = ?", (world_id, str(action[key]), nation_id)).fetchone()
+            if place is not None:
+                break
     event_id = record_event(
         conn, world_id=world_id, turn=turn, date=date,
         kind=EventKind.ECONOMIC_REFORM, origin=EventOrigin.ENGINE,
-        text=f"{nation['name']} directs public funds into industry and rearmament.",
+        text=(f"{nation['name']} directs public funds into {place['name']}." if place
+              else f"{nation['name']} directs public funds into industry and rearmament."),
         actor_nation_id=nation_id, visibility=Visibility.PUBLIC,
     )
+    diffs = [
+        Diff("nation", nation_id, "treasury", DiffOp.ADJUST, -_INVESTMENT_COST,
+             reason_event_id=event_id),
+        Diff("nation", nation_id, "economy", DiffOp.ADJUST, _INVESTMENT_GAIN,
+             reason_event_id=event_id),
+    ]
+    if place is not None:
+        diffs.append(Diff("region", str(place["id"]), "development", DiffOp.ADJUST,
+                          _INVESTMENT_DEVELOPMENT, reason_event_id=event_id))
     _commit(
-        conn, world_id, turn,
-        [
-            Diff("nation", nation_id, "treasury", DiffOp.ADJUST, -_INVESTMENT_COST,
-                 reason_event_id=event_id),
-            Diff("nation", nation_id, "economy", DiffOp.ADJUST, _INVESTMENT_GAIN,
-                 reason_event_id=event_id),
-        ],
-        effects,
-        f"{nation['name']} invested in its economy.",
+        conn, world_id, turn, diffs, effects,
+        f"{nation['name']} invested in {place['name']}." if place
+        else f"{nation['name']} invested in its economy.",
     )
 
 
