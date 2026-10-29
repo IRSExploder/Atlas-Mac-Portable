@@ -325,7 +325,9 @@ def _contested(conn: sqlite3.Connection, world_id: str) -> dict[str, tuple[str, 
         " ORDER BY region_id, attacker_id",
         (world_id,),
     ):
-        pressure = float(row["pressure"])
+        # A share, as documented on `MapViewState.contested`: the outline width is drawn
+        # from it, and an out-of-range value smeared a province into a blob.
+        pressure = min(1.0, max(0.0, float(row["pressure"])))
         current = found.get(row["region_id"])
         if current is None or pressure > current[1]:
             found[row["region_id"]] = (row["attacker_id"], pressure)

@@ -12,7 +12,7 @@ here is three lines.
 
 from __future__ import annotations
 
-from PySide6.QtCore import QRect, Qt, Signal
+from PySide6.QtCore import QPointF, QRect, Qt, Signal
 from PySide6.QtGui import QColor, QLinearGradient, QPainter
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QWidget
 
@@ -760,6 +760,14 @@ class _LegendSwatch(QWidget):
                 painter.drawLine(
                     offset, rect.height(), offset + rect.height(), 0
                 )
+        elif self._key == SwatchKind.SIEGE:
+            painter.fillRect(rect, QColor(theme.map_unclaimed))
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(QColor(theme.map_contested))
+            for y in range(1, rect.height() + 1, 4):
+                for x in range(1 + (y // 4 % 2) * 2, rect.width() + 1, 4):
+                    painter.drawEllipse(QPointF(x, y), 1.1, 1.1)
         else:
             painter.fillRect(rect, QColor(theme.map_unclaimed))
             pen = QPen(QColor(theme.brass))

@@ -156,6 +156,8 @@ class RegionItem(QGraphicsPathItem):
             # dropped. A two-colour texture paints both: the owner's colour underneath,
             # the occupier's hatched over it, which is what the legend promises.
             self.setBrush(QBrush(_hatch(colour, QColor(visual.pattern_colour))))
+        elif visual.pattern is FillPattern.SIEGE and visual.pattern_colour:
+            self.setBrush(QBrush(_dots(colour, QColor(visual.pattern_colour))))
         elif visual.pattern is FillPattern.NONE:
             self.setBrush(QBrush(Qt.BrushStyle.NoBrush))
         else:
@@ -640,4 +642,31 @@ def _hatch(base: QColor, over: QColor) -> QPixmap:
     painter.end()
 
     _HATCH_CACHE[key] = tile
+    return tile
+
+
+_DOT_CACHE: dict[tuple[str, str], QPixmap] = {}
+
+
+def _dots(base: QColor, over: QColor) -> QPixmap:
+    """A 10x10 tile: the holder's colour, with the attacker's dots staggered over it.
+
+    The siege pattern. Stripes mean the ground is held by someone else; dots mean someone
+    is still fighting for it -- and a front reads as dots turning into stripes.
+    """
+    key = (base.name(), over.name())
+    cached = _DOT_CACHE.get(key)
+    if cached is not None:
+        return cached
+    tile = QPixmap(10, 10)
+    tile.fill(base)
+    painter = QPainter(tile)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setBrush(over)
+    # Staggered, and the corner dot drawn in all four corners so it wraps seamlessly.
+    for x, y in ((0, 0), (10, 0), (0, 10), (10, 10), (5, 5)):
+        painter.drawEllipse(QPointF(x, y), 1.9, 1.9)
+    painter.end()
+    _DOT_CACHE[key] = tile
     return tile

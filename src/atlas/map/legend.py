@@ -56,6 +56,7 @@ class SwatchKind(StrEnum):
     PLAYER = "player"
     CHANGED = "changed"
     CONTESTED = "contested"
+    SIEGE = "siege"
     FOCUS = "focus"
     DIMMED = "dimmed"
     UNKNOWN = "unknown"
@@ -132,6 +133,7 @@ _POLITICAL = (
     LegendEntry(SwatchKind.PLAYER, "{nation} — you"),
     LegendEntry(SwatchKind.CHANGED, "Changed hands this turn"),
     LegendEntry(SwatchKind.CONTESTED, "Occupied, not annexed"),
+    LegendEntry(SwatchKind.SIEGE, "Under attack"),
     LegendEntry(SwatchKind.FOCUS, "Acting for itself"),
 )
 
@@ -152,6 +154,7 @@ LEGENDS: dict[MapLayer, LayerLegend] = {
         driven_by="Declarations of war, offensives, and ground that changed hands",
         entries=(
             LegendEntry(SwatchKind.CONTESTED, "Occupied, not annexed"),
+            LegendEntry(SwatchKind.SIEGE, "Under attack"),
             LegendEntry(SwatchKind.CHANGED, "Changed hands this turn"),
             LegendEntry(SwatchKind.DIMMED, "At peace"))),
     MapLayer.FOG: LayerLegend(

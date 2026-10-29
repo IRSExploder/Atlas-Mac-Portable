@@ -159,6 +159,9 @@ class FillPattern(StrEnum):
     SOLID = "solid"
     #: Occupation: the owner's colour, hatched with the occupier's.
     HATCHED = "hatched"
+    #: A siege in progress: the holder's colour, dotted with the attacker's. Not stripes,
+    #: because "they hold it" and "they are fighting for it" are different news.
+    SIEGE = "siege"
     NONE = "none"
 
 

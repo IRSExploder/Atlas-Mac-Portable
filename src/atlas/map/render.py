@@ -706,12 +706,14 @@ def build_scene(
             style = OutlineStyle.NORMAL
             outline, width = palette.outline, 0.5
 
-        # Occupation hatches with whoever is standing on the ground; a siege in progress
-        # hatches with whoever is pushing. Both say "this is not simply held".
+        # Occupation stripes with whoever is standing on the ground; a siege in progress is
+        # dotted with whoever is pushing. Both say "this is not simply held", and they used
+        # to say it the same way -- so a player could not tell ground they had taken from
+        # ground they were still fighting for.
         if known and occupied:
             pattern, pattern_colour = FillPattern.HATCHED, controller.colour
         elif known and besieger is not None:
-            pattern, pattern_colour = FillPattern.HATCHED, besieger.colour
+            pattern, pattern_colour = FillPattern.SIEGE, besieger.colour
         else:
             pattern, pattern_colour = FillPattern.SOLID, None
 

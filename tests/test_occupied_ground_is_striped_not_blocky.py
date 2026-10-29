@@ -73,3 +73,41 @@ def test_a_selected_province_draws_no_dotted_box():
     painter.end()
     assert not option.state & QStyle.StateFlag.State_Selected
     del view
+
+
+def test_ground_under_attack_is_dotted_and_ground_taken_is_striped(conn):
+    """Asked for in play: occupied and besieged land looked the same. Taken ground stripes
+    with the occupier; ground still being fought for is dotted with the attacker."""
+    from atlas.map.legend import LEGENDS, SwatchKind
+    from atlas.map.query import load_map_view
+    from atlas.map.render import build_scene
+    from atlas.map.scene_model import MapLayer
+
+    conn.execute("UPDATE relation SET at_war = 1 WHERE world_id = 'sandbox' AND"
+                 " nation_a IN ('aurelia', 'karthos') AND nation_b IN ('aurelia', 'karthos')")
+    conn.execute("INSERT INTO contest (id, world_id, region_id, attacker_id, defender_id,"
+                 " pressure, opened_turn, last_turn) VALUES"
+                 " ('c1', 'sandbox', 'r_south', 'aurelia', 'karthos', 40, 1, 1)")
+    conn.execute("UPDATE region SET controller_nation_id = 'aurelia' WHERE id = 'r_west'")
+
+    class _Flat:
+        key = "flat"
+
+        def project(self, lon, lat):
+            return lon, -lat
+
+    view = load_map_view(conn, "sandbox", observer_nation_id="aurelia")
+    scene = build_scene(view, projection=_Flat(), pack_id="sandbox")
+    pattern = {v.region_id: v.pattern for v in scene.regions}
+    assert pattern["r_south"] is FillPattern.SIEGE
+    assert pattern["r_west"] is FillPattern.HATCHED
+    for layer in (MapLayer.POLITICAL, MapLayer.FRONTS):
+        assert SwatchKind.SIEGE in {entry.swatch for entry in LEGENDS[layer].entries}
+
+
+def test_the_siege_texture_is_not_the_occupation_texture():
+    from atlas.ui.map_items import _dots, _hatch
+
+    QApplication.instance() or QApplication([])
+    base, over = QColor("#505650"), QColor("#B5473F")
+    assert _dots(base, over).toImage() != _hatch(base, over).toImage()
