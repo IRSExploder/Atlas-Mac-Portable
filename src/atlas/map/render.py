@@ -417,6 +417,50 @@ def _country_names(view: MapViewState, place, palette: MapPalette, me: str | Non
     return out
 
 
+#: A network at least this good can tell which of a power's formations are upgraded.
+_SEES_UPGRADES = frozenset({"workable", "good", "excellent"})
+
+
+def _estimated(view: MapViewState, owner: str, region_id: str, domain, strength: float):
+    """The observer's estimate of a stack, or ``None`` when it sees the truth -- its own
+    forces, an ally's, or a view with no observer at all."""
+    me = view.observer_nation_id
+    if not me or owner == me:
+        return None
+    feeling = view.attitude.get(owner)
+    if feeling is not None and feeling[1] in ("alliance", "defensive"):
+        return None
+    network = view.networks.get(owner)
+    if network is None:
+        return None
+    from dataclasses import replace
+
+    from ..engine.intelligence import estimate_with
+
+    guess = estimate_with(network, seed=view.seed, world_id=view.world_id, turn=view.turn,
+                          viewer=me, target=owner, subject=f"forces:{region_id}:{domain}",
+                          value=strength)
+    # Formations you can see are worth something: "0-4" reads as "maybe nobody there".
+    return replace(guess, low=max(guess.low, min(1.0, guess.high)))
+
+
+def _guess_label(guess) -> str:
+    """A tight estimate as one figure, a loose one as the range it is."""
+    if guess.confidence in ("good", "excellent"):
+        return "~" + _figure((guess.low + guess.high) / 2.0)
+    low, high = _figure(guess.low), _figure(guess.high)
+    return low if low == high else f"{low}-{high}"
+
+
+def _figure(value: float) -> str:
+    return f"{value:.0f}" if value >= 10 or value == int(value) else f"{value:.1f}"
+
+
+def _owners(view: MapViewState, owners: dict) -> str:
+    """Whose forces they are, without what each is worth -- that is the estimate's job."""
+    return ", ".join(view.nations[n].name if n in view.nations else n for n in sorted(owners))
+
+
 def _luminance(colour: str) -> float:
     """Perceived lightness of ``#RRGGBB``, 0 (black) to 1 (white)."""
     try:
@@ -921,9 +965,17 @@ def build_scene(
         # Commonest first, and ties broken by name so the same stack reads the same way
         # twice. A scene description is a pure function of its inputs, and a tooltip that
         # reordered itself between frames would quietly break that.
+        # **What the player actually knows about it.** Your own forces and your allies'
+        # are exact; anybody else's are what your intelligence service believes, from the
+        # same fog every briefing reads (`intelligence.estimate_with`). A good network
+        # reads close; a blind one gives a wide range, and is not told about upgrades.
+        guess = _estimated(view, dominant_id, region_id, domain, strength)
+        network = view.networks.get(dominant_id)
+        upgrades_seen = guess is None or (
+            network is not None and network.band in _SEES_UPGRADES)
         # **And how good they are.** The marks are the dominant owner's: research is a
         # country's, and a counter wears its strongest contributor's colour already.
-        reached = view.marks.get(dominant_id, {})
+        reached = view.marks.get(dominant_id, {}) if upgrades_seen else {}
         mark = max((reached.get(str(kind), 1) for kind in kinds), default=1)
         composition = ", ".join(
             f"{tally}x {str(kind).replace('_', ' ')}"
@@ -952,12 +1004,21 @@ def build_scene(
                 # already pointing.
                 # Calm: the one number that decides a battle. "4 / 28" asked a player to
                 # know that the first figure counts formations and the second is strength.
-                label=(say_strength(strength) if calm
-                       else f"{count} / {say_strength(strength)}"),
+                label=(_guess_label(guess) if guess is not None
+                       else say_strength(strength)) if calm else (
+                    f"{count} / " + (_guess_label(guess) if guess is not None
+                                     else say_strength(strength))),
                 tooltip=(
                     f"{names[domain]}: {count} unit{'s' if count != 1 else ''}, "
                     f"strength {strength:g}\n{composition}\n{breakdown}"
-                ),
+                ) if guess is None else (
+                    f"{names[domain]}: {count} unit{'s' if count != 1 else ''}, "
+                    f"strength {_figure(guess.low)}-{_figure(guess.high)} by your "
+                    f"estimate\n{composition}"
+                    + ("" if upgrades_seen else "; upgrades unknown")
+                    + f"\n{_owners(view, owners)}\n"
+                    f"Your intelligence in {nation.name if nation else dominant_id} is "
+                    f"{guess.confidence}."),
                 domain=domain,
                 offset_x=offset_x,
                 offset_y=offset_y,

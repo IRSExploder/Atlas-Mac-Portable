@@ -137,6 +137,31 @@ the defenders hold, the attacker can still gain ground, but the province stays p
   enemy asks ("Iran asks for a ceasefire…") and gives the order that accepts it; nothing
   is agreed on your behalf.
 
+## Making peace
+
+Every country you are at war with has a **Make peace…** button in the Diplomacy list.
+
+* **Provinces you hold**: tick the enemy provinces your forces occupy that you want them to
+  give up. Only occupied ground can be asked for, and a country is never dissolved at the
+  table.
+* **Money**: a slider up to what the rules let a settlement ask (60% of their treasury).
+* **Best deal they'd sign** fills in the largest package the engine thinks they would take;
+  **White peace** asks for nothing.
+* The verdict underneath is the engine's own answer to the same question the turn will
+  ask: "Iran will sign" or "Iran would refuse", with the reason and a meter. Only what
+  happens before the turn -- a battle won or lost -- can change it.
+* **Add to orders** writes the offer as a sentence ("Sue for peace with Iran: they cede
+  Ilam and pay 20."). You can type the same thing yourself.
+
+## The map: taken, under attack, and what your spies see
+
+* **Stripes** in a colour: that country has taken the province. **Dots**: it is still
+  fighting for it, and the border thickens as the attack nears breaking through.
+* **Your own and your allies' armies** show their exact strength. **Anybody else's** show
+  what your intelligence service believes: "~12" when your network there is good,
+  "8-17" when it is patchy. The tooltip says how good your intelligence in that country is,
+  and a weak network is not told which of their formations are upgraded.
+
 ## Research and upgrades
 
 The **Research** tab sits beside Diplomacy in the right-hand panel.

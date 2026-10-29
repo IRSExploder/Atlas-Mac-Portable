@@ -132,6 +132,13 @@ class MapViewState:
     #: **How far each country's research has improved its formations**, as ``nation_id ->
     #: {unit kind: mark}``. Only marks above Mk I are listed; the counters show them.
     marks: dict[str, dict[str, int]] = field(default_factory=dict)
+    #: **What the observer's service can see of each other power**, as ``nation_id ->
+    #: IntelNetwork``, for every power with forces on the map. A foreign counter shows the
+    #: service's estimate rather than the truth; see `render`. Empty without an observer.
+    networks: dict[str, object] = field(default_factory=dict)
+    #: The world's seed, which the estimate is drawn from -- so a rewind shows the same
+    #: wrong guess, and a redraw never changes it.
+    seed: int = 0
     #: **The ground the observer's wars are about**, as ``region_id -> ((claimant, kind,
     #: enemy), ...)``. Only wars the observer is in: its own aims and the aims declared
     #: against it. War aims are public -- a demand nobody has heard cannot be met, refused
@@ -552,6 +559,24 @@ def _independence(conn: sqlite3.Connection, world_id: str) -> dict[str, float]:
     return {str(row["region_id"]): float(row["momentum"]) for row in rows}
 
 
+def _networks(conn: sqlite3.Connection, world_id: str, observer: str | None,
+              units) -> dict[str, object]:
+    if not observer:
+        return {}
+    from ..engine.intelligence import network_between
+
+    try:
+        return {nation_id: network_between(conn, world_id, observer, nation_id)
+                for nation_id in sorted({unit.nation_id for unit in units} - {observer})}
+    except sqlite3.OperationalError:  # a world from before intelligence had a table
+        return {}
+
+
+def _seed(conn: sqlite3.Connection, world_id: str) -> int:
+    row = conn.execute("SELECT rng_seed FROM world WHERE id = ?", (world_id,)).fetchone()
+    return int(row[0] or 0) if row else 0
+
+
 def _marks(conn: sqlite3.Connection, world_id: str) -> dict[str, dict[str, int]]:
     try:
         from ..engine.research import all_marks
@@ -651,6 +676,7 @@ def load_map_view(
 
     nuclear_reach, nuclear_answer, nuclear_mine = _nuclear(
         conn, world_id, observer_nation_id)
+    known = _known_regions(conn, world_id, observer_nation_id)
 
     return MapViewState(
         world_id=world_id,
@@ -661,7 +687,7 @@ def load_map_view(
         cities=cities,
         units=units,
         changed_region_ids=_changed_regions(conn, world_id, turn, observer_nation_id),
-        known_region_ids=_known_regions(conn, world_id, observer_nation_id),
+        known_region_ids=known,
         contested=_contested(conn, world_id),
         unrest=_unrest(conn, world_id),
         air_control=_air_control(conn, world_id),
@@ -671,6 +697,9 @@ def load_map_view(
         nuclear_mine=nuclear_mine,
         attitude=_attitude(conn, world_id, observer_nation_id),
         marks=_marks(conn, world_id),
+        networks=_networks(conn, world_id, observer_nation_id,
+                           [unit for unit in units if unit.region_id in known]),
+        seed=_seed(conn, world_id),
         war_aims=_war_aims(conn, world_id, observer_nation_id),
         trade=_trade(conn, world_id, observer_nation_id),
         obligations=_obligations(conn, world_id, observer_nation_id),

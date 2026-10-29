@@ -64,6 +64,7 @@ __all__ = [
     "discovery_odds",
     "discovery_tier",
     "estimate_of",
+    "estimate_with",
     "error_span",
     "estimates_for",
     "magnitude_of",
@@ -538,13 +539,28 @@ def estimate_of(  # noqa: PLR0913 - an estimate is who is asking, about whom, of
     same question asked twice in a turn gets the same answer, a rewind reproduces the same
     wrong guess, and two different questions are wrong in unrelated ways.
     """
-    network = network_between(conn, world_id, viewer, target)
+    return estimate_with(
+        network_between(conn, world_id, viewer, target), seed=_world_seed(conn, world_id),
+        world_id=world_id, turn=turn, viewer=viewer, target=target, subject=subject,
+        value=value, unit=unit)
+
+
+def estimate_with(  # noqa: PLR0913 - the estimate's inputs, without a connection
+    network: IntelNetwork, *, seed: int, world_id: str, turn: int, viewer: str,
+    target: str, subject: str, value: float, unit: str = "",
+) -> Estimate:
+    """:func:`estimate_of` with the network and the world's seed already in hand.
+
+    **The same arithmetic, callable without a database**, which is what lets the map show
+    a foreign army as the player's service sees it: the scene is a pure function of a view
+    read once, and asking the connection again per counter is what that design exists to
+    avoid. :func:`estimate_of` calls this, so there is one fog and two doors onto it.
+    """
     # **Which fog, by what is being asked about.** Identical to what it always was for the
     # three figures a foreign ministry argues about; three times as wide for the one it
     # cannot get at.
     floor, ceiling = error_span(subject)
     error = floor + (ceiling - floor) * (1.0 - network.quality)
-    seed = _world_seed(conn, world_id)
     rng = derive(seed, world_id, turn, f"intel:{viewer}:{target}:{subject}")
     # Displaced, then opened. The bias is drawn over the same width as the band, so a
     # believable estimate is wrong in a believable direction rather than merely fuzzy.
