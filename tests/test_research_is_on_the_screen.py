@@ -148,3 +148,33 @@ def test_start_puts_the_order_in_the_box_and_says_so(conn):
     chip.clicked.emit()
     assert box == ["Research Armour Mk II"]
     assert panel.findChild(Chip, "research:armour_mk2")._label.text() == "In orders ✓"
+
+
+def test_an_upgrade_costs_what_the_country_can_afford(conn):
+    """Found by a live play-test: one flat price was ten turns of Turkey's income and a
+    rounding error to the richest powers. Upgrades scale with the economy, within bounds;
+    the era's own programmes keep their price."""
+    from atlas.engine.production import order_research
+    from atlas.engine.research import (
+        PRICE_CEILING_SHARE,
+        PRICE_FLOOR_SHARE,
+        TECHNOLOGIES,
+        price_of,
+        technology_by_id,
+    )
+
+    mk2 = technology_by_id("armour_mk2", TECHNOLOGIES)
+    welding = technology_by_id("welding", TECHNOLOGIES)
+    for economy, share in ((28.0, 0.4), (1.0, PRICE_FLOOR_SHARE), (500.0, PRICE_CEILING_SHARE)):
+        conn.execute("UPDATE nation SET economy = ? WHERE id = ?", (economy, ME))
+        assert price_of(conn, WORLD, ME, mk2) == round(mk2.cost_treasury * share)
+        assert price_of(conn, WORLD, ME, welding) == welding.cost_treasury
+
+    conn.execute("UPDATE nation SET economy = 28, treasury = 50 WHERE id = ?", (ME,))
+    board_card = next(line for line in board(conn, WORLD, ME).lines
+                      if line.line_id == "armour").next
+    assert board_card.cost == 12.0
+    report = order_research(conn, WORLD, nation_id=ME, tech_id="armour_mk2", turn=1,
+                            date="1897-05-01")
+    assert not report.problems, report.problems
+    assert conn.execute("SELECT treasury FROM nation WHERE id = ?", (ME,)).fetchone()[0] == 38.0

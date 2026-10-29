@@ -119,3 +119,21 @@ def test_a_save_with_trade_to_a_dead_country_is_mended(conn):
     conn.commit()
     assert settle_buried_land(conn, WORLD, turn=2, date="1897-06-01") == ([], [])
     assert conn.execute("SELECT COUNT(*) FROM trade_route").fetchone()[0] == 0
+
+
+def test_a_clash_with_a_country_annexed_this_turn_is_dropped_quietly(conn):
+    """Found by a live play-test: the simulator, briefed before the orders ran, proposed
+    a clash in Northern Cyprus the same turn it was annexed, and the player was shown
+    "a clash named 'm_cyn', which matched no nation on the map"."""
+    from atlas.engine.resolution import ResolutionReport, _resolve_one
+    from atlas.state.models import Difficulty
+
+    _beaten_and_out_of_reach(conn)
+    annex(conn, WORLD, nation_id=ME, target=THEM, turn=1, date="1897-05-01")
+    for raw, quiet in (({"attacker": ME, "defender": THEM, "region_id": "r_south"}, True),
+                       ({"attacker": ME, "defender": "atlantis", "region_id": "r_south"},
+                        False)):
+        report = ResolutionReport()
+        _resolve_one(conn, WORLD, raw, turn=1, date="1897-05-01", seed=1,
+                     difficulty=Difficulty.NORMAL, player_nation=ME, report=report)
+        assert (report.problems == []) is quiet, report.problems

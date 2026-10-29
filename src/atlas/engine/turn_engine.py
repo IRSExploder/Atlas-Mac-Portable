@@ -1644,6 +1644,16 @@ class TurnEngine:
             self._set_phase(TurnPhase.RESOLVE, TurnStatus.ABORTED, turn=turn)
             return report
 
+        # Written for a reader inside the world: see `untrusted.in_world`.
+        from dataclasses import replace as _replace
+
+        from .untrusted import in_world
+
+        batch = _replace(batch, narrative=in_world(str(getattr(batch, "narrative", "") or "")),
+                         events=tuple(
+                             {**event, "text": in_world(str(event.get("text") or ""))}
+                             if isinstance(event, dict) and event.get("text") else event
+                             for event in batch.events))
         if self.progress is not None:
             self.progress.start("validate")
         # The turn's length reaches validation, so a rule that bounds a *rate* bounds
@@ -2690,7 +2700,9 @@ class TurnEngine:
             if outcome.refused:
                 report.freeform.append(f"refused: {outcome.refused}")
             elif outcome.narrative:
-                report.freeform.append(outcome.narrative)
+                from .untrusted import in_world
+
+                report.freeform.append(in_world(outcome.narrative))
             # Nothing evaporates. A consequence the caps or the allowlist would not carry
             # is reported rather than dropped, which is the entire point of this channel.
             report.rejections.extend(outcome.trimmed)

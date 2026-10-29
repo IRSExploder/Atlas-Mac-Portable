@@ -26,6 +26,7 @@ from .research import (
     known_technologies,
     mark_name,
     marks,
+    price_of,
 )
 
 __all__ = ["Board", "Card", "LineRow", "board", "effect_words", "kind_words", "mark_label"]
@@ -127,7 +128,8 @@ def board(conn: sqlite3.Connection, world_id: str, nation_id: str) -> Board:
 
     def card(tech: Technology) -> Card:
         made = Card(tech_id=tech.id, name=tech.name, blurb=tech.blurb,
-                    effect=effect_words(tech), cost=tech.cost_treasury, turns=tech.turns,
+                    effect=effect_words(tech), cost=price_of(conn, world_id, nation_id, tech),
+                    turns=tech.turns,
                     state="open", order=f"Research {tech.name}")
         missing = [names.get(need, need) for need in tech.requires if need not in known]
         if tech.id in known:
@@ -136,9 +138,9 @@ def board(conn: sqlite3.Connection, world_id: str, nation_id: str) -> Board:
             made.state, made.turns_left = "running", running[tech.id]
         elif missing:
             made.state, made.why = "locked", "Needs " + " and ".join(missing) + " first"
-        elif treasury < tech.cost_treasury:
+        elif treasury < made.cost:
             made.state = "unaffordable"
-            made.why = f"Costs {tech.cost_treasury:.0f}; you have {treasury:.0f}"
+            made.why = f"Costs {made.cost:.0f}; you have {treasury:.0f}"
         elif used >= slots:
             made.state = "no_slot"
             made.why = "Every build slot is busy; wait for something to finish"

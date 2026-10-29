@@ -239,7 +239,8 @@ def build_freeform_view(
         "",
         "Answer in period and in world. Take it seriously as an order, however strange "
         "it is: a government that decrees something absurd has still decreed it, and a "
-        "country reacts to that.",
+        "country reacts to that. Your answer is read as news from inside the world: never "
+        "mention the engine, the game, turns, rules or numbers about mechanics.",
         "",
         "Rules you cannot argue with:",
         "- You are not deciding an outcome. You cannot move a border, an army, a budget "

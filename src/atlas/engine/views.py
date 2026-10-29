@@ -1332,6 +1332,7 @@ def _buildable_lines(conn: sqlite3.Connection, world_id: str, nation_id: str) ->
         available_technologies,
         catalogue_for,
         known_technologies,
+        price_of,
     )
 
     capacity = industrial_capacity(conn, nation_id)
@@ -1400,10 +1401,11 @@ def _buildable_lines(conn: sqlite3.Connection, world_id: str, nation_id: str) ->
             "the knowledge your country is scored on):"
         )
         for t in _ordered_for_plan(conn, world_id, nation_id, techs):
-            afford = "" if treasury >= t.cost_treasury else "  [cannot afford yet]"
+            price = price_of(conn, world_id, nation_id, t)
+            afford = "" if treasury >= price else "  [cannot afford yet]"
             secret = "  (pursued in secret)" if t.secret else ""
             lines.append(
-                f"- {t.name} [`{t.id}`]: {t.cost_treasury:.0f} treasury, {t.turns} turns "
+                f"- {t.name} [`{t.id}`]: {price:.0f} treasury, {t.turns} turns "
                 f"-> {_programme_summary(t)}{secret}{afford}"
             )
 
@@ -1424,7 +1426,8 @@ def _buildable_lines(conn: sqlite3.Connection, world_id: str, nation_id: str) ->
             wants = [names.get(need, need) for need in t.requires if need not in known]
             lines.append(
                 f"- {t.name} [`{t.id}`]: needs {_and_list(wants)} first; then "
-                f"{t.cost_treasury:.0f} treasury, {t.turns} turns -> {_programme_summary(t)}"
+                f"{price_of(conn, world_id, nation_id, t):.0f} treasury, {t.turns} turns -> "
+                f"{_programme_summary(t)}"
             )
     return lines
 
@@ -1468,7 +1471,10 @@ def _ordered_for_plan(
 
     # Stable on the catalogue's own order within each group: a reordering that also
     # reshuffled the rest would be two changes wearing one name.
-    return sorted(techs, key=lambda tech: (serves(tech), tech.cost_treasury, tech.id))
+    from .research import price_of
+
+    return sorted(techs, key=lambda tech: (serves(tech),
+                                           price_of(conn, world_id, nation_id, tech), tech.id))
 
 
 # --------------------------------------------------------------------------- world sim
@@ -1765,6 +1771,12 @@ def build_world_sim_view(
         "- You cannot create units, transfer territory, or set war status directly. Those "
         "are engine-only columns and follow from resolution -- which is exactly why a clash "
         "must be reported rather than described.",
+        "- `narrative` and every event's text are read by the player as news from inside "
+        "the world, written by a correspondent who has never heard of this game. Never "
+        "mention the engine, the simulation, turns, contests, pressure figures, "
+        "percentages of progress, rules or what will be 'resolved'. Say it in world terms: "
+        "'the line is close to breaking', not '62% of the way'; 'Tehran has the offer', "
+        "not 'the engine will decide'.",
     ]
 
     return RenderedView(

@@ -167,8 +167,9 @@ Every country you are at war with has a **Make peace…** button in the Diplomac
 The **Research** tab sits beside Diplomacy in the right-hand panel.
 
 * **Upgrades.** Infantry, Armour, Air wings and Fleet each go from **Mk I to Mk III**. Each
-  mark is dearer and slower than the last (30 money and 5 turns, then 60 and 8), and the
-  Mk III needs the Mk II. There is no Mk IV.
+  mark is dearer and slower than the last (5 turns, then 8), and the Mk III needs the Mk II.
+  There is no Mk IV. **The price scales with your economy**: Turkey pays 12 for a Mk II and
+  the United States 38, so a smaller power can still modernise.
 * **Programmes.** The era's own technologies (drones, semiconductors, hypersonics…), with
   what each one does, what it costs and what it needs first.
 * **Start** writes the order ("Research Armour Mk II") into your orders box; nothing is

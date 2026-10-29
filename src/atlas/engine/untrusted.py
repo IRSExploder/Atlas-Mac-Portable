@@ -115,3 +115,44 @@ def wrap_untrusted(text: str, *, source: str, kind: str = "in-world speech") -> 
         f"{sanitize(text)}\n"
         f"{close_tag}"
     )
+
+
+#: Sentences a reader inside the world could not have written: the referee talking about
+#: its own machinery. Dropped whole -- there is no in-world way to say "the engine decides".
+_MACHINERY = re.compile(
+    r"\bthe (?:game )?engine\b|\bengine[- ]only\b|\b(?:this|next|last) turn\b"
+    r"|\bturn \d+\b|\bthe (?:simulator|referee)\b|\bthe player\b",
+    re.IGNORECASE)
+
+#: A pressure figure, which is a fact about the contest table, said as a reader would say it.
+_SHARE_OF_THE_WAY = re.compile(r"\b(\d{1,3})\s?(?:%|per ?cent) of the way(?: to\b)?",
+                               re.IGNORECASE)
+
+_SENTENCE = re.compile(r"(?<=[.!?])\s+(?=[A-Z\"'(])")
+
+
+def _share_words(match: re.Match) -> str:
+    share = int(match.group(1))
+    if share >= 70:
+        return "close to"
+    if share >= 35:
+        return "well on the way to"
+    return "some way towards"
+
+
+def in_world(text: str) -> str:
+    """Model prose as a reader inside the world would see it.
+
+    **The narrator kept describing the game.** Its briefing explains the rules in terms of
+    "the engine", and a live Haiku run wrote "Whether Tehran accepts is a matter for the
+    engine to resolve" and "Ukraine now stands 62% of the way to taking the province" into
+    the turn report. The briefing now asks for news written from inside the world; this is
+    the net under that request: a sentence about the machinery is dropped, and a pressure
+    figure becomes words ("well on the way to taking"). If nothing would be left, the text
+    is returned as it came rather than as nothing.
+    """
+    if not text:
+        return text
+    words = _SHARE_OF_THE_WAY.sub(_share_words, text)
+    kept = [s for s in _SENTENCE.split(words) if not _MACHINERY.search(s)]
+    return " ".join(kept).strip() or text

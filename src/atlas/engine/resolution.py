@@ -2005,6 +2005,16 @@ def _has_casus_belli(
     return bool(row and row[0])
 
 
+def _gone(conn: sqlite3.Connection, world_id: str, named) -> bool:
+    """Whether ``named`` is a country that existed and no longer does."""
+    text = str(named or "").strip()
+    if not text:
+        return False
+    return conn.execute(
+        "SELECT 1 FROM nation WHERE world_id = ? AND is_alive = 0"
+        "   AND (id = ? OR LOWER(name) = LOWER(?))", (world_id, text, text)).fetchone() is not None
+
+
 def _resolve_one(
     conn: sqlite3.Connection,
     world_id: str,
@@ -2028,11 +2038,16 @@ def _resolve_one(
         # nation, and it is nothing to resolve rather than something that went wrong.
         return
     if not attacker or not defender:
-        missing = [
-            repr(raw.get(side))
-            for side, resolved in (("attacker", attacker), ("defender", defender))
-            if not resolved
-        ]
+        unresolved = [raw.get(side) for side, resolved in
+                      (("attacker", attacker), ("defender", defender)) if not resolved]
+        if all(_gone(conn, world_id, named) for named in unresolved):
+            # **A clash with a country that stopped existing this turn is moot, not an
+            # error.** The simulator is briefed before the orders are carried out, so an
+            # annexation it was told about in the same turn ("annex Northern Cyprus")
+            # comes back as a clash there -- found by a live play-test, where the player
+            # read "a clash named 'm_cyn', which matched no nation on the map".
+            return
+        missing = [repr(named) for named in unresolved]
         report.problems.append(
             f"a clash named {' and '.join(missing)}, which matched no nation on the map"
         )

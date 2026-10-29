@@ -38,6 +38,7 @@ __all__ = [
     "all_marks",
     "marks",
     "mark_name",
+    "price_of",
     "technology_by_id",
     "upgrade_programmes",
 ]
@@ -119,6 +120,36 @@ UPGRADE_LINES: tuple[UpgradeLine, ...] = (
 #: What each mark costs and how many turns it takes. Dearer and slower each time: the
 #: second step is worth what the first was, and costs twice as much.
 _MARK_COST: dict[int, tuple[float, int]] = {2: (30.0, 5), 3: (60.0, 8)}
+
+
+#: **An upgrade is priced against what the country can afford.** One flat price was a
+#: rounding error to the United States and ten turns of Turkey's income -- a live play-test
+#: had Turkey research one mark in twenty turns while India finished every line. Economy is
+#: the measure (it is what the treasury grows from); this is the economy at which an upgrade
+#: costs its listed price.
+PRICE_REFERENCE_ECONOMY = 70.0
+#: The poorest pay this share of the list price and the richest this much, so a minor is not
+#: handed upgrades for nothing and a superpower is not priced out of its own army.
+PRICE_FLOOR_SHARE = 0.3
+PRICE_CEILING_SHARE = 1.25
+
+
+def price_of(conn: sqlite3.Connection, world_id: str, nation_id: str,
+             tech: Technology) -> float:
+    """What ``nation_id`` pays to begin ``tech``.
+
+    The era's own programmes keep the price the era gave them; the upgrade lines scale with
+    the country's economy. Every reader of a price -- the order, the research screen, the
+    engine's own chooser and the briefings -- reads it here, so they cannot disagree.
+    """
+    if not tech.mark:
+        return tech.cost_treasury
+    row = conn.execute("SELECT economy FROM nation WHERE world_id = ? AND id = ?",
+                       (world_id, nation_id)).fetchone()
+    economy = float(row[0] or 0.0) if row else PRICE_REFERENCE_ECONOMY
+    share = min(PRICE_CEILING_SHARE,
+                max(PRICE_FLOOR_SHARE, economy / PRICE_REFERENCE_ECONOMY))
+    return float(round(tech.cost_treasury * share))
 
 
 def mark_name(mark: int) -> str:

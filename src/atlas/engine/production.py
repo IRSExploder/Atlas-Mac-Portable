@@ -639,7 +639,7 @@ def _programme_for(
 
     Cheapest first, ties broken by id, so the same world makes the same choice twice.
     """
-    from .research import available_technologies
+    from .research import available_technologies, price_of
 
     if conn.execute(
         "SELECT 1 FROM construction WHERE world_id = ? AND nation_id = ?"
@@ -656,10 +656,10 @@ def _programme_for(
     open_now = sorted(
         (tech for tech in available_technologies(conn, world_id, nation_id)
          if at_war or not tech.mark),
-        key=lambda tech: (tech.cost_treasury, tech.id),
+        key=lambda tech: (price_of(conn, world_id, nation_id, tech), tech.id),
     )
     for tech in open_now:
-        needed = (tech.cost_treasury + ordinary_cost * _RESEARCH_SURPLUS) * _INVEST_RESERVE
+        needed = (price_of(conn, world_id, nation_id, tech) + ordinary_cost * _RESEARCH_SURPLUS) * _INVEST_RESERVE
         if treasury >= needed:
             return tech.id
     return None
@@ -910,7 +910,10 @@ def order_research(
             f"{nation['name']} has nothing spare to begin {tech.name} with"
         )
         return report
-    if float(nation["treasury"]) < tech.cost_treasury:
+    from .research import price_of
+
+    price = price_of(conn, world_id, nation_id, tech)
+    if float(nation["treasury"]) < price:
         report.problems.append(f"{nation['name']} cannot afford {tech.name}")
         return report
     if conn.execute(
@@ -972,7 +975,7 @@ def order_research(
                     },
                     reason_event_id=event_id, visibility_scope=scope,
                 ),
-                Diff("nation", nation_id, "treasury", DiffOp.ADJUST, -tech.cost_treasury,
+                Diff("nation", nation_id, "treasury", DiffOp.ADJUST, -price,
                      reason_event_id=event_id, visibility_scope=scope),
             ),
         ),
