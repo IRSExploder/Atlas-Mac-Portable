@@ -553,6 +553,9 @@ def _parse_clause(conn: sqlite3.Connection, world_id: str, nation_id: str, claus
             if len(at_war) == 1:
                 action["target_nation"] = at_war[0]
         action["ceasefire"] = bool(_first_at(hay, ("ceasefire", "truce", "armistice")))
+        enemy = nations[0] if nations else action.get("target_nation")
+        if enemy and not action["ceasefire"]:
+            action["terms"] = _peace_terms(conn, world_id, nation_id, enemy, hay, regions)
     elif action_type == "declare_war" and nations and _at_war(
             conn, world_id, nation_id, nations[0]):
         return None, f"you are already at war with {_name(conn, world_id, nations[0])}"
@@ -640,6 +643,42 @@ def _parse_clause(conn: sqlite3.Connection, world_id: str, nation_id: str, claus
                   if action["target_nation"] else "")
         return None, f"you cannot {what}{target} right now"
     return action, None
+
+
+#: "pay 20", "pays 20", "20 in reparations", "reparations of 20".
+_REPARATIONS = re.compile(
+    r"\bpays?\s+(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s+in\s+reparations"
+    r"|reparations\s+of\s+(\d+(?:\.\d+)?)")
+
+
+def _peace_terms(conn: sqlite3.Connection, world_id: str, nation_id: str, enemy: str,
+                 hay: str, regions: list) -> list[dict]:
+    """The terms a peace order names: the enemy's provinces it lists, ceded to the player,
+    and any money it asks for.
+
+    **A peace order used to carry no terms at all**, so "sue for peace with Iran and take
+    Tabriz" was offered as a white peace -- the clause was read for its country and the rest
+    thrown away, and every war a player ended on paper ended without a province changing
+    hands. What a term names is all that is read here; whether it can be carried out, and
+    whether the other side signs, is `peace.review_terms` and `peace.acceptance`, exactly as
+    for anybody else's offer.
+    """
+    terms: list[dict] = []
+    for _position, region_id in regions:
+        owner = conn.execute(
+            "SELECT owner_nation_id FROM region WHERE world_id = ? AND id = ?",
+            (world_id, region_id)).fetchone()
+        if owner is not None and owner[0] == enemy and not any(
+                t["subject"] == region_id for t in terms):
+            terms.append({"kind": "cede_region", "obliged": enemy, "beneficiary": nation_id,
+                          "subject": region_id})
+    money = _REPARATIONS.search(hay)
+    if money:
+        value = float(next(group for group in money.groups() if group))
+        if value > 0:
+            terms.append({"kind": "reparations", "obliged": enemy, "beneficiary": nation_id,
+                          "subject": "", "value": value})
+    return terms
 
 
 def parse_orders(conn: sqlite3.Connection, world_id: str, *, nation_id: str,

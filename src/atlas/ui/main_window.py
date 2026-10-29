@@ -66,6 +66,7 @@ from .overlays import (
     SummaryOverlay,
     UndoTurnOverlay,
 )
+from .peace_panel import PeaceOverlay
 from .preferences import (
     colour_safe,
     load_app_preferences,
@@ -450,6 +451,7 @@ class AtlasWindow(QMainWindow):
         self._right.orders_submitted.connect(self._on_check_orders)
         self._right.jump_requested.connect(self._on_jump)
         self._right.order_written.connect(self._write_order)
+        self._right.peace_requested.connect(self._open_peace)
 
         self._status = StatusStrip(self._theme)
         #: Whether the player has overruled the breakpoint for a rail. Cleared when the
@@ -494,6 +496,8 @@ class AtlasWindow(QMainWindow):
         self._jump_overlay = TurningOverlay(self._theme, host)
         self._jump_overlay.cancel_requested.connect(self._on_cancel_jump)
         self._confirm = ConfirmOverlay(self._theme, host)
+        self._peace = PeaceOverlay(self._theme, host)
+        self._peace.order_written.connect(self._write_order)
         self._confirm.confirmed.connect(self._jump_confirmed)
         self._confirm.declined.connect(self._jump_declined)
         self._summary = SummaryOverlay(self._theme, host)
@@ -1880,6 +1884,13 @@ class AtlasWindow(QMainWindow):
         self._advance.close_overlay()
         self._inspector.load(self._conn, self._world_id, event_id)
         self._inspector.open()
+
+    def _open_peace(self, enemy: str) -> None:
+        """The peace table for one war. Offers nothing: it writes the offer into the box."""
+        if not self._player:
+            return
+        self._peace.load(self._conn, self._world_id, self._player, enemy)
+        self._peace.open()
 
     def _open_workbench(self) -> None:
         """Show what the orders already checked will do, before the turn is spent.

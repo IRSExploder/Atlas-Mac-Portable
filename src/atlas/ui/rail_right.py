@@ -68,6 +68,8 @@ class RightRail(Rail):
     #: An order chosen on a panel here (a research programme): the window writes it into
     #: the orders box, as it does a province panel's.
     order_written = Signal(str)
+    #: The peace table for this enemy.
+    peace_requested = Signal(str)
 
     def __init__(self, theme: Theme, parent: QWidget | None = None) -> None:
         super().__init__("Your turn", width=scaled(404), opens_right=True, theme=theme,
@@ -98,6 +100,7 @@ class RightRail(Rail):
         layout.addWidget(Divider(theme=theme))
         self._diplomacy = _DiplomacyBlock(theme)
         self._diplomacy.open_chat.connect(self.open_chat.emit)
+        self._diplomacy.peace_requested.connect(self.peace_requested.emit)
         self._diplomacy.open_advisor.connect(self.open_advisor.emit)
         self._diplomacy.send_message.connect(self.send_message.emit)
         self._diplomacy.close_chat.connect(self.close_chat.emit)
@@ -240,6 +243,7 @@ class RightRail(Rail):
 
 
 class _DiplomacyBlock(QWidget):
+    peace_requested = Signal(str)
     open_chat = Signal(str)
     open_advisor = Signal()
     send_message = Signal(str)
@@ -258,6 +262,7 @@ class _DiplomacyBlock(QWidget):
 
         self._list_page = _NationListPage(theme)
         self._list_page.chosen.connect(self.open_chat.emit)
+        self._list_page.peace.connect(self.peace_requested.emit)
         self._list_page.advise.connect(self.open_advisor.emit)
         self._chat_page = _ChatPage(theme)
         self._chat_page.send.connect(self.send_message.emit)
@@ -297,6 +302,7 @@ class _DiplomacyBlock(QWidget):
 class _NationListPage(QWidget):
     chosen = Signal(str)
     advise = Signal()
+    peace = Signal(str)
 
     def __init__(self, theme: Theme, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -441,6 +447,7 @@ class _NationListPage(QWidget):
     def _add_row(self, row, theme: Theme, *, rule, group: str, compact: bool = False) -> None:
         entry = _NationRow(row, theme=theme, compact=compact)
         entry.clicked.connect(lambda nid=row["id"]: self.chosen.emit(nid))
+        entry.peace.connect(lambda nid=row["id"]: self.peace.emit(str(nid)))
         self._body.addWidget(entry)
         self._rows.append((str(row["name"]).lower(), entry, rule, group))
 
@@ -534,6 +541,8 @@ class _NationRow(QWidget):
     """A shield, a name, the state of the relationship, and a bar showing how far."""
 
     clicked = Signal()
+    #: At war only: the player wants the peace table.
+    peace = Signal()
 
     def __init__(self, row, *, theme: Theme, compact: bool = False,
                  parent: QWidget | None = None) -> None:
@@ -593,6 +602,14 @@ class _NationRow(QWidget):
                                colour="brass", theme=theme)
         self._talk.setVisible(False)
         head.addWidget(self._talk)
+        if self._at_war:
+            # The way out of a war, on the row of the war. It used to be a sentence the
+            # player had to know to type, and the terms in it were thrown away.
+            self._peace = Chip("Make peace…", theme=theme, padding=(8, 2))
+            self._peace.setObjectName(f"peace:{row['id']}")
+            self._peace.setToolTip("Choose terms and see whether they would sign.")
+            self._peace.clicked.connect(self.peace.emit)
+            head.addWidget(self._peace)
         column.addLayout(head)
         self.setAttribute(Qt.WidgetAttribute.WA_Hover)
 

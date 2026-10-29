@@ -1431,8 +1431,9 @@ def _sue_for_peace(  # noqa: PLR0913 - the handler signature every order handler
             outcome.refused[0] if outcome.refused else f"{target} would not settle")
         return
     effects.applied += 1
+    them = _nation(conn, target)
     effects.headlines.append(
-        f"Peace with {target}"
+        f"Peace with {them['name'] if them else target}"
         + (": " + "; ".join(outcome.applied[:4]) if outcome.applied else "."))
     effects.headlines.extend(outcome.facts[:3])
 
