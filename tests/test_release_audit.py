@@ -133,15 +133,21 @@ def test_the_headline_numbers_are_the_ones_we_publish(clean):
     only counterfactual entries and are labelled as such in its manifest. Auditing an
     alternate history against a real record is what proves it diverges only where it says
     it does; the numbers of the other three eras did not move.
+
+    **A fifth era, 2026-10-29: Fire in the Gulf (`fire:152`), and `4 era(s)` became `5`.**
+    An alternate 2027 in which Iran holds Kuwait and the Saudi oil coast. Its facts are
+    modern-day's 151, plus the two occupied provinces, minus the Saudi-Iranian
+    normalisation, which Riyadh has declared void.
     """
     audit = next(g for g in clean.gates if g.name == "scenario-audit")
     assert "gathering:88" in audit.number
     assert "cold:85" in audit.number
     assert "hot:87" in audit.number
     assert "modern:151" in audit.number
+    assert "fire:152" in audit.number
 
     determinism = next(g for g in clean.gates if g.name == "determinism")
-    assert "4 era(s)" in determinism.number
+    assert "5 era(s)" in determinism.number
 
 
 def test_skipping_the_suite_is_reported_as_a_skip_not_a_pass(clean):

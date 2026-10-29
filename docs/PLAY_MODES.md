@@ -137,6 +137,20 @@ the defenders hold, the attacker can still gain ground, but the province stays p
   enemy asks ("Iran asks for a ceasefire…") and gives the order that accepts it; nothing
   is agreed on your behalf.
 
+## Scenario: 2027 - Fire in the Gulf
+
+An alternate 2027 on the Modern Day map. Iran has closed the Strait of Hormuz and, through an
+allied Iraq, seized Kuwait and the Saudi Eastern Province (Dhahran, Abqaiq, the oil coast).
+Saudi Arabia is massing at Riyadh, Israel is striking Iran from the air, and the United
+States, Turkey, Pakistan, India and China have not chosen sides.
+
+* **Good seats:** Saudi Arabia (win back the coast, then Kuwait), Iran (hold what you took),
+  Turkey (stay out and profit, mediate, or pick a side), Israel, Pakistan, the United States.
+* **Liberation:** take back a province that belongs to a country also fighting the occupier
+  ("Liberate Kuwait") and it is handed back to its owner rather than occupied by you.
+* "Retake", "recapture", "drive out" and "counterattack" are attack orders; "fund opposition
+  groups" or "arm militias" inside a country backs rebels there.
+
 ## Making peace
 
 Every country you are at war with has a **Make peace…** button in the Diplomacy list.

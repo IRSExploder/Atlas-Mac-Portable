@@ -2005,6 +2005,29 @@ def _has_casus_belli(
     return bool(row and row[0])
 
 
+def _liberated_for(conn: sqlite3.Connection, world_id: str, region, *, attacker: str,
+                   defender: str) -> str | None:
+    """The owner a captured province goes back to, or ``None`` if the attacker keeps it.
+
+    Liberation, not occupation: the owner is alive, is not the attacker, is at war with the
+    power being driven out, and is not at war with the power doing the driving.
+    """
+    owner = region["owner_nation_id"]
+    if not owner or owner in (attacker, defender):
+        return None
+
+    def war(a: str, b: str) -> bool:
+        row = conn.execute("SELECT at_war FROM relation WHERE world_id = ? AND nation_a = ?"
+                           " AND nation_b = ?", (world_id, a, b)).fetchone()
+        return bool(row and row[0])
+
+    alive = conn.execute("SELECT is_alive FROM nation WHERE world_id = ? AND id = ?",
+                         (world_id, owner)).fetchone()
+    if not (alive and alive[0]) or not war(owner, defender) or war(owner, attacker):
+        return None
+    return str(owner)
+
+
 def _gone(conn: sqlite3.Connection, world_id: str, named) -> bool:
     """Whether ``named`` is a country that existed and no longer does."""
     text = str(named or "").strip()
@@ -2314,6 +2337,12 @@ def _resolve_one(
 
     # Occupation, not annexation. Taking ground puts you in control of it; ownership
     # changes only through a settlement, which is a diplomatic act rather than a battle.
+    #
+    # **Except when it is liberation.** Ground taken from an occupier and belonging to a
+    # country that is itself fighting that occupier goes back to its owner: a live Gulf game
+    # had Saudi Arabia ordering "liberate Kuwait", and the only thing a capture could have
+    # done was make Saudi Arabia Kuwait's next occupier.
+    liberated = _liberated_for(conn, world_id, region, attacker=attacker, defender=defender)
     if captured:
         diffs.append(
             Diff(
@@ -2321,7 +2350,7 @@ def _resolve_one(
                 target_id=region_id,
                 field="controller_nation_id",
                 op=DiffOp.SET,
-                new_value=attacker,
+                new_value=liberated or attacker,
                 reason_event_id=event_id,
                 visibility_scope=Visibility.PUBLIC,
             )
@@ -2341,6 +2370,12 @@ def _resolve_one(
         if owner == attacker:
             staged.headlines.append(
                 f"{names[attacker]} has retaken {region['name']}."
+            )
+        elif liberated:
+            owner_name = _names(conn, (owner,)).get(owner, owner)
+            staged.headlines.append(
+                f"{names[attacker]} liberated {region['name']} and handed it back to "
+                f"{owner_name}."
             )
         else:
             owner_name = _names(conn, (owner,)).get(owner, owner) if owner else None

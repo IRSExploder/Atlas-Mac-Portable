@@ -124,7 +124,11 @@ _EXTRA_ALIASES: dict[str, tuple[str, ...]] = {
     "sue_for_peace": ("seek terms", "terms", "end the war"),
     "move_units": ("send troops", "send the army", "deploy", "occupy", "retreat",
                    "pull back", "capture", "conquer", "seize", "take over", "take",
-                   "overrun", "storm"),
+                   "overrun", "storm",
+                   # Taking ground back is an attack too. A live Gulf game ordered "Liberate
+                   # Kuwait" for seventeen months and was told no order was recognised.
+                   "liberate", "retake", "recapture", "reconquer", "drive out", "push out",
+                   "expel", "counterattack", "counter-attack"),
     "raise_units": ("train", "draft"),
     "economic_investment": ("boost the economy", "industrialise", "industrialize",
                             "rebuild", "reconstruct"),
@@ -144,7 +148,9 @@ _EXTRA_ALIASES: dict[str, tuple[str, ...]] = {
                "leak", "smear", "name and shame", "hold a summit", "hold talks",
                "peace talks", "back channel", "backchannel", "secret talks", "honeypot",
                "airstrike", "missile strike", "drone strike", "air raid", "rebels",
-               "insurgents", "uprising", "coup", "defect"),
+               "insurgents", "uprising", "coup", "defect", "opposition groups",
+               "fund the opposition", "fund opposition", "arm militias", "fund militias",
+               "back militias", "separatists", "insurgency"),
 }
 
 #: A weak verb ("ask", "tell") yields to a stronger act named in the same clause: "ask
@@ -196,7 +202,9 @@ _GAMBIT_WORDS: tuple[tuple[str, str], ...] = (
     ("destabilise", "incite"), ("destabilize", "incite"), ("propaganda", "incite"),
     ("disinformation", "incite"), ("social media campaign", "incite"),
     ("regime change", "incite"), ("coup", "incite"), ("insurgents", "incite"),
-    ("uprising", "incite"),
+    ("uprising", "incite"), ("opposition groups", "incite"), ("fund the opposition", "incite"),
+    ("fund opposition", "incite"), ("militias", "incite"), ("separatists", "incite"),
+    ("insurgency", "incite"),
     ("expose", "expose"), ("leak", "expose"), ("smear", "expose"),
     ("name and shame", "expose"),
 )

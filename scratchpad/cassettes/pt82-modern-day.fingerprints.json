@@ -1,0 +1,61 @@
+{
+  "profile": "api-modern-tur",
+  "preset": "modern-day",
+  "provider": "claude",
+  "mock": false,
+  "turns": 8,
+  "days": 30,
+  "calls": 9,
+  "seconds": 121,
+  "created_at": "2026-10-29T13:48:20+00:00",
+  "attempts": [
+    {
+      "turn": 1,
+      "fingerprint": "8a3988e94b51150a8a168f0d51a3fbba",
+      "orders": 2,
+      "status": "sealed"
+    },
+    {
+      "turn": 2,
+      "fingerprint": "ceb2b8171e9c6e98a68a5d3ebdeee74a",
+      "orders": 2,
+      "status": "sealed"
+    },
+    {
+      "turn": 3,
+      "fingerprint": "259107172e076a473b1fa3b8e1e72150",
+      "orders": 2,
+      "status": "sealed"
+    },
+    {
+      "turn": 4,
+      "fingerprint": "f1bece248b8ed3045df8790e73f16885",
+      "orders": 2,
+      "status": "sealed"
+    },
+    {
+      "turn": 5,
+      "fingerprint": "2b23bbbce170e7bdbdee0305d2a776b5",
+      "orders": 1,
+      "status": "sealed"
+    },
+    {
+      "turn": 6,
+      "fingerprint": "7af6655b83d2b9ae96db92b10bbd0199",
+      "orders": 0,
+      "status": "sealed"
+    },
+    {
+      "turn": 7,
+      "fingerprint": "730599a7d14397a507a820f85d1c9ad7",
+      "orders": 1,
+      "status": "sealed"
+    },
+    {
+      "turn": 8,
+      "fingerprint": "3bd96038bb356b2942e60c1eb281375c",
+      "orders": 0,
+      "status": "sealed"
+    }
+  ]
+}

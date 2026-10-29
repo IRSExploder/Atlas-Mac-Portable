@@ -2,11 +2,18 @@
   "$comment": "Which recorded runs gate a release and which are only history. An ACTIVE tape was recorded against a tree whose prompts HEAD still produces; `atlas release-audit` REPLAYS every active tape through `scratchpad/tape_replay.py` and reddens on a miss or a mismatch, so a drifted active tape stops a release. A HISTORICAL tape predates changes that legitimately altered those questions; it misses on purpose, is never replayed, and must never redden anything. An index with no active tape is itself a finding: nothing would be checking that HEAD still asks what anybody recorded. The replay reproduces each tape against the harness that recorded it -- that pairing is part of the tape.",
   "tapes": [
     {
-      "tag": "pt81-modern-day",
+      "tag": "pt82-modern-day",
       "status": "active",
       "preset": "modern-day",
       "profile": "api-modern-tur",
-      "why": "**Recorded on Claude Haiku 5.5 after the in-world narration change and economy-scaled upgrade prices.** Same profile as pt80. 10 calls, all to claude-haiku-5-5, 0 failures, 114s; 8 turns sealed. Replays offline 8 matched, 0 mismatched, 0 missed."
+      "why": "**Recorded on Claude Haiku 5.5 after the Fire in the Gulf fixes** (liberation hands ground back, new attack and incitement verbs, the freeform rule on speeches about ground). Same profile as pt80/pt81. 9 calls, all to claude-haiku-5-5, 0 failures, 121s. Replays offline 8 matched, 0 mismatched, 0 missed."
+    },
+    {
+      "tag": "pt81-modern-day",
+      "status": "historical",
+      "preset": "modern-day",
+      "profile": "api-modern-tur",
+      "why": "**Retired by the Fire in the Gulf fixes, and it misses on purpose.** The freeform briefing now says a speech, promise, appeal or parade about ground is not an attempt to take it, which changes the freeform question; a captured province belonging to a co-belligerent is now handed back to its owner. Replayed against that tree it reads a freeform MISS. Superseded by pt82-modern-day.\n\n**Recorded on Claude Haiku 5.5 after the in-world narration change and economy-scaled upgrade prices.** Same profile as pt80. 10 calls, all to claude-haiku-5-5, 0 failures, 114s; 8 turns sealed. Replays offline 8 matched, 0 mismatched, 0 missed."
     },
     {
       "tag": "pt80-modern-day",

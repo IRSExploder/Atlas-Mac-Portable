@@ -254,7 +254,8 @@ def build_freeform_view(
         "legitimacy, or what a neighbour thinks of you. Nothing else is available.",
         "- Refuse outright when the order is impossible in this period, or when it is "
         "really an attempt to take ground, raise forces or move money. Say which real "
-        "order the player wanted.",
+        "order the player wanted. A speech, a promise, an appeal or a parade *about* "
+        "ground is not an attempt to take it: answer it as the act it is.",
     ]
     if neighbours:
         lines += [

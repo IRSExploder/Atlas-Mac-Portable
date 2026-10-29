@@ -38,6 +38,7 @@ SCENARIOS: dict[str, str] = {
     "cold-war": "atlas.scenarios.cold_war",
     "modern-day": "atlas.scenarios.modern_day",
     "hot-cold-war": "atlas.scenarios.hot_cold_war",
+    "fire-in-the-gulf": "atlas.scenarios.fire_in_the_gulf",
 }
 
 #: Eras built from another era, as ``derived -> base``. A derived era is a shipped
@@ -49,6 +50,7 @@ SCENARIOS: dict[str, str] = {
 #: country-granularity build the day they drift.
 DERIVED_FROM: dict[str, str] = {
     "hot-cold-war": "cold-war",
+    "fire-in-the-gulf": "modern-day",
 }
 
 

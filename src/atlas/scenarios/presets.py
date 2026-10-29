@@ -226,6 +226,38 @@ _BUILTIN: tuple[Preset, ...] = (
         builtin=True,
     ),
     Preset(
+        id="fire-in-the-gulf",
+        name="2027 - Fire in the Gulf",
+        start_date="2027-03-01",
+        description="An alternate 2027: Iran has closed Hormuz and seized the Saudi oil coast.",
+        lore_text=(
+            "This is not a year that has happened. At the end of February 2027 Iran declared "
+            "the Strait of Hormuz closed, mined its approaches and sent armoured columns south "
+            "through Iraq, whose militia-backed government had just signed a defence pact with "
+            "Tehran. By the first of March Iranian divisions hold Kuwait and the Saudi Eastern "
+            "Province -- Dhahran, Abqaiq, the oil coast. Saudi Arabia has torn up the 2023 "
+            "normalisation and is massing at Riyadh for the counterattack. Israel is striking "
+            "Iran from the air. Two American carrier groups are in the Arabian Sea and "
+            "Washington has not decided anything. Turkey, Pakistan, India and China all have "
+            "reasons to join, to mediate, or to profit -- and a world economy is waiting on "
+            "tankers that are not moving."
+        ),
+        simulation_rules=(
+            "The war is under way and cannot be wished away. A government may fight it, widen "
+            "it, mediate it or seek terms, but no power may simply declare the invasion over.",
+            "Technology is contemporary: drones, precision missiles, satellites, cyber. "
+            "Nuclear weapons exist, and Israel and Pakistan hold them; any move toward use is "
+            "a catastrophic escalation, never a battlefield option.",
+            "The Strait of Hormuz is closed while Iran holds the coast and is at war. Oil "
+            "prices, shipping and the economies that depend on them react to that.",
+            "Do not invent nations. Iraq is Iran's ally by treaty; every other power begins "
+            "where the present day left it, and chooses for itself.",
+        ),
+        playable=("tur", "sau", "irn", "isr", "egy", "pak", "ind", "usa"),
+        seed=2027,
+        builtin=True,
+    ),
+    Preset(
         id="narrow-sea",
         name="The Narrow Sea",
         start_date="1897-03-01",
