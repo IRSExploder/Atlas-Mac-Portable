@@ -320,5 +320,9 @@ def test_the_window_reviews_the_orders_a_jump_would_carry():
     # line first, and an assertion about the wrong four hundred characters is an assertion
     # about nothing.
     handler = inspect.getsource(AtlasWindow._open_workbench)
-    assert "self._pending_orders" in handler
+    # It loads through `_load_workbench`, which the refresh after a turn shares; the read of
+    # `_pending_orders` is there, and following the one call is what checks it.
+    loader = inspect.getsource(AtlasWindow._load_workbench)
+    assert "self._load_workbench()" in handler
+    assert "self._pending_orders" in loader
     assert "self._workbench.open()" in handler
