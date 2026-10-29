@@ -139,6 +139,14 @@ def annex(conn: sqlite3.Connection, world_id: str, *, nation_id: str, target: st
             for row in conn.execute(
                 "SELECT id FROM unit WHERE world_id = ? AND nation_id = ? ORDER BY id",
                 (world_id, target))]
+        # And its trade: a cargo to a country that no longer exists was walked every turn
+        # by `assess_trade` for nobody (found by a 60-turn play-test, on every annexation).
+        diffs += [
+            Diff("trade_route", str(row["id"]), "__delete__", DiffOp.DELETE, None,
+                 reason_event_id=event_id, visibility_scope=Visibility.PUBLIC)
+            for row in conn.execute(
+                "SELECT id FROM trade_route WHERE world_id = ? AND (seller_id = ? OR"
+                " buyer_id = ?) ORDER BY id", (world_id, target, target))]
         diffs.append(Diff("nation", target, "is_alive", DiffOp.SET, 0,
                           reason_event_id=event_id, visibility_scope=Visibility.PUBLIC))
 
@@ -182,7 +190,7 @@ def settle_buried_land(conn: sqlite3.Connection, world_id: str, *, turn: int,
         " ORDER BY r.controller_nation_id, r.owner_nation_id, r.id",
         (world_id,)).fetchall()
     headlines: list[str] = []
-    problems: list[str] = []
+    problems: list[str] = _close_dead_routes(conn, world_id, turn=turn, date=date)
     pairs: dict[tuple[str, str], list[str]] = {}
     for row in rows:
         pairs.setdefault((str(row["holder"]), str(row["dead"])), []).append(str(row["id"]))
@@ -206,3 +214,29 @@ def settle_buried_land(conn: sqlite3.Connection, world_id: str, *, turn: int,
             unrecord_events(conn, [event_id])
             problems.append(f"{them}'s last ground could not pass to {me}: {applied.reason}")
     return headlines, problems
+
+
+def _close_dead_routes(conn: sqlite3.Connection, world_id: str, *, turn: int,
+                       date: str) -> list[str]:
+    """Close every trade route with a dead country at one end -- what an annexation left
+    open before it closed them itself. Returns any problem, for the turn report."""
+    dead = [str(row[0]) for row in conn.execute(
+        "SELECT t.id FROM trade_route t WHERE t.world_id = ? AND ("
+        "  NOT EXISTS (SELECT 1 FROM nation n WHERE n.id = t.seller_id AND n.is_alive = 1)"
+        "  OR NOT EXISTS (SELECT 1 FROM nation n WHERE n.id = t.buyer_id AND n.is_alive = 1))"
+        " ORDER BY t.id", (world_id,))]
+    if not dead:
+        return []
+    event_id = record_event(
+        conn, world_id=world_id, turn=turn, date=date, kind=EventKind.NARRATIVE,
+        origin=EventOrigin.ENGINE, text="Trade with states that no longer exist was wound up.",
+        visibility=Visibility.PUBLIC)
+    applied = apply_batch(conn, DiffBatch(
+        world_id=world_id, turn=turn, proposer_role=Role.ENGINE, proposer_model=None,
+        diffs=tuple(Diff("trade_route", route, "__delete__", DiffOp.DELETE, None,
+                         reason_event_id=event_id, visibility_scope=Visibility.PUBLIC)
+                    for route in dead)), whole=True)
+    if applied.applied:
+        return []
+    unrecord_events(conn, [event_id])
+    return [f"trade with dead states could not be wound up: {applied.reason}"]

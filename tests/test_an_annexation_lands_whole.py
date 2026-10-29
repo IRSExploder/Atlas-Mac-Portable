@@ -95,3 +95,27 @@ def test_the_province_panel_calls_annexed_ground_yours(conn):
     # And still says so of ground that is only occupied.
     conn.execute("UPDATE region SET controller_nation_id = ? WHERE id = 'r_east'", (ME,))
     assert "Occupied, not annexed" in _panel_text(conn, "r_east")
+
+
+def test_an_annexed_country_stops_trading(conn):
+    """Found by a 60-turn play-test: every annexation left the dead country's trade routes
+    running, and `assess_trade` walked them for nobody every turn after."""
+    from atlas.testing.invariants import violations
+
+    _beaten_and_out_of_reach(conn)
+    conn.execute("INSERT INTO trade_route (id, world_id, seller_id, buyer_id, good, volume,"
+                 " opened_turn) VALUES ('r1', ?, 'veyra', ?, 'oil', 5, 1)", (WORLD, THEM))
+    annex(conn, WORLD, nation_id=ME, target=THEM, turn=1, date="1897-05-01")
+    assert conn.execute("SELECT COUNT(*) FROM trade_route WHERE id = 'r1'").fetchone()[0] == 0
+    assert not [v for v in violations(conn, WORLD) if "route" in v]
+
+
+def test_a_save_with_trade_to_a_dead_country_is_mended(conn):
+    conn.execute("INSERT INTO trade_route (id, world_id, seller_id, buyer_id, good, volume,"
+                 " opened_turn) VALUES ('r1', ?, 'veyra', ?, 'oil', 5, 1)", (WORLD, THEM))
+    conn.execute("UPDATE nation SET is_alive = 0 WHERE id = ?", (THEM,))
+    conn.execute("UPDATE region SET owner_nation_id = 'veyra' WHERE owner_nation_id = ?",
+                 (THEM,))
+    conn.commit()
+    assert settle_buried_land(conn, WORLD, turn=2, date="1897-06-01") == ([], [])
+    assert conn.execute("SELECT COUNT(*) FROM trade_route").fetchone()[0] == 0
